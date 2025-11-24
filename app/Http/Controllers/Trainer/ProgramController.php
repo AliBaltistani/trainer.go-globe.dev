@@ -147,8 +147,9 @@ class ProgramController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => [
-                    'pdf_view_url' => $result['url'],
-                    'pdf_download_url' => $result['url'],
+                    'pdf_view_url' => route('trainer.programs.pdf-view', ['program' => $program->id]),
+                    'pdf_download_url' => route('trainer.programs.pdf-download', ['program' => $program->id]),
+                    'file_url' => $result['url'],
                 ]
             ]);
         } catch (\Exception $e) {
