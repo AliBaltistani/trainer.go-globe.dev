@@ -186,6 +186,13 @@ class NutritionPlansController extends Controller
         return $service->stream($plan);
     }
 
+    public function pdfDownload(int $id)
+    {
+        $plan = NutritionPlan::where('trainer_id', Auth::id())->findOrFail($id);
+        $service = app(\App\Services\NutritionPlanPdfService::class);
+        return $service->download($plan);
+    }
+
     public function create(): RedirectResponse|View
     {
         try {

@@ -171,6 +171,13 @@ class ProgramController extends Controller
         return $service->stream($program);
     }
 
+    public function pdfDownload(Program $program)
+    {
+        $this->authorizeTrainer($program);
+        $service = app(\App\Services\ProgramPdfService::class);
+        return $service->download($program);
+    }
+
     /**
      * Show the form for creating a new program
      */

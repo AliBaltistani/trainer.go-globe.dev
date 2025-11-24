@@ -297,6 +297,7 @@ Route::middleware('auth')->group(function () {
         Route::get('programs/{program}/pdf-data', [\App\Http\Controllers\Admin\ProgramController::class, 'pdfData'])->name('programs.pdf-data');
         Route::get('programs/{program}/pdf-inline', [\App\Http\Controllers\Admin\ProgramController::class, 'pdfInline'])->name('programs.pdf-inline');
         Route::get('programs/{program}/pdf-view', [\App\Http\Controllers\Admin\ProgramController::class, 'pdfView'])->name('programs.pdf-view');
+        Route::get('programs/{program}/pdf-download', [\App\Http\Controllers\Admin\ProgramController::class, 'pdfDownload'])->name('programs.pdf-download');
         
         // Resource routes for programs
         Route::resource('programs', \App\Http\Controllers\Admin\ProgramController::class);
@@ -575,6 +576,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/{program}/pdf-data', [\App\Http\Controllers\Trainer\ProgramController::class, 'pdfData'])->name('pdf-data');
             Route::get('/{program}/pdf-inline', [\App\Http\Controllers\Trainer\ProgramController::class, 'pdfInline'])->name('pdf-inline');
             Route::get('/{program}/pdf-view', [\App\Http\Controllers\Trainer\ProgramController::class, 'pdfView'])->name('pdf-view');
+            Route::get('/{program}/pdf-download', [\App\Http\Controllers\Trainer\ProgramController::class, 'pdfDownload'])->name('pdf-download');
         });
         Route::resource('programs', \App\Http\Controllers\Trainer\ProgramController::class, ['names' => [
             'index' => 'trainer.programs.index',
@@ -660,6 +662,7 @@ Route::middleware('auth')->group(function () {
             Route::get('/{id}/pdf-data', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfData'])->name('pdf-data');
             Route::get('/{id}/pdf-inline', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfInline'])->name('pdf-inline');
             Route::get('/{id}/pdf-view', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfView'])->name('pdf-view');
+            Route::get('/{id}/pdf-download', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfDownload'])->name('pdf-download');
             Route::delete('/{id}/delete-media', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'deleteMedia'])->name('delete-media');
 
             // Categories and Calculator
@@ -733,4 +736,3 @@ Route::middleware('auth')->group(function () {
         Route::post('/{id}/testimonials', [TrainerWebController::class, 'storeTestimonial'])->name('trainers.testimonials.store');
     });
 });
-

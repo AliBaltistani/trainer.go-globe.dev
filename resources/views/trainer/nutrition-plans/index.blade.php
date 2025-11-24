@@ -362,17 +362,18 @@ $(document).ready(function() {
     });
 
     $(document).on('click', '.nutrition-pdf-download', function() {
-        var id = $(this).data('plan-id');
-        fetchNutritionPdfUrl(id).then(function(url) {
-            var a = document.createElement('a');
-            a.href = url;
-            a.download = 'nutrition-plan-' + id + '.pdf';
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }).catch(function() {
-            alert('Failed to generate PDF');
-        });
+        var btn = this;
+        var id = $(btn).data('plan-id');
+        var original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Downloading...';
+        var a = document.createElement('a');
+        a.href = '/trainer/nutrition-plans/' + id + '/pdf-download';
+        a.download = 'nutrition-plan-' + id + '.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(function(){ btn.disabled = false; btn.innerHTML = original; }, 1500);
     });
     });
 

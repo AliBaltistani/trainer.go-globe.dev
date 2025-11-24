@@ -34,6 +34,13 @@ class NutritionPlanPdfService
         return Pdf::loadHTML($html)->setPaper($paper)->stream('nutrition-plan-' . $plan->id . '.pdf', ['Attachment' => false]);
     }
 
+    public function download(NutritionPlan $plan, array $options = [])
+    {
+        $paper = $options['paper'] ?? 'a4';
+        $html = $this->renderHtml($plan);
+        return Pdf::loadHTML($html)->setPaper($paper)->download('nutrition-plan-' . $plan->id . '.pdf');
+    }
+
     public function generate(NutritionPlan $plan, array $options = []): array
     {
         $html = $this->renderHtml($plan);

@@ -183,17 +183,18 @@
             });
 
             $(document).on('click', '.program-pdf-download', function() {
-                var id = $(this).data('program-id');
-                fetchProgramPdfUrl(id).then(function(url) {
-                    var a = document.createElement('a');
-                    a.href = url;
-                    a.download = 'program-' + id + '.pdf';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }).catch(function() {
-                    Swal.fire('Error', 'Failed to generate PDF', 'error');
-                });
+                var btn = this;
+                var id = $(btn).data('program-id');
+                var original = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Downloading...';
+                var a = document.createElement('a');
+                a.href = '/admin/programs/' + id + '/pdf-download';
+                a.download = 'program-' + id + '.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(function(){ btn.disabled = false; btn.innerHTML = original; }, 1500);
             });
         });
 

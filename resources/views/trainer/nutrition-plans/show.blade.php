@@ -604,18 +604,17 @@ $(document).ready(function() {
     if (btn) {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
-            fetch('{{ route('trainer.nutrition-plans.pdf-data', $plan->id) }}', {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            }).then(function(resp){ return resp.json();}).then(function(data){
-                if (data && data.success && data.data && data.data.pdf_view_url) {
-                    var a = document.createElement('a');
-                    a.href = data.data.pdf_view_url;
-                    a.download = '';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }
-            }).catch(function(){});
+            btn.disabled = true;
+            var icon = btn.querySelector('.download-icon');
+            var original = icon ? icon.innerHTML : '';
+            if (icon) { icon.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>'; }
+            var a = document.createElement('a');
+            a.href = '{{ route('trainer.nutrition-plans.pdf-download', $plan->id) }}';
+            a.download = 'nutrition-plan-{{ $plan->id }}.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(function(){ btn.disabled = false; if (icon) { icon.innerHTML = original; } }, 1500);
         });
     }
 });

@@ -32,6 +32,13 @@ class ProgramPdfService
         return Pdf::loadHTML($html)->setPaper($paper)->stream('program-' . $program->id . '.pdf', ['Attachment' => false]);
     }
 
+    public function download(Program $program, array $options = [])
+    {
+        $paper = $options['paper'] ?? 'a4';
+        $html = $this->renderHtml($program);
+        return Pdf::loadHTML($html)->setPaper($paper)->download('program-' . $program->id . '.pdf');
+    }
+
     public function generate(Program $program, array $options = []): array
     {
         $html = $this->renderHtml($program);
