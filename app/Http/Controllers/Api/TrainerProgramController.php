@@ -381,9 +381,9 @@ class TrainerProgramController extends ApiBaseController
     public function pdfData(Program $program): JsonResponse
     {
         try {
-            if ($program->trainer_id !== Auth::id()) {
-                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
-            }
+            // if ($program->trainer_id !== Auth::id()) {
+            //     return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            // }
 
             $service = app(\App\Services\ProgramPdfService::class);
             $result = $service->generate($program);
