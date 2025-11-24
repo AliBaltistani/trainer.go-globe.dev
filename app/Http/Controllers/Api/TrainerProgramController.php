@@ -389,8 +389,8 @@ class TrainerProgramController extends ApiBaseController
             $result = $service->generate($program);
 
             return $this->sendResponse([
-                'pdf_view_url' => $result['url'],
-                'pdf_download_url' => $result['url'],
+                'pdf_view_url' => config('app.url') . $result['url'],
+                'pdf_download_url' => config('app.url') . $result['url'],
             ], 'PDF generated');
         } catch (\Exception $e) {
             Log::error('TrainerProgramController@pdfData failed: ' . $e->getMessage(), [
