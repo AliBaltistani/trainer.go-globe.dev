@@ -389,8 +389,8 @@ class TrainerProgramController extends ApiBaseController
             $result = $service->generate($program);
 
             return $this->sendResponse([
-                'pdf_view_url' => route('trainer.programs.pdf-view', ['program' => $program->id]),
-                'pdf_download_url' => route('trainer.programs.pdf-download', ['program' => $program->id]),
+                'pdf_view_url' => route('api.trainer.programs.pdf-view', ['program' => $program->id]),
+                'pdf_download_url' => route('api.trainer.programs.pdf-download', ['program' => $program->id]),
                 'file_url' => url($result['url'])
             ], 'PDF generated');
         } catch (\Exception $e) {
@@ -400,5 +400,22 @@ class TrainerProgramController extends ApiBaseController
             ]);
             return $this->sendError('Generation Failed', ['error' => 'Unable to generate PDF'], 500);
         }
+    }
+    public function pdfView(Program $program)
+    {
+        if ($program->trainer_id !== Auth::id()) {
+            return response()->json(['success' => false, 'message' => 'Access denied'], 403);
+        }
+        $service = app(\App\Services\ProgramPdfService::class);
+        return $service->stream($program);
+    }
+
+    public function pdfDownload(Program $program)
+    {
+        if ($program->trainer_id !== Auth::id()) {
+            return response()->json(['success' => false, 'message' => 'Access denied'], 403);
+        }
+        $service = app(\App\Services\ProgramPdfService::class);
+        return $service->download($program);
     }
 }

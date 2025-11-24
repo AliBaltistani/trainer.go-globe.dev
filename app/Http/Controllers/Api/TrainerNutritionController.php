@@ -1186,8 +1186,9 @@ class TrainerNutritionController extends Controller
                 'success' => true,
                 'message' => 'PDF generated successfully',
                 'data' => [
-                    'pdf_view_url' => $result['url'],
-                    'pdf_download_url' => $result['url'],
+                    'pdf_view_url' => route('api.trainer.nutrition.plans.pdf-view', ['id' => $id]),
+                    'pdf_download_url' => route('api.trainer.nutrition.plans.pdf-download', ['id' => $id]),
+                    'file_url' => url($result['url'])
                 ]
             ]);
         } catch (\Exception $e) {
@@ -1202,5 +1203,13 @@ class TrainerNutritionController extends Controller
         $plan = NutritionPlan::where('trainer_id', $trainer->id)->findOrFail($id);
         $service = app(\App\Services\NutritionPlanPdfService::class);
         return $service->stream($plan);
+    }
+
+    public function pdfDownload(int $id)
+    {
+        $trainer = Auth::user();
+        $plan = NutritionPlan::where('trainer_id', $trainer->id)->findOrFail($id);
+        $service = app(\App\Services\NutritionPlanPdfService::class);
+        return $service->download($plan);
     }
 }

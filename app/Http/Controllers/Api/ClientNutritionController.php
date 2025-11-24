@@ -1980,8 +1980,9 @@ class ClientNutritionController extends Controller
                 'success' => true,
                 'message' => 'PDF generated successfully',
                 'data' => [
-                    'pdf_view_url' => $result['url'],
-                    'pdf_download_url' => $result['url'],
+                    'pdf_view_url' => route('api.client.nutrition.plans.pdf-view', ['planId' => $planId]),
+                    'pdf_download_url' => route('api.client.nutrition.plans.pdf-download', ['planId' => $planId]),
+                    'file_url' => url($result['url'])
                 ]
             ]);
         } catch (\Exception $e) {
@@ -1996,5 +1997,13 @@ class ClientNutritionController extends Controller
         $plan = NutritionPlan::where('client_id', $client->id)->findOrFail($planId);
         $service = app(\App\Services\NutritionPlanPdfService::class);
         return $service->stream($plan);
+    }
+
+    public function pdfDownload(int $planId)
+    {
+        $client = Auth::user();
+        $plan = NutritionPlan::where('client_id', $client->id)->findOrFail($planId);
+        $service = app(\App\Services\NutritionPlanPdfService::class);
+        return $service->download($plan);
     }
 }

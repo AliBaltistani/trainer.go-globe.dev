@@ -245,6 +245,7 @@ Route::middleware('auth:sanctum')->group(function () {
             // PDF endpoints
             Route::get('/my-plans/{id}/pdf-data', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'pdfData'])->name('plans.pdf-data');
             Route::get('/my-plans/{id}/pdf-view', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'pdfView'])->name('plans.pdf-view');
+            Route::get('/my-plans/{id}/pdf-download', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'pdfDownload'])->name('plans.pdf-download');
         });
 
         /**
@@ -304,6 +305,8 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::post('/duplicate', [\App\Http\Controllers\Api\TrainerProgramController::class, 'duplicate'])->name('duplicate');
                 Route::post('/assign', [\App\Http\Controllers\Api\TrainerProgramController::class, 'assign'])->name('assign');
                 Route::get('/pdf-data', [\App\Http\Controllers\Api\TrainerProgramController::class, 'pdfData'])->name('pdf-data');
+                Route::get('/pdf-view', [\App\Http\Controllers\Api\TrainerProgramController::class, 'pdfView'])->name('pdf-view');
+                Route::get('/pdf-download', [\App\Http\Controllers\Api\TrainerProgramController::class, 'pdfDownload'])->name('pdf-download');
 
                 // Program Videos Routes
                 Route::get('/plan', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'getProgramPlan'])->name('plan');
@@ -406,6 +409,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::prefix('programs')->name('programs.')->group(function () {
             Route::get('/{program}/pdf-data', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfData'])->name('pdf-data');
+            Route::get('/{program}/pdf-view', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfView'])->name('pdf-view');
+            Route::get('/{program}/pdf-download', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfDownload'])->name('pdf-download');
         });
 
         Route::post('/subscription', [\App\Http\Controllers\Api\ClientController::class, 'manageSubscription'])->name('subscription.manage');
@@ -472,6 +477,7 @@ Route::middleware('auth:sanctum')->group(function () {
             // PDF endpoints
             Route::get('/plans/{planId}/pdf-data', [\App\Http\Controllers\Api\ClientNutritionController::class, 'pdfData'])->name('plans.pdf-data');
             Route::get('/plans/{planId}/pdf-view', [\App\Http\Controllers\Api\ClientNutritionController::class, 'pdfView'])->name('plans.pdf-view');
+            Route::get('/plans/{planId}/pdf-download', [\App\Http\Controllers\Api\ClientNutritionController::class, 'pdfDownload'])->name('plans.pdf-download');
 
             // Nutrition Calculator
             Route::post('/calculate', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'calculate'])->name('calculate');
