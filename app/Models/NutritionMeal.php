@@ -34,14 +34,16 @@ class NutritionMeal extends Model
         'title',
         'description',
         'meal_type',
-        'media_url',
-        'calories',
-        'protein',
-        'carbs',
-        'fats',
+        'ingredients',
+        'instructions',
+        'image_url',
         'prep_time',
         'cook_time',
         'servings',
+        'calories_per_serving',
+        'protein_per_serving',
+        'carbs_per_serving',
+        'fats_per_serving',
         'sort_order'
     ];
 
@@ -52,10 +54,10 @@ class NutritionMeal extends Model
         'prep_time' => 'integer',
         'cook_time' => 'integer',
         'servings' => 'integer',
-        'calories' => 'decimal:2',
-        'protein' => 'decimal:2',
-        'carbs' => 'decimal:2',
-        'fats' => 'decimal:2',
+        'calories_per_serving' => 'decimal:2',
+        'protein_per_serving' => 'decimal:2',
+        'carbs_per_serving' => 'decimal:2',
+        'fats_per_serving' => 'decimal:2',
         'sort_order' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime'
@@ -185,10 +187,10 @@ class NutritionMeal extends Model
     public function getTotalMacrosAttribute()
     {
         return [
-            'calories' => ($this->calories ?? 0) * $this->servings,
-            'protein' => ($this->protein ?? 0) * $this->servings,
-            'carbs' => ($this->carbs ?? 0) * $this->servings,
-            'fats' => ($this->fats ?? 0) * $this->servings,
+            'calories' => ($this->calories_per_serving ?? 0) * ($this->servings ?? 1),
+            'protein' => ($this->protein_per_serving ?? 0) * ($this->servings ?? 1),
+            'carbs' => ($this->carbs_per_serving ?? 0) * ($this->servings ?? 1),
+            'fats' => ($this->fats_per_serving ?? 0) * ($this->servings ?? 1),
         ];
     }
 

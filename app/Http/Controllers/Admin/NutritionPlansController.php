@@ -665,9 +665,9 @@ class NutritionPlansController extends Controller
         try {
             $plan = NutritionPlan::findOrFail($id);
             
-            // Delete associated media file
-            if ($plan->media_url) {
-                Storage::disk('public')->delete($plan->media_url);
+            // Delete associated image file
+            if ($plan->image_url) {
+                Storage::disk('public')->delete($plan->image_url);
             }
             
             // Store plan info for logging
@@ -817,9 +817,9 @@ class NutritionPlansController extends Controller
         try {
             $plan = NutritionPlan::findOrFail($id);
             
-            if ($plan->media_url) {
-                Storage::disk('public')->delete($plan->media_url);
-                $plan->update(['media_url' => null]);
+            if ($plan->image_url) {
+                Storage::disk('public')->delete($plan->image_url);
+                $plan->update(['image_url' => null]);
                 
                 return response()->json([
                     'success' => true,

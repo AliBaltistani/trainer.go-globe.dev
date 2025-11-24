@@ -32,8 +32,8 @@ class NutritionMealsController extends Controller
     {
         try {
             $plan = NutritionPlan::where('trainer_id', Auth::id())->where('is_global', false)->findOrFail($planId);
-            $nextOrder = (int) NutritionMeal::where('plan_id', $planId)->max('sort_order') + 1;
-            return view('trainer.nutrition-plans.meals.create', compact('plan', 'nextOrder'));
+            $nextSortOrder = (int) NutritionMeal::where('plan_id', $planId)->max('sort_order') + 1;
+            return view('trainer.nutrition-plans.meals.create', compact('plan', 'nextSortOrder'));
         } catch (\Exception $e) {
             Log::error('Failed to load trainer meal create form: ' . $e->getMessage());
             return redirect()->route('trainer.nutrition-plans.meals.index', $planId)->with('error', 'Access denied or plan not found');
@@ -68,9 +68,11 @@ class NutritionMealsController extends Controller
                 return back()->withErrors($validator)->withInput();
             }
 
-            $mediaUrl = null;
+            $imageUrl = null;
             if ($request->hasFile('image_file')) {
-                $mediaUrl = $request->file('image_file')->store('nutrition-meals', 'public');
+                $imageUrl = $request->file('image_file')->store('nutrition-meals', 'public');
+            } elseif ($request->filled('image_url') && is_string($request->image_url)) {
+                $imageUrl = $request->image_url;
             }
 
             $meal = new NutritionMeal();
@@ -83,12 +85,12 @@ class NutritionMealsController extends Controller
             $meal->prep_time = $request->prep_time;
             $meal->cook_time = $request->cook_time;
             $meal->servings = $request->servings;
-            $meal->calories = $request->calories_per_serving;
-            $meal->protein = $request->protein_per_serving;
-            $meal->carbs = $request->carbs_per_serving;
-            $meal->fats = $request->fats_per_serving;
+            $meal->calories_per_serving = $request->calories_per_serving;
+            $meal->protein_per_serving = $request->protein_per_serving;
+            $meal->carbs_per_serving = $request->carbs_per_serving;
+            $meal->fats_per_serving = $request->fats_per_serving;
             $meal->sort_order = $request->sort_order;
-            $meal->media_url = $mediaUrl;
+            $meal->image_url = $imageUrl;
             $meal->save();
 
             if ($request->ajax()) { return response()->json(['success'=>true,'message'=>'Meal created successfully','meal'=>$meal]); }
@@ -100,7 +102,7 @@ class NutritionMealsController extends Controller
         } catch (\Exception $e) {
             Log::error('Trainer failed to create meal: ' . $e->getMessage(), ['trainer_id'=>Auth::id(),'plan_id'=>$planId]);
             if ($request->ajax()) { return response()->json(['success'=>false,'message'=>'Failed to create meal'],500);} 
-            return back()->with('error','Failed to create meal')->withInput();
+            return back()->with('error','Failed to create meal'. $e->getMessage())->withInput();
         }
     }
 
@@ -158,8 +160,10 @@ class NutritionMealsController extends Controller
             }
 
             if ($request->hasFile('image_file')) {
-                if ($meal->media_url) { Storage::disk('public')->delete($meal->media_url); }
-                $meal->media_url = $request->file('image_file')->store('nutrition-meals', 'public');
+                if ($meal->image_url) { Storage::disk('public')->delete($meal->image_url); }
+                $meal->image_url = $request->file('image_file')->store('nutrition-meals', 'public');
+            } elseif ($request->filled('image_url') && is_string($request->image_url)) {
+                $meal->image_url = $request->image_url;
             }
 
             $meal->title = $request->title;
@@ -170,10 +174,10 @@ class NutritionMealsController extends Controller
             $meal->prep_time = $request->prep_time;
             $meal->cook_time = $request->cook_time;
             $meal->servings = $request->servings;
-            $meal->calories = $request->calories_per_serving;
-            $meal->protein = $request->protein_per_serving;
-            $meal->carbs = $request->carbs_per_serving;
-            $meal->fats = $request->fats_per_serving;
+            $meal->calories_per_serving = $request->calories_per_serving;
+            $meal->protein_per_serving = $request->protein_per_serving;
+            $meal->carbs_per_serving = $request->carbs_per_serving;
+            $meal->fats_per_serving = $request->fats_per_serving;
             $meal->sort_order = $request->sort_order;
             $meal->save();
 
@@ -191,7 +195,7 @@ class NutritionMealsController extends Controller
         try {
             $plan = NutritionPlan::where('trainer_id', Auth::id())->where('is_global', false)->findOrFail($planId);
             $meal = NutritionMeal::where('plan_id', $planId)->findOrFail($id);
-            if ($meal->media_url) { Storage::disk('public')->delete($meal->media_url); }
+            if ($meal->image_url) { Storage::disk('public')->delete($meal->image_url); }
             $meal->delete();
             return response()->json(['success'=>true,'message'=>'Meal deleted successfully']);
         } catch (\Exception $e) {
@@ -221,9 +225,9 @@ class NutritionMealsController extends Controller
         try {
             $plan = NutritionPlan::where('trainer_id', Auth::id())->where('is_global', false)->findOrFail($planId);
             $meal = NutritionMeal::where('plan_id', $planId)->findOrFail($id);
-            if ($meal->media_url) {
-                Storage::disk('public')->delete($meal->media_url);
-                $meal->media_url = null;
+            if ($meal->image_url) {
+                Storage::disk('public')->delete($meal->image_url);
+                $meal->image_url = null;
                 $meal->save();
                 return response()->json(['success'=>true,'message'=>'Meal image deleted successfully']);
             }
@@ -262,10 +266,10 @@ class NutritionMealsController extends Controller
                 'fats_per_serving' => 'nullable|numeric|min:0|max:100'
             ]);
             if ($validator->fails()) { return response()->json(['success'=>false,'message'=>'Validation failed','errors'=>$validator->errors()],422);} 
-            $meal->calories = $request->calories_per_serving;
-            $meal->protein = $request->protein_per_serving;
-            $meal->carbs = $request->carbs_per_serving;
-            $meal->fats = $request->fats_per_serving;
+            $meal->calories_per_serving = $request->calories_per_serving;
+            $meal->protein_per_serving = $request->protein_per_serving;
+            $meal->carbs_per_serving = $request->carbs_per_serving;
+            $meal->fats_per_serving = $request->fats_per_serving;
             $meal->save();
             return response()->json(['success'=>true,'message'=>'Meal macros updated successfully']);
         } catch (\Exception $e) {
@@ -284,7 +288,7 @@ class NutritionMealsController extends Controller
             if (!$sourcePlan->is_global) { return response()->json(['success'=>false,'message'=>'Source meal is not from a global plan'],422);} 
             $copy = $globalMeal->replicate();
             $copy->plan_id = $planId;
-            $copy->media_url = null;
+            $copy->image_url = null;
             $copy->sort_order = (int) NutritionMeal::where('plan_id', $planId)->max('sort_order') + 1;
             $copy->save();
             return response()->json(['success'=>true,'message'=>'Meal copied from global successfully','meal'=>$copy]);
@@ -313,7 +317,7 @@ class NutritionMealsController extends Controller
             $ids = $request->get('ids', []);
             if (!is_array($ids) || empty($ids)) { return response()->json(['success'=>false,'message'=>'No meals selected'],422);} 
             $meals = NutritionMeal::where('plan_id', $planId)->whereIn('id', $ids)->get();
-            foreach ($meals as $meal) { if ($meal->media_url) { Storage::disk('public')->delete($meal->media_url); } $meal->delete(); }
+            foreach ($meals as $meal) { if ($meal->image_url) { Storage::disk('public')->delete($meal->image_url); } $meal->delete(); }
             return response()->json(['success'=>true,'message'=>'Selected meals deleted successfully']);
         } catch (\Exception $e) {
             Log::error('Trainer failed bulk delete meals: ' . $e->getMessage());

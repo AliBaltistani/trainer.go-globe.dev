@@ -163,10 +163,10 @@
                         <td>{{ $meal->title }}</td>
                         <td>{{ $meal->meal_type_display }}</td>
                         <td>{{ $meal->servings }}</td>
-                        <td>{{ $meal->calories ?? 0 }}</td>
-                        <td>{{ $meal->protein ?? 0 }}</td>
-                        <td>{{ $meal->carbs ?? 0 }}</td>
-                        <td>{{ $meal->fats ?? 0 }}</td>
+                        <td>{{ $meal->calories_per_serving ?? 0 }}</td>
+                        <td>{{ $meal->protein_per_serving ?? 0 }}</td>
+                        <td>{{ $meal->carbs_per_serving ?? 0 }}</td>
+                        <td>{{ $meal->fats_per_serving ?? 0 }}</td>
                     </tr>
                 @endforeach
             </tbody>

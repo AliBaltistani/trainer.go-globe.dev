@@ -418,9 +418,24 @@ function duplicateMeal() {
         confirmButtonText: 'Yes, duplicate it!'
     }).then((result) => {
         if (result.isConfirmed) {
-            // For now, redirect to create page with meal data
-            // In a full implementation, you'd create a duplicate endpoint
-            window.location.href = '/trainer/nutrition-plans/{{ $plan->id }}/meals/create?duplicate={{ $meal->id }}';
+            $.ajax({
+                url: '/trainer/nutrition-plans/{{ $plan->id }}/meals/{{ $meal->id }}/duplicate',
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Duplicated!', response.message, 'success');
+                        window.location.href = '/trainer/nutrition-plans/{{ $plan->id }}/meals';
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error!', 'Failed to duplicate meal', 'error');
+                }
+            });
         }
     });
 }

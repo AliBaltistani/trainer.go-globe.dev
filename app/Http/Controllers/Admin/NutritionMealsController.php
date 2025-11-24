@@ -113,10 +113,12 @@ class NutritionMealsController extends Controller
                 return back()->withErrors($validator)->withInput();
             }
             
-            // Handle image upload
+            // Handle image upload or direct image_url
             $imageUrl = null;
             if ($request->hasFile('image_file')) {
                 $imageUrl = $request->file('image_file')->store('nutrition-meals', 'public');
+            } elseif ($request->filled('image_url') && is_string($request->image_url)) {
+                $imageUrl = $request->image_url;
             }
             
             // Create meal
@@ -279,6 +281,8 @@ class NutritionMealsController extends Controller
                 }
                 
                 $imageUrl = $request->file('image_file')->store('nutrition-meals', 'public');
+            } elseif ($request->filled('image_url') && is_string($request->image_url)) {
+                $imageUrl = $request->image_url;
             }
             
             // Update meal
@@ -745,10 +749,10 @@ class NutritionMealsController extends Controller
             $meal = NutritionMeal::where('plan_id', $planId)->findOrFail($id);
             
             $validator = Validator::make($request->all(), [
-                'calories' => 'nullable|numeric|min:0|max:2000',
-                'protein' => 'nullable|numeric|min:0|max:200',
-                'carbs' => 'nullable|numeric|min:0|max:300',
-                'fats' => 'nullable|numeric|min:0|max:100',
+                'calories_per_serving' => 'nullable|numeric|min:0|max:2000',
+                'protein_per_serving' => 'nullable|numeric|min:0|max:200',
+                'carbs_per_serving' => 'nullable|numeric|min:0|max:300',
+                'fats_per_serving' => 'nullable|numeric|min:0|max:100',
                 'servings' => 'required|integer|min:1|max:20'
             ]);
             
@@ -762,10 +766,10 @@ class NutritionMealsController extends Controller
             
             // Update meal macros
             $meal->update([
-                'calories' => $request->calories,
-                'protein' => $request->protein,
-                'carbs' => $request->carbs,
-                'fats' => $request->fats,
+                'calories_per_serving' => $request->calories_per_serving,
+                'protein_per_serving' => $request->protein_per_serving,
+                'carbs_per_serving' => $request->carbs_per_serving,
+                'fats_per_serving' => $request->fats_per_serving,
                 'servings' => $request->servings
             ]);
             
@@ -774,7 +778,7 @@ class NutritionMealsController extends Controller
                 'admin_id' => Auth::id(),
                 'plan_id' => $planId,
                 'meal_id' => $meal->id,
-                'macros' => $request->only(['calories', 'protein', 'carbs', 'fats', 'servings'])
+                'macros' => $request->only(['calories_per_serving', 'protein_per_serving', 'carbs_per_serving', 'fats_per_serving', 'servings'])
             ]);
             
             return response()->json([

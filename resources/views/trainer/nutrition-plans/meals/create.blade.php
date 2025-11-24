@@ -47,6 +47,21 @@
                 </div>
             </div>
         </div>
+        @if(session('success'))
+            <div class="alert alert-success" role="alert">{{ session('success') }}</div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger" role="alert">{{ session('error') }}</div>
+        @endif
+        @if($errors->any())
+            <div class="alert alert-danger" role="alert">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
     </div>
 </div>
 
@@ -65,41 +80,41 @@
                     <div class="row">
                         <div class="col-xl-12 mb-3">
                             <label for="title" class="form-label">Meal Title <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="title" name="title" placeholder="Enter meal title" required>
-                            <div class="invalid-feedback"></div>
+                            <input type="text" class="form-control @error('title') is-invalid @enderror" id="title" name="title" placeholder="Enter meal title" value="{{ old('title') }}" required>
+                            <div class="invalid-feedback">@error('title'){{ $message }}@enderror</div>
                         </div>
                         <div class="col-xl-12 mb-3">
                             <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="3" placeholder="Enter meal description"></textarea>
-                            <div class="invalid-feedback"></div>
+                            <textarea class="form-control @error('description') is-invalid @enderror" id="description" name="description" rows="3" placeholder="Enter meal description">{{ old('description') }}</textarea>
+                            <div class="invalid-feedback">@error('description'){{ $message }}@enderror</div>
                         </div>
                         <div class="col-xl-6 mb-3">
                             <label for="meal_type" class="form-label">Meal Type <span class="text-danger">*</span></label>
-                            <select class="form-select" id="meal_type" name="meal_type" required>
+                            <select class="form-select @error('meal_type') is-invalid @enderror" id="meal_type" name="meal_type" required>
                                 <option value="">Select Meal Type</option>
-                                <option value="breakfast">Breakfast</option>
-                                <option value="lunch">Lunch</option>
-                                <option value="dinner">Dinner</option>
-                                <option value="snack">Snack</option>
-                                <option value="pre_workout">Pre-Workout</option>
-                                <option value="post_workout">Post-Workout</option>
+                                <option value="breakfast" {{ old('meal_type')==='breakfast' ? 'selected' : '' }}>Breakfast</option>
+                                <option value="lunch" {{ old('meal_type')==='lunch' ? 'selected' : '' }}>Lunch</option>
+                                <option value="dinner" {{ old('meal_type')==='dinner' ? 'selected' : '' }}>Dinner</option>
+                                <option value="snack" {{ old('meal_type')==='snack' ? 'selected' : '' }}>Snack</option>
+                                <option value="pre_workout" {{ old('meal_type')==='pre_workout' ? 'selected' : '' }}>Pre-Workout</option>
+                                <option value="post_workout" {{ old('meal_type')==='post_workout' ? 'selected' : '' }}>Post-Workout</option>
                             </select>
-                            <div class="invalid-feedback"></div>
+                            <div class="invalid-feedback">@error('meal_type'){{ $message }}@enderror</div>
                         </div>
                         <div class="col-xl-6 mb-3">
                             <label for="servings" class="form-label">Servings <span class="text-danger">*</span></label>
-                            <input type="number" class="form-control" id="servings" name="servings" placeholder="Number of servings" min="1" max="20" value="1" required>
-                            <div class="invalid-feedback"></div>
+                            <input type="number" class="form-control @error('servings') is-invalid @enderror" id="servings" name="servings" placeholder="Number of servings" min="1" max="20" value="{{ old('servings', 1) }}" required>
+                            <div class="invalid-feedback">@error('servings'){{ $message }}@enderror</div>
                         </div>
                         <div class="col-xl-6 mb-3">
                             <label for="prep_time" class="form-label">Prep Time (minutes)</label>
-                            <input type="number" class="form-control" id="prep_time" name="prep_time" placeholder="Preparation time" min="0" max="480">
-                            <div class="invalid-feedback"></div>
+                            <input type="number" class="form-control @error('prep_time') is-invalid @enderror" id="prep_time" name="prep_time" placeholder="Preparation time" min="0" max="480" value="{{ old('prep_time') }}">
+                            <div class="invalid-feedback">@error('prep_time'){{ $message }}@enderror</div>
                         </div>
                         <div class="col-xl-6 mb-3">
                             <label for="cook_time" class="form-label">Cook Time (minutes)</label>
-                            <input type="number" class="form-control" id="cook_time" name="cook_time" placeholder="Cooking time" min="0" max="480">
-                            <div class="invalid-feedback"></div>
+                            <input type="number" class="form-control @error('cook_time') is-invalid @enderror" id="cook_time" name="cook_time" placeholder="Cooking time" min="0" max="480" value="{{ old('cook_time') }}">
+                            <div class="invalid-feedback">@error('cook_time'){{ $message }}@enderror</div>
                         </div>
                     </div>
                 </div>
@@ -116,14 +131,14 @@
                     <div class="row">
                         <div class="col-xl-12 mb-3">
                             <label for="ingredients" class="form-label">Ingredients</label>
-                            <textarea class="form-control" id="ingredients" name="ingredients" rows="6" placeholder="Enter ingredients (one per line)&#10;Example:&#10;2 cups oats&#10;1 cup milk&#10;1 banana&#10;1 tbsp honey"></textarea>
-                            <div class="invalid-feedback"></div>
+                            <textarea class="form-control @error('ingredients') is-invalid @enderror" id="ingredients" name="ingredients" rows="6" placeholder="Enter ingredients (one per line)&#10;Example:&#10;2 cups oats&#10;1 cup milk&#10;1 banana&#10;1 tbsp honey">{{ old('ingredients') }}</textarea>
+                            <div class="invalid-feedback">@error('ingredients'){{ $message }}@enderror</div>
                             <small class="text-muted">Enter each ingredient on a new line</small>
                         </div>
                         <div class="col-xl-12 mb-3">
                             <label for="instructions" class="form-label">Instructions</label>
-                            <textarea class="form-control" id="instructions" name="instructions" rows="6" placeholder="Enter cooking instructions (one step per line)&#10;Example:&#10;1. Heat milk in a saucepan&#10;2. Add oats and cook for 5 minutes&#10;3. Slice banana and add to bowl&#10;4. Drizzle with honey"></textarea>
-                            <div class="invalid-feedback"></div>
+                            <textarea class="form-control @error('instructions') is-invalid @enderror" id="instructions" name="instructions" rows="6" placeholder="Enter cooking instructions (one step per line)&#10;Example:&#10;1. Heat milk in a saucepan&#10;2. Add oats and cook for 5 minutes&#10;3. Slice banana and add to bowl&#10;4. Drizzle with honey">{{ old('instructions') }}</textarea>
+                            <div class="invalid-feedback">@error('instructions'){{ $message }}@enderror</div>
                             <small class="text-muted">Enter each instruction step on a new line</small>
                         </div>
                     </div>
@@ -141,23 +156,23 @@
                     <div class="row">
                         <div class="col-xl-6 mb-3">
                             <label for="calories_per_serving" class="form-label">Calories</label>
-                            <input type="number" class="form-control" id="calories_per_serving" name="calories_per_serving" placeholder="Calories per serving" min="0" max="2000" step="1">
-                            <div class="invalid-feedback"></div>
+                            <input type="number" class="form-control @error('calories_per_serving') is-invalid @enderror" id="calories_per_serving" name="calories_per_serving" placeholder="Calories per serving" min="0" max="2000" step="1" value="{{ old('calories_per_serving') }}">
+                            <div class="invalid-feedback">@error('calories_per_serving'){{ $message }}@enderror</div>
                         </div>
                         <div class="col-xl-6 mb-3">
                             <label for="protein_per_serving" class="form-label">Protein (oz)</label>
-                            <input type="number" class="form-control" id="protein_per_serving" name="protein_per_serving" placeholder="Protein in oz" min="0" max="200" step="0.1">
-                            <div class="invalid-feedback"></div>
+                            <input type="number" class="form-control @error('protein_per_serving') is-invalid @enderror" id="protein_per_serving" name="protein_per_serving" placeholder="Protein in oz" min="0" max="200" step="0.1" value="{{ old('protein_per_serving') }}">
+                            <div class="invalid-feedback">@error('protein_per_serving'){{ $message }}@enderror</div>
                         </div>
                         <div class="col-xl-6 mb-3">
                             <label for="carbs_per_serving" class="form-label">Carbohydrates (oz)</label>
-                            <input type="number" class="form-control" id="carbs_per_serving" name="carbs_per_serving" placeholder="Carbs in oz" min="0" max="300" step="0.1">
-                            <div class="invalid-feedback"></div>
+                            <input type="number" class="form-control @error('carbs_per_serving') is-invalid @enderror" id="carbs_per_serving" name="carbs_per_serving" placeholder="Carbs in oz" min="0" max="300" step="0.1" value="{{ old('carbs_per_serving') }}">
+                            <div class="invalid-feedback">@error('carbs_per_serving'){{ $message }}@enderror</div>
                         </div>
                         <div class="col-xl-6 mb-3">
                             <label for="fats_per_serving" class="form-label">Fats (oz)</label>
-                            <input type="number" class="form-control" id="fats_per_serving" name="fats_per_serving" placeholder="Fats in oz" min="0" max="100" step="0.1">
-                            <div class="invalid-feedback"></div>
+                            <input type="number" class="form-control @error('fats_per_serving') is-invalid @enderror" id="fats_per_serving" name="fats_per_serving" placeholder="Fats in oz" min="0" max="100" step="0.1" value="{{ old('fats_per_serving') }}">
+                            <div class="invalid-feedback">@error('fats_per_serving'){{ $message }}@enderror</div>
                         </div>
                     </div>
                     <div class="alert alert-info" role="alert">
@@ -180,8 +195,8 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <label for="image_file" class="form-label">Upload Image</label>
-                        <input type="file" class="filepond" name="image_file" id="image_file" accept="image/*">
-                        <div class="invalid-feedback"></div>
+                        <input type="file" class="filepond @error('image_file') is-invalid @enderror" name="image_file" id="image_file" accept="image/*">
+                        <div class="invalid-feedback">@error('image_file'){{ $message }}@enderror</div>
                         <small class="text-muted">Upload an appetizing image of this meal</small>
                     </div>
                 </div>
@@ -197,8 +212,8 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <label for="sort_order" class="form-label">Sort Order <span class="text-danger">*</span></label>
-                        <input type="number" class="form-control" id="sort_order" name="sort_order" value="{{ $nextSortOrder }}" min="0" required>
-                        <div class="invalid-feedback"></div>
+                        <input type="number" class="form-control @error('sort_order') is-invalid @enderror" id="sort_order" name="sort_order" value="{{ old('sort_order', $nextSortOrder) }}" min="0" required>
+                        <div class="invalid-feedback">@error('sort_order'){{ $message }}@enderror</div>
                         <small class="text-muted">Lower numbers appear first in the meal list</small>
                     </div>
                 </div>

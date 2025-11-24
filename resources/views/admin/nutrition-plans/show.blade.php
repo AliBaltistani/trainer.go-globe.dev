@@ -572,7 +572,7 @@
         @endif
         
         <!-- Plan Media -->
-        @if($plan->media_url)
+        @if($plan->image_url)
             <div class="card custom-card">
                 <div class="card-header">
                     <div class="card-title">
@@ -580,7 +580,7 @@
                     </div>
                 </div>
                 <div class="card-body p-0">
-                    <img src="{{ Storage::url($plan->media_url) }}" class="img-fluid rounded" alt="{{ $plan->plan_name }}">
+                    <img src="{{ Storage::url($plan->image_url) }}" class="img-fluid rounded" alt="{{ $plan->plan_name }}">
                 </div>
             </div>
         @endif

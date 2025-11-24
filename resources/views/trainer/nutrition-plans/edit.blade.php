@@ -306,18 +306,18 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if($plan->media_url)
+                    @if($plan->image_url)
                         <div class="mb-3">
-                            <img src="{{ asset('storage/' . $plan->media_url) }}" alt="Plan Image" class="img-fluid rounded" style="max-height: 200px;">
+                            <img src="{{ asset('storage/' . $plan->image_url) }}" alt="Plan Image" class="img-fluid rounded" style="max-height: 200px;">
                             <div class="mt-2">
-<button type="button" class="btn btn-sm btn-danger" onclick="deleteMedia('{{ $plan->id }}')">
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteMedia('{{ $plan->id }}')">
                                     <i class="ri-delete-bin-line me-1"></i> Remove Image
                                 </button>
                             </div>
                         </div>
                     @endif
                     <div class="mb-3">
-                        <label for="media_file" class="form-label">{{ $plan->media_url ? 'Replace Image' : 'Plan Image' }}</label>
+                        <label for="media_file" class="form-label">{{ $plan->image_url ? 'Replace Image' : 'Plan Image' }}</label>
                         <input type="file" class="filepond" name="media_file" id="media_file" accept="image/*">
                         <div class="invalid-feedback"></div>
                         <small class="text-muted">Upload an image to represent this nutrition plan</small>

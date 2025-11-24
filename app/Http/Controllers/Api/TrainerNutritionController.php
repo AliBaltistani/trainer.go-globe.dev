@@ -51,7 +51,7 @@ class TrainerNutritionController extends Controller
             
             $query = NutritionPlan::with([
                 'client:id,name,email',
-                'meals:id,plan_id,title,meal_type,calories',
+                'meals:id,plan_id,title,meal_type,calories_per_serving',
                 'dailyMacros:id,plan_id,protein,carbs,fats,total_calories',
                 'restrictions:id,plan_id'
             ])->where('trainer_id', $trainer->id);
@@ -98,9 +98,9 @@ class TrainerNutritionController extends Controller
                     'target_weight' => $plan->target_weight,
                     'status' => $plan->status,
                     'is_featured' => $plan->is_featured,
-                    'media_url' => $plan->media_url ? asset('storage/' . $plan->media_url) : null,
+                    'image_url' => $plan->image_url ? asset('storage/' . $plan->image_url) : null,
                     'meals_count' => $plan->meals->count(),
-                    'total_calories' => $plan->meals->sum('calories'),
+                    'total_calories' => $plan->meals->sum('calories_per_serving'),
                     'daily_macros' => $plan->dailyMacros,
                     'has_restrictions' => $plan->restrictions !== null,
                     'tags' => $plan->tags,
@@ -160,7 +160,7 @@ class TrainerNutritionController extends Controller
                 'meals.*.name' => 'required|string|max:255',
                 'meals.*.type' => 'required|in:breakfast,lunch,dinner,snack',
                 'meals.*.description' => 'nullable|string|max:500',
-                'meals.*.media_url' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'meals.*.image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 
                 // Macronutrient targets validation
                 'macros' => 'required|array',
@@ -231,24 +231,36 @@ class TrainerNutritionController extends Controller
             
 
             
-            // Create meals for the nutrition plan
             if ($request->has('meals') && is_array($request->meals)) {
                 foreach ($request->meals as $index => $mealData) {
+                    $ingredientsInput = $mealData['ingredients'] ?? null;
+                    $instructionsInput = $mealData['instructions'] ?? null;
+                    $ingredientsStr = is_array($ingredientsInput) ? implode("\n", array_map('trim', $ingredientsInput)) : (is_string($ingredientsInput) ? $ingredientsInput : '');
+                    $instructionsStr = is_array($instructionsInput) ? implode("\n", array_map('trim', $instructionsInput)) : (is_string($instructionsInput) ? $instructionsInput : '');
+
+                    $mealImageUrl = null;
+                    if ($request->hasFile("meals.$index.image")) {
+                        $mealImageUrl = $request->file("meals.$index.image")->store('nutrition-meals', 'public');
+                    } elseif (isset($mealData['image_url']) && is_string($mealData['image_url'])) {
+                        $mealImageUrl = $mealData['image_url'];
+                    }
+
                     NutritionMeal::create([
                         'plan_id' => $plan->id,
                         'title' => $mealData['name'],
                         'description' => $mealData['description'] ?? '',
                         'meal_type' => $mealData['type'],
-                        'ingredients' => $mealData['ingredients'] ?? [],
-                        'instructions' => $mealData['instructions'] ?? [],
+                        'ingredients' => $ingredientsStr,
+                        'instructions' => $instructionsStr,
                         'prep_time' => $mealData['prep_time'] ?? 0,
                         'cook_time' => $mealData['cook_time'] ?? 0,
                         'servings' => $mealData['servings'] ?? 1,
-                        'calories' => $mealData['calories_per_serving'] ?? 0,
-                        'protein' => $mealData['protein_per_serving'] ?? 0,
-                        'carbs' => $mealData['carbs_per_serving'] ?? 0,
-                        'fats' => $mealData['fats_per_serving'] ?? 0,
-                        'sort_order' => $index + 1
+                        'calories_per_serving' => $mealData['calories_per_serving'] ?? 0,
+                        'protein_per_serving' => $mealData['protein_per_serving'] ?? 0,
+                        'carbs_per_serving' => $mealData['carbs_per_serving'] ?? 0,
+                        'fats_per_serving' => $mealData['fats_per_serving'] ?? 0,
+                        'sort_order' => $index + 1,
+                        'image_url' => $mealImageUrl
                     ]);
                 }
             }
@@ -292,7 +304,7 @@ class TrainerNutritionController extends Controller
             // Load relationships for response
             $plan->load([
                 'client:id,name,email',
-                'meals:id,plan_id,title,meal_type,calories,protein,carbs,fats,sort_order',
+                'meals:id,plan_id,title,meal_type,image_url,calories_per_serving,protein_per_serving,carbs_per_serving,fats_per_serving,sort_order',
                 'dailyMacros:id,plan_id,protein,carbs,fats,total_calories',
                 'restrictions:id,plan_id,vegetarian,vegan,gluten_free,dairy_free,keto,paleo,custom_restrictions,notes'
             ]);
@@ -328,11 +340,12 @@ class TrainerNutritionController extends Controller
                             'name' => $meal->title,
                             'type' => $meal->meal_type,
                             'description' => $meal->description,
-                            'calories' => $meal->calories,
-                            'protein' => $meal->protein,
-                            'carbs' => $meal->carbs,
-                            'fats' => $meal->fats,
-                            'sort_order' => $meal->sort_order
+                            'calories_per_serving' => $meal->calories_per_serving,
+                            'protein_per_serving' => $meal->protein_per_serving,
+                            'carbs_per_serving' => $meal->carbs_per_serving,
+                            'fats_per_serving' => $meal->fats_per_serving,
+                            'sort_order' => $meal->sort_order,
+                            'image_url' => $meal->image_url ? asset('storage/' . $meal->image_url) : null
                         ];
                     }),
                     'macros' => $plan->dailyMacros ? [
@@ -395,7 +408,7 @@ class TrainerNutritionController extends Controller
             // Calculate plan statistics
             $stats = [
                 'total_meals' => $plan->meals->count(),
-                'total_calories' => $plan->meals->sum('calories'),
+                'total_calories' => $plan->meals->sum('calories_per_serving'),
                 'avg_prep_time' => $plan->meals->avg('prep_time'),
                 'meal_types' => $plan->meals->groupBy('meal_type')->map->count()
             ];
@@ -414,7 +427,7 @@ class TrainerNutritionController extends Controller
                     'target_weight' => $plan->target_weight,
                     'status' => $plan->status,
                     'is_featured' => $plan->is_featured,
-                    'media_url' => $plan->media_url ? asset('storage/' . $plan->media_url) : null,
+                    'image_url' => $plan->image_url ? asset('storage/' . $plan->image_url) : null,
                     'tags' => $plan->tags,
                     'meals' => $plan->meals->map(function($meal) {
                         return [
@@ -431,7 +444,7 @@ class TrainerNutritionController extends Controller
                             'cook_time_formatted' => $meal->cook_time_formatted,
                             'total_time' => $meal->total_time,
                             'servings' => $meal->servings,
-                            'calories_per_serving' => $meal->calories,
+                            'calories_per_serving' => $meal->calories_per_serving,
                             'protein_per_serving' => $meal->protein_per_serving,
                             'carbs_per_serving' => $meal->carbs_per_serving,
                             'fats_per_serving' => $meal->fats_per_serving,
@@ -1066,7 +1079,7 @@ class TrainerNutritionController extends Controller
                                            'id' => $entry->meal->id,
                                            'title' => $entry->meal->title,
                                            'meal_type' => $entry->meal->meal_type,
-                                           'media_url' => $entry->meal->media_url ? asset('storage/' . $entry->meal->media_url) : null
+                                           'image_url' => $entry->meal->image_url ? asset('storage/' . $entry->meal->image_url) : null
                                        ] : null
                                    ];
                                });
