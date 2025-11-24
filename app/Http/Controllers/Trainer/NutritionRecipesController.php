@@ -19,7 +19,7 @@ class NutritionRecipesController extends Controller
     public function index(int $planId): View|RedirectResponse
     {
         try {
-            $plan = NutritionPlan::where(function($q){ $q->where('trainer_id', Auth::id())->orWhere('is_global', true);})->with(['recipes' => function($query){ $query->orderBy('sort_order'); }])->findOrFail($planId);
+            $plan = NutritionPlan::where('trainer_id', Auth::id())->with(['recipes' => function($query){ $query->orderBy('sort_order'); }])->findOrFail($planId);
             return view('trainer.nutrition-plans.recipes.index', compact('plan'));
         } catch (\Exception $e) {
             Log::error('Failed to load trainer recipes: ' . $e->getMessage());
@@ -86,7 +86,7 @@ class NutritionRecipesController extends Controller
     public function show(int $planId, int $id): View|RedirectResponse
     {
         try {
-            $plan = NutritionPlan::where(function($q){ $q->where('trainer_id', Auth::id())->orWhere('is_global', true);})->findOrFail($planId);
+            $plan = NutritionPlan::where('trainer_id', Auth::id())->findOrFail($planId);
             $recipe = NutritionRecipe::where('plan_id', $planId)->findOrFail($id);
             return view('trainer.nutrition-plans.recipes.show', compact('plan', 'recipe'));
         } catch (\Exception $e) {

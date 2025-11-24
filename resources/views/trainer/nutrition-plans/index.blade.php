@@ -155,7 +155,6 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Plan Name</th>
-                                <th>Trainer</th>
                                 <th>Client</th>
                                 <th>Goal Type</th>
                                 <th>Meals</th>
@@ -226,13 +225,6 @@ $(document).ready(function() {
                 render: function(data, type, row) {
                     var badge = row.is_global ? '<span class="badge bg-warning-transparent ms-2">Global</span>' : '';
                     return '<div class="fw-semibold">' + data + badge + '</div>';
-                }
-            },
-            { 
-                data: 'trainer', 
-                name: 'trainer',
-                render: function(data, type, row) {
-                    return data || '<span class="text-muted">Admin</span>';
                 }
             },
             { 
@@ -357,12 +349,32 @@ $(document).ready(function() {
         table.ajax.reload();
     });
 
-    // Hidden filter inputs
-    $('body').append('<input type="hidden" id="statusFilter">');
-    $('body').append('<input type="hidden" id="trainerFilter">');
-    $('body').append('<input type="hidden" id="clientFilter">');
-    $('body').append('<input type="hidden" id="globalFilter">');
-});
+        // Hidden filter inputs
+        $('body').append('<input type="hidden" id="statusFilter">');
+        $('body').append('<input type="hidden" id="trainerFilter">');
+        $('body').append('<input type="hidden" id="clientFilter">');
+        $('body').append('<input type="hidden" id="globalFilter">');
+
+    // PDF actions
+    $(document).on('click', '.nutrition-pdf-show', function() {
+        var id = $(this).data('plan-id');
+        window.open('/trainer/nutrition-plans/' + id + '/pdf-view', '_blank');
+    });
+
+    $(document).on('click', '.nutrition-pdf-download', function() {
+        var id = $(this).data('plan-id');
+        fetchNutritionPdfUrl(id).then(function(url) {
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }).catch(function() {
+            alert('Failed to generate PDF');
+        });
+    });
+    });
 
 // Action Functions
 function toggleStatus(planId) {
@@ -432,6 +444,23 @@ function deletePlan(planId) {
             }
         });
     }
+}
+
+function fetchNutritionPdfUrl(id) {
+    return new Promise(function(resolve, reject) {
+        $.ajax({
+            url: '/trainer/nutrition-plans/' + id + '/pdf-data',
+            type: 'GET',
+            success: function(resp) {
+                if (resp && resp.success && resp.data && resp.data.pdf_view_url) {
+                    resolve(resp.data.pdf_view_url);
+                } else {
+                    reject();
+                }
+            },
+            error: function() { reject(); }
+        });
+    });
 }
 </script>
 @endsection

@@ -19,7 +19,7 @@ class NutritionMealsController extends Controller
     public function index(int $planId): View|RedirectResponse
     {
         try {
-            $plan = NutritionPlan::where('trainer_id', Auth::id())->orWhere('is_global', true)->findOrFail($planId);
+            $plan = NutritionPlan::where('trainer_id', Auth::id())->findOrFail($planId);
             $meals = NutritionMeal::where('plan_id', $planId)->ordered()->get();
             return view('trainer.nutrition-plans.meals.index', compact('plan', 'meals'));
         } catch (\Exception $e) {
@@ -107,7 +107,7 @@ class NutritionMealsController extends Controller
     public function show(int $planId, int $id): View|RedirectResponse
     {
         try {
-            $plan = NutritionPlan::where(function($q){ $q->where('trainer_id', Auth::id())->orWhere('is_global', true);})->findOrFail($planId);
+            $plan = NutritionPlan::where('trainer_id', Auth::id())->findOrFail($planId);
             $meal = NutritionMeal::where('plan_id', $planId)->findOrFail($id);
             return view('trainer.nutrition-plans.meals.show', compact('plan', 'meal'));
         } catch (\Exception $e) {

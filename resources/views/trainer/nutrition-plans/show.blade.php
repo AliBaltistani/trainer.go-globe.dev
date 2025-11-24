@@ -79,6 +79,12 @@
         </div>
     </div>
     <div class="ms-auto pageheader-btn">
+        <a href="{{ route('trainer.nutrition-plans.pdf-view', $plan->id) }}" class="btn btn-outline-secondary btn-wave waves-effect waves-light me-2">
+            <i class="ri-file-pdf-line me-1"></i> View PDF
+        </a>
+        <a href="{{ route('trainer.nutrition-plans.pdf-data', $plan->id) }}" class="btn btn-outline-dark btn-wave waves-effect waves-light me-2" id="downloadPdfBtn">
+            <i class="ri-download-2-line me-1"></i> Download PDF
+        </a>
         <a href="{{route('trainer.nutrition-plans.calculator', $plan->id)}}" class="btn btn-info btn-wave waves-effect waves-light me-2">
             <i class="ri-calculator-line me-1"></i> Calculator
         </a>
@@ -593,6 +599,25 @@
 $(document).ready(function() {
     // Any additional JavaScript for the show page
     console.log('Nutrition plan details loaded');
+
+    var btn = document.getElementById('downloadPdfBtn');
+    if (btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            fetch('{{ route('trainer.nutrition-plans.pdf-data', $plan->id) }}', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function(resp){ return resp.json();}).then(function(data){
+                if (data && data.success && data.data && data.data.pdf_view_url) {
+                    var a = document.createElement('a');
+                    a.href = data.data.pdf_view_url;
+                    a.download = '';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+            }).catch(function(){});
+        });
+    }
 });
 
 // Smooth scroll to section function

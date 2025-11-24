@@ -1158,4 +1158,36 @@ class TrainerNutritionController extends Controller
             ], 500);
         }
     }
+
+    public function pdfData(int $id): JsonResponse
+    {
+        try {
+            $trainer = Auth::user();
+            if ($trainer->role !== 'trainer') {
+                return response()->json(['success' => false, 'message' => 'Access denied. Trainer role required.'], 403);
+            }
+            $plan = NutritionPlan::where('trainer_id', $trainer->id)->findOrFail($id);
+            $service = app(\App\Services\NutritionPlanPdfService::class);
+            $result = $service->generate($plan);
+            return response()->json([
+                'success' => true,
+                'message' => 'PDF generated successfully',
+                'data' => [
+                    'pdf_view_url' => $result['url'],
+                    'pdf_download_url' => $result['url'],
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Trainer nutrition PDF generation failed: ' . $e->getMessage(), ['trainer_id' => Auth::id(), 'plan_id' => $id]);
+            return response()->json(['success' => false, 'message' => 'Failed to generate PDF'], 500);
+        }
+    }
+
+    public function pdfView(int $id)
+    {
+        $trainer = Auth::user();
+        $plan = NutritionPlan::where('trainer_id', $trainer->id)->findOrFail($id);
+        $service = app(\App\Services\NutritionPlanPdfService::class);
+        return $service->stream($plan);
+    }
 }

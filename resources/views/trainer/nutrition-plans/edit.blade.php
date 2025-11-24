@@ -135,17 +135,6 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-xl-6 mb-3">
-                            <label for="trainer_id" class="form-label">Trainer</label>
-                            <select class="form-select select2" id="trainer_id" name="trainer_id">
-                                <option value="">Select Trainer (Optional)</option>
-                                @foreach($trainers as $trainer)
-                                    <option value="{{$trainer->id}}" {{ old('trainer_id', $plan->trainer_id) == $trainer->id ? 'selected' : '' }}>{{$trainer->name}} ({{$trainer->email}})</option>
-                                @endforeach
-                            </select>
-                            <div class="invalid-feedback"></div>
-                            <small class="text-muted">Leave empty for admin-created global plans</small>
-                        </div>
-                        <div class="col-xl-6 mb-3">
                             <label for="client_id" class="form-label">Client</label>
                             <select class="form-select select2" id="client_id" name="client_id">
                                 <option value="">Select Client (Optional)</option>

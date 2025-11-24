@@ -1965,4 +1965,36 @@ class ClientNutritionController extends Controller
         
         return $defaults[$goalType] ?? 2000;
     }
+
+    public function pdfData(int $planId): JsonResponse
+    {
+        try {
+            $client = Auth::user();
+            if ($client->role !== 'client') {
+                return response()->json(['success' => false, 'message' => 'Access denied. Client role required.'], 403);
+            }
+            $plan = NutritionPlan::where('client_id', $client->id)->findOrFail($planId);
+            $service = app(\App\Services\NutritionPlanPdfService::class);
+            $result = $service->generate($plan);
+            return response()->json([
+                'success' => true,
+                'message' => 'PDF generated successfully',
+                'data' => [
+                    'pdf_view_url' => $result['url'],
+                    'pdf_download_url' => $result['url'],
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Client nutrition PDF generation failed: ' . $e->getMessage(), ['client_id' => Auth::id(), 'plan_id' => $planId]);
+            return response()->json(['success' => false, 'message' => 'Failed to generate PDF'], 500);
+        }
+    }
+
+    public function pdfView(int $planId)
+    {
+        $client = Auth::user();
+        $plan = NutritionPlan::where('client_id', $client->id)->findOrFail($planId);
+        $service = app(\App\Services\NutritionPlanPdfService::class);
+        return $service->stream($plan);
+    }
 }

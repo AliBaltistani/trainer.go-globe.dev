@@ -241,6 +241,10 @@ Route::middleware('auth:sanctum')->group(function () {
             // Macros and restrictions management
             Route::put('/my-plans/{planId}/macros', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'updateMacros'])->name('plans.macros.update');
             Route::put('/my-plans/{planId}/restrictions', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'updateRestrictions'])->name('plans.restrictions.update');
+
+            // PDF endpoints
+            Route::get('/my-plans/{id}/pdf-data', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'pdfData'])->name('plans.pdf-data');
+            Route::get('/my-plans/{id}/pdf-view', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'pdfView'])->name('plans.pdf-view');
         });
 
         /**
@@ -464,6 +468,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
             // Nutrition goal types
             Route::get('/goal-types', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getNutritionGoalTypes'])->name('goal-types');
+
+            // PDF endpoints
+            Route::get('/plans/{planId}/pdf-data', [\App\Http\Controllers\Api\ClientNutritionController::class, 'pdfData'])->name('plans.pdf-data');
+            Route::get('/plans/{planId}/pdf-view', [\App\Http\Controllers\Api\ClientNutritionController::class, 'pdfView'])->name('plans.pdf-view');
 
             // Nutrition Calculator
             Route::post('/calculate', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'calculate'])->name('calculate');

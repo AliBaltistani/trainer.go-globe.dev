@@ -657,6 +657,9 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{id}', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'destroy'])->name('destroy');
             Route::patch('/{id}/toggle-status', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'toggleStatus'])->name('toggle-status');
             Route::post('/{id}/duplicate', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'duplicate'])->name('duplicate');
+            Route::get('/{id}/pdf-data', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfData'])->name('pdf-data');
+            Route::get('/{id}/pdf-inline', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfInline'])->name('pdf-inline');
+            Route::get('/{id}/pdf-view', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfView'])->name('pdf-view');
             Route::delete('/{id}/delete-media', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'deleteMedia'])->name('delete-media');
 
             // Categories and Calculator

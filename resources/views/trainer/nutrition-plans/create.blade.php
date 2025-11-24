@@ -130,12 +130,6 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-xl-6 mb-3">
-                            <label class="form-label">Trainer</label>
-                            <input type="text" class="form-control" value="{{ Auth::user()->name }} ({{ Auth::user()->email }})" disabled>
-                            <input type="hidden" name="trainer_id" value="{{ Auth::id() }}">
-                            <div class="invalid-feedback"></div>
-                        </div>
-                        <div class="col-xl-6 mb-3">
                             <label for="client_id" class="form-label">Client</label>
                             <select class="form-select select2" id="client_id" name="client_id">
                                 <option value="">Select Client (Optional)</option>

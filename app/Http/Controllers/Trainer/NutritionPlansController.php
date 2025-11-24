@@ -8,6 +8,7 @@ use App\Models\NutritionMeal;
 use App\Models\NutritionMacro;
 use App\Models\NutritionRestriction;
 use App\Models\NutritionRecommendation;
+use App\Models\TrainerSubscription;
 use App\Models\User;
 use App\Models\Goal;
 use App\Services\NutritionCalculatorService;
@@ -33,13 +34,9 @@ class NutritionPlansController extends Controller
             $trainerId = Auth::id();
 
             $stats = [
-                'total_plans' => NutritionPlan::where(function($q) use ($trainerId) {
-                    $q->where('trainer_id', $trainerId)->orWhere('is_global', true);
-                })->count(),
-                'active_plans' => NutritionPlan::where(function($q) use ($trainerId) {
-                    $q->where('trainer_id', $trainerId)->orWhere('is_global', true);
-                })->where('status', 'active')->count(),
-                'global_plans' => NutritionPlan::where('is_global', true)->count(),
+                'total_plans' => NutritionPlan::where('trainer_id', $trainerId)->count(),
+                'active_plans' => NutritionPlan::where('trainer_id', $trainerId)->where('status', 'active')->count(),
+                'global_plans' => 0,
                 'plans_with_clients' => NutritionPlan::where('trainer_id', $trainerId)->whereNotNull('client_id')->count(),
             ];
 
@@ -66,17 +63,13 @@ class NutritionPlansController extends Controller
 
             $query = NutritionPlan::with(['trainer:id,name', 'client:id,name', 'meals', 'restrictions'])
                 ->select('nutrition_plans.*')
-                ->where(function($q) use ($trainerId) {
-                    $q->where('trainer_id', $trainerId)->orWhere('is_global', true);
-                });
+                ->where('trainer_id', $trainerId);
 
             if ($statusFilter) {
                 $query->where('status', $statusFilter);
             }
 
-            if ($globalFilter !== null && $globalFilter !== '') {
-                $query->where('is_global', $globalFilter === '1');
-            }
+            // no global filter for trainer-only view
 
             if ($search) {
                 $query->where(function($q) use ($search) {
@@ -89,9 +82,7 @@ class NutritionPlansController extends Controller
                 });
             }
 
-            $totalRecords = NutritionPlan::where(function($q) use ($trainerId) {
-                $q->where('trainer_id', $trainerId)->orWhere('is_global', true);
-            })->count();
+            $totalRecords = NutritionPlan::where('trainer_id', $trainerId)->count();
 
             $filteredRecords = $query->count();
 
@@ -142,6 +133,8 @@ class NutritionPlansController extends Controller
         $buttons = [];
 
         $buttons[] = '<a href="' . route('trainer.nutrition-plans.show', $plan->id) . '" class="btn btn-sm btn-info btn-wave" title="View Details"><i class="ri-eye-line"></i></a>';
+        $buttons[] = '<button type="button" class="btn btn-sm btn-outline-secondary btn-wave nutrition-pdf-show" data-plan-id="' . $plan->id . '" title="Show PDF"><i class="ri-file-pdf-line"></i></button>';
+        $buttons[] = '<button type="button" class="btn btn-sm btn-outline-dark btn-wave nutrition-pdf-download" data-plan-id="' . $plan->id . '" title="Download PDF"><i class="ri-download-2-line"></i></button>';
 
         $canEdit = ($plan->trainer_id === Auth::id()) && !$plan->is_global;
         if ($canEdit) {
@@ -160,10 +153,50 @@ class NutritionPlansController extends Controller
         return '<div class="btn-group" role="group">' . implode('', $buttons) . '</div>';
     }
 
+    public function pdfData(int $id): JsonResponse
+    {
+        try {
+            $plan = NutritionPlan::where('trainer_id', Auth::id())->findOrFail($id);
+            $service = app(\App\Services\NutritionPlanPdfService::class);
+            $result = $service->generate($plan);
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'pdf_view_url' => $result['url'],
+                    'pdf_download_url' => $result['url'],
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Trainer nutrition PDF generation failed: ' . $e->getMessage(), ['trainer_id' => Auth::id(), 'plan_id' => $id]);
+            return response()->json(['success' => false, 'error' => 'Failed to generate PDF'], 500);
+        }
+    }
+
+    public function pdfInline(int $id)
+    {
+        $plan = NutritionPlan::where('trainer_id', Auth::id())->findOrFail($id);
+        $service = app(\App\Services\NutritionPlanPdfService::class);
+        return $service->stream($plan);
+    }
+
+    public function pdfView(int $id)
+    {
+        $plan = NutritionPlan::where('trainer_id', Auth::id())->findOrFail($id);
+        $service = app(\App\Services\NutritionPlanPdfService::class);
+        return $service->stream($plan);
+    }
+
     public function create(): RedirectResponse|View
     {
         try {
-            $clients = User::where('role', 'client')->select('id', 'name', 'email')->orderBy('name')->get();
+            $subscribedClientIds = TrainerSubscription::active()
+                ->where('trainer_id', Auth::id())
+                ->pluck('client_id');
+            $clients = User::where('role', 'client')
+                ->whereIn('id', $subscribedClientIds)
+                ->select('id', 'name', 'email')
+                ->orderBy('name')
+                ->get();
             $goals = Goal::where('status', 1)->select('id', 'name')->orderBy('name')->get();
             return view('trainer.nutrition-plans.create', compact('clients', 'goals'));
         } catch (\Exception $e) {
@@ -200,6 +233,20 @@ class NutritionPlansController extends Controller
                     return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
                 }
                 return back()->withErrors($validator)->withInput();
+            }
+
+            $clientId = $request->client_id;
+            if ($clientId) {
+                $isSubscribed = TrainerSubscription::active()
+                    ->where('trainer_id', Auth::id())
+                    ->where('client_id', $clientId)
+                    ->exists();
+                if (!$isSubscribed) {
+                    if ($request->ajax()) {
+                        return response()->json(['success' => false, 'message' => 'Selected client is not subscribed to you'], 422);
+                    }
+                    return back()->withErrors(['client_id' => 'Selected client is not subscribed to you'])->withInput();
+                }
             }
 
             $mediaUrl = null;
@@ -262,7 +309,7 @@ class NutritionPlansController extends Controller
         try {
             $trainerId = Auth::id();
             $plan = NutritionPlan::with(['trainer:id,name,email,profile_image','client:id,name,email,profile_image','meals' => function($q){$q->orderBy('sort_order');},'recipes' => function($q){$q->orderBy('sort_order');},'dailyMacros','restrictions'])
-                ->where(function($q) use ($trainerId) { $q->where('trainer_id', $trainerId)->orWhere('is_global', true); })
+                ->where('trainer_id', $trainerId)
                 ->findOrFail($id);
 
             $stats = [
@@ -284,7 +331,14 @@ class NutritionPlansController extends Controller
     {
         try {
             $plan = NutritionPlan::with(['restrictions'])->where('trainer_id', Auth::id())->where('is_global', false)->findOrFail($id);
-            $clients = User::where('role', 'client')->select('id', 'name', 'email')->orderBy('name')->get();
+            $subscribedClientIds = TrainerSubscription::active()
+                ->where('trainer_id', Auth::id())
+                ->pluck('client_id');
+            $clients = User::where('role', 'client')
+                ->whereIn('id', $subscribedClientIds)
+                ->select('id', 'name', 'email')
+                ->orderBy('name')
+                ->get();
             $goals = Goal::where('status', 1)->select('id', 'name')->orderBy('name')->get();
             return view('trainer.nutrition-plans.edit', compact('plan', 'clients', 'goals'));
         } catch (\Exception $e) {
@@ -319,6 +373,18 @@ class NutritionPlansController extends Controller
                 return back()->withErrors($validator)->withInput();
             }
 
+            $clientId = $request->client_id;
+            if ($clientId) {
+                $isSubscribed = TrainerSubscription::active()
+                    ->where('trainer_id', Auth::id())
+                    ->where('client_id', $clientId)
+                    ->exists();
+                if (!$isSubscribed) {
+                    if ($request->ajax()) { return response()->json(['success'=>false,'message'=>'Selected client is not subscribed to you'],422);} 
+                    return back()->withErrors(['client_id' => 'Selected client is not subscribed to you'])->withInput();
+                }
+            }
+
             $mediaUrl = $plan->image_url;
             if ($request->hasFile('media_file')) {
                 if ($plan->image_url) { Storage::disk('public')->delete($plan->image_url); }
@@ -329,7 +395,7 @@ class NutritionPlansController extends Controller
                 'plan_name' => $request->plan_name,
                 'description' => $request->description,
                 'category' => $request->category,
-                'client_id' => $request->client_id,
+                'client_id' => $request->filled('client_id') ? $request->client_id : $plan->client_id,
                 'goal_type' => $request->goal_type,
                 'duration_days' => $request->duration_days,
                 'target_weight' => UnitConverter::lbsToKg($request->target_weight !== null ? (float) $request->target_weight : null),
@@ -395,7 +461,7 @@ class NutritionPlansController extends Controller
     {
         try {
             $accessiblePlan = NutritionPlan::with(['meals','dailyMacros','restrictions'])
-                ->where(function($q){ $q->where('trainer_id', Auth::id())->orWhere('is_global', true); })
+                ->where('trainer_id', Auth::id())
                 ->findOrFail($id);
 
             $duplicate = $accessiblePlan->replicate();
@@ -461,7 +527,7 @@ class NutritionPlansController extends Controller
         try {
             $trainerId = Auth::id();
             $plan = NutritionPlan::with(['client','trainer','recommendations'])
-                ->where(function($q) use ($trainerId){ $q->where('trainer_id',$trainerId)->orWhere('is_global', true);} )
+                ->where('trainer_id', $trainerId)
                 ->findOrFail($id);
             $calculatorService = new NutritionCalculatorService();
             $activityLevels = $calculatorService->getActivityLevels();
@@ -539,7 +605,7 @@ class NutritionPlansController extends Controller
         try {
             $trainerId = Auth::id();
             $plan = NutritionPlan::with(['client','recommendations'])
-                ->where(function($q) use ($trainerId){ $q->where('trainer_id',$trainerId)->orWhere('is_global', true);} )
+                ->where('trainer_id', $trainerId)
                 ->findOrFail($id);
             $calculatorService = new NutritionCalculatorService();
             $data = [
