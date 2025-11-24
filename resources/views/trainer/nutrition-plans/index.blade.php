@@ -366,7 +366,7 @@ $(document).ready(function() {
         fetchNutritionPdfUrl(id).then(function(url) {
             var a = document.createElement('a');
             a.href = url;
-            a.download = '';
+            a.download = 'nutrition-plan-' + id + '.pdf';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

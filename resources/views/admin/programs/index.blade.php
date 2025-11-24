@@ -187,7 +187,7 @@
                 fetchProgramPdfUrl(id).then(function(url) {
                     var a = document.createElement('a');
                     a.href = url;
-                    a.download = '';
+                    a.download = 'program-' + id + '.pdf';
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
