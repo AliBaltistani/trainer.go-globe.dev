@@ -1987,7 +1987,7 @@ class ClientNutritionController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Client nutrition PDF generation failed: ' . $e->getMessage(), ['client_id' => Auth::id(), 'plan_id' => $planId]);
-            return response()->json(['success' => false, 'message' => 'Failed to generate PDF'], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to generate PDF. Error: '.$e->getMessage()], 500);
         }
     }
 
