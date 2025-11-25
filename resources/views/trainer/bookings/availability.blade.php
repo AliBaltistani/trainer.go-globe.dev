@@ -3,7 +3,6 @@
 @section('styles')
     <style>
         .availability-container {
-            background: white;
             border-radius: 12px;
             padding: 30px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
@@ -24,7 +23,7 @@
         .day-name {
             font-size: 16px;
             font-weight: 600;
-            color: #333;
+            /* color: #333; */
             min-width: 100px;
         }
         
@@ -61,6 +60,7 @@
             width: 22px;
             height: 22px;
             background: white;
+            /* background: var(--bootstrap-card-background); */
             border-radius: 50%;
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -72,13 +72,13 @@
         
         .time-label {
             font-size: 14px;
-            color: #666;
+            /* color: #666; */
             min-width: 120px;
         }
         
         .save-button {
             background: var(--primary-color, #ff6b35);
-            color: white;
+            /* color: white; */
             border: none;
             padding: 12px 30px;
             border-radius: 8px;
@@ -95,7 +95,7 @@
         }
         
         .trainer-info {
-            background: #f8f9fa;
+            background: var(--black-1);
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 30px;
@@ -112,11 +112,11 @@
         
         .trainer-info .name {
             font-weight: 600;
-            color: #333;
+            /* color: #333; */
         }
         
         .trainer-info .role {
-            color: #666;
+            /* color: #666; */
             font-size: 14px;
         }
         
@@ -136,16 +136,16 @@
             <div class="">
                 <nav>
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.bookings.index') }}">Bookings</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.bookings.scheduling-menu') }}">Scheduling Settings</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('trainer.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('trainer.bookings.index') }}">Bookings</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('trainer.bookings.settings') }}">My Scheduling Settings</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Availability</li>
                     </ol>
                 </nav>
             </div>
         </div>
         <div class="ms-auto pageheader-btn">
-            <a href="{{ route('admin.bookings.scheduling-menu', ['trainer_id' => request('trainer_id')]) }}" class="btn btn-secondary btn-wave waves-effect waves-light">
+            <a href="{{ route('trainer.bookings.settings', ['trainer_id' => request('trainer_id')]) }}" class="btn btn-secondary btn-wave waves-effect waves-light">
                 <i class="ri-arrow-left-line fw-semibold align-middle me-1"></i> Back to Settings
             </a>
         </div>
@@ -156,15 +156,20 @@
         @if($trainer)
             <!-- Trainer Info -->
             <div class="trainer-info">
-                <img src="{{ $trainer->profile_image ? asset('storage/' . $trainer->profile_image) : asset('assets/images/faces/9.jpg') }}" 
-                     alt="{{ $trainer->name }}">
+                @if($trainer->profile_image && file_exists(public_path('storage/' . $trainer->profile_image)))
+                    <img src="{{ asset('storage/' . $trainer->profile_image) }}" alt="{{ $trainer->name }}">
+                @else
+                    <div style="width:48px;height:48px;border-radius:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:#666;">
+                        {{ strtoupper(substr($trainer->name, 0, 1)) }}
+                    </div>
+                @endif
                 <div>
                     <div class="name">{{ $trainer->name }}</div>
                     <div class="role">Personal Trainer</div>
                 </div>
             </div>
 
-            <form id="availability-form" action="{{ route('admin.bookings.availability.update') }}" method="POST">
+            <form id="availability-form" action="{{ route('trainer.bookings.availability.update') }}" method="POST">
                 @csrf
                 <input type="hidden" name="trainer_id" value="{{ $trainer->id }}">
                 
@@ -223,7 +228,7 @@
                 <i class="ri-user-line fs-48 text-muted mb-3"></i>
                 <h4 class="text-muted">No Trainer Selected</h4>
                 <p class="text-muted">Please select a trainer from the scheduling menu to manage their availability.</p>
-                <a href="{{ route('admin.bookings.scheduling-menu') }}" class="btn btn-primary">
+                <a href="{{ route('trainer.bookings.settings') }}" class="btn btn-primary">
                     <i class="ri-arrow-left-line me-2"></i> Back to Settings
                 </a>
             </div>

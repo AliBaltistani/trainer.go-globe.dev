@@ -3,14 +3,14 @@
 @section('styles')
     <style>
         .blocked-times-container {
-            background: white;
+            /* background: white; */
             border-radius: 12px;
             padding: 30px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
         .calendar-container {
-            background: #f8f9fa;
+            /* background: #f8f9fa; */
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 30px;
@@ -90,7 +90,7 @@
         }
         
         .blocked-time-item {
-            background: #f8f9fa;
+            background: var(--default-background);
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 12px;
@@ -114,29 +114,29 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: white;
+            /* color: white; */
         }
         
         .blocked-time-details .date {
             font-weight: 600;
-            color: #333;
+            /* color: #333; */
             margin-bottom: 4px;
         }
         
         .blocked-time-details .time {
-            color: #666;
+            /* color: #666; */
             font-size: 14px;
             margin-bottom: 2px;
         }
         
         .blocked-time-details .reason {
-            color: #666;
+            /* color: #666; */
             font-size: 14px;
         }
         
         .delete-btn {
             background: #dc3545;
-            color: white;
+            /* color: white; */
             border: none;
             padding: 8px 12px;
             border-radius: 6px;
@@ -150,7 +150,7 @@
         
         .add-blocked-time-btn {
             background: var(--primary-color, #ff6b35);
-            color: white;
+            /* color: white; */
             border: none;
             padding: 15px 30px;
             border-radius: 8px;
@@ -167,7 +167,7 @@
         }
         
         .trainer-info {
-            background: #f8f9fa;
+            background: var(--black-1);
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 30px;
@@ -184,11 +184,11 @@
         
         .trainer-info .name {
             font-weight: 600;
-            color: #333;
+            /* color: #333; */
         }
         
         .trainer-info .role {
-            color: #666;
+            /* color: #666; */
             font-size: 14px;
         }
 
@@ -235,20 +235,20 @@
     <!-- Page Header -->
     <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
         <div>
-            <h1 class="page-title fw-semibold fs-18 mb-0">Blocked Times</h1>
+            <h1 class="page-title fw-semibold fs-18 mb-0">My Blocked Times</h1>
             <div class="">
                 <nav>
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.bookings.index') }}">Bookings</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.bookings.scheduling-menu') }}">Scheduling Settings</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Blocked Times</li>
+                        <li class="breadcrumb-item"><a href="{{ route('trainer.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('trainer.bookings.index') }}">Bookings</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('trainer.bookings.settings') }}">My Scheduling Settings</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">My Blocked Times</li>
                     </ol>
                 </nav>
             </div>
         </div>
         <div class="ms-auto pageheader-btn">
-            <a href="{{ route('admin.bookings.scheduling-menu', ['trainer_id' => request('trainer_id')]) }}" class="btn btn-secondary btn-wave waves-effect waves-light">
+            <a href="{{ route('trainer.bookings.settings', ['trainer_id' => request('trainer_id')]) }}" class="btn btn-secondary btn-wave waves-effect waves-light">
                 <i class="ri-arrow-left-line fw-semibold align-middle me-1"></i> Back to Settings
             </a>
         </div>
@@ -259,48 +259,24 @@
         @if($trainer)
             <!-- Trainer Info -->
             <div class="trainer-info">
-                <img src="{{ $trainer->profile_image ? asset('storage/' . $trainer->profile_image) : asset('assets/images/faces/9.jpg') }}" 
-                     alt="{{ $trainer->name }}">
+                @if($trainer->profile_image && file_exists(public_path('storage/' . $trainer->profile_image)))
+                    <img src="{{ asset('storage/' . $trainer->profile_image) }}" alt="{{ $trainer->name }}">
+                @else
+                    <div style="width:48px;height:48px;border-radius:50%;background:#e0e0e0;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:#666;">
+                        {{ strtoupper(substr($trainer->name, 0, 1)) }}
+                    </div>
+                @endif
                 <div>
                     <div class="name">{{ $trainer->name }}</div>
                     <div class="role">Personal Trainer</div>
                 </div>
             </div>
 
-            <!-- Calendar -->
-            <div class="calendar-container">
-                <div class="calendar-header">
-                    <button class="calendar-nav" onclick="changeMonth(-1)">
-                        <i class="ri-arrow-left-line"></i>
-                    </button>
-                    <h4 class="mb-0" id="calendar-month-year">{{ $currentMonth->format('F Y') }}</h4>
-                    <button class="calendar-nav" onclick="changeMonth(1)">
-                        <i class="ri-arrow-right-line"></i>
-                    </button>
-                </div>
-                
-                <div class="calendar-grid">
-                    <!-- Day Headers -->
-                    <div class="calendar-day-header">Sun</div>
-                    <div class="calendar-day-header">Mon</div>
-                    <div class="calendar-day-header">Tue</div>
-                    <div class="calendar-day-header">Wed</div>
-                    <div class="calendar-day-header">Thu</div>
-                    <div class="calendar-day-header">Fri</div>
-                    <div class="calendar-day-header">Sat</div>
-                    
-                    <!-- Calendar Days -->
-                    @foreach($calendarDays as $day)
-                        <div class="calendar-day {{ $day['isOtherMonth'] ? 'other-month' : '' }} {{ $day['isBlocked'] ? 'blocked' : '' }}">
-                            {{ $day['day'] }}
-                        </div>
-                    @endforeach
-                </div>
-            </div>
+            
 
-            <!-- Blocked Times List -->
+            <!-- My Blocked Times List -->
             <div class="blocked-times-list">
-                <h5 class="mb-3">Blocked Times</h5>
+                <h5 class="mb-3">My Blocked Times</h5>
                 
                 @forelse($blockedTimes as $blockedTime)
                     <div class="blocked-time-item">
@@ -314,7 +290,7 @@
                                 <div class="reason">{{ $blockedTime->reason }}</div>
                             </div>
                         </div>
-                        <form action="{{ route('admin.bookings.blocked-times.destroy', $blockedTime->id) }}" method="POST" style="display: inline;">
+                        <form action="{{ route('trainer.bookings.blocked-times.destroy', $blockedTime->id) }}" method="POST" style="display: inline;">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to remove this blocked time?')">
@@ -325,7 +301,7 @@
                 @empty
                     <div class="text-center py-4">
                         <i class="ri-calendar-line fs-48 text-muted mb-3"></i>
-                        <p class="text-muted">No blocked times set</p>
+                        <p class="text-muted">No My Blocked Times set</p>
                     </div>
                 @endforelse
             </div>
@@ -338,8 +314,8 @@
             <div class="text-center py-5">
                 <i class="ri-user-line fs-48 text-muted mb-3"></i>
                 <h4 class="text-muted">No Trainer Selected</h4>
-                <p class="text-muted">Please select a trainer from the scheduling menu to manage their blocked times.</p>
-                <a href="{{ route('admin.bookings.scheduling-menu') }}" class="btn btn-primary">
+                <p class="text-muted">Please select a trainer from the scheduling menu to manage their My Blocked Times.</p>
+                <a href="{{ route('trainer.bookings.settings') }}" class="btn btn-primary">
                     <i class="ri-arrow-left-line me-2"></i> Back to Settings
                 </a>
             </div>
@@ -355,7 +331,7 @@
                     <h5 class="modal-title">Add Blocked Time</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form action="{{ route('admin.bookings.blocked-times.store') }}" method="POST">
+                <form action="{{ route('trainer.bookings.blocked-times.store') }}" method="POST">
                     @csrf
                     <input type="hidden" name="trainer_id" value="{{ $trainer->id }}">
                     

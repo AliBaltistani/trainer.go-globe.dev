@@ -147,6 +147,46 @@
                 </li>
                 <!-- End::slide Nutrition Management -->
 
+                <!-- Start::slide Booking Management -->
+                <li class="slide has-sub {{ request()->is('trainer/bookings*') ? 'open' : '' }}">
+                    <a href="javascript:void(0);" class="side-menu__item">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><rect x="40" y="40" width="176" height="176" rx="8" opacity="0.2"/><rect x="40" y="40" width="176" height="176" rx="8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="176" y1="24" x2="176" y2="56" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="80" y1="24" x2="80" y2="56" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="40" y1="88" x2="216" y2="88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                        <span class="side-menu__label">Booking Management</span>
+                        <i class="ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        <li class="slide side-menu__label1">
+                            <a href="javascript:void(0)">Booking Management</a>
+                        </li>
+                        <li class="slide {{ request()->is('trainer/bookings/dashboard') ? 'active' : '' }}">
+                            <a href="{{route('trainer.bookings.dashboard')}}" class="side-menu__item">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><rect x="32" y="48" width="192" height="160" rx="8" opacity="0.2"/><rect x="32" y="48" width="192" height="160" rx="8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="152" y1="112" x2="192" y2="112" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="152" y1="144" x2="192" y2="144" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><rect x="64" y="112" width="56" height="64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                Dashboard</a>
+                        </li>
+                        <li class="slide {{ request()->is('trainer/bookings') && !request()->is('trainer/bookings/*') ? 'active' : '' }}">
+                            <a href="{{route('trainer.bookings.index')}}" class="side-menu__item">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Z" opacity="0.2"/><rect x="32" y="48" width="192" height="160" rx="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="64" y1="80" x2="192" y2="80" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="64" y1="112" x2="192" y2="112" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="64" y1="144" x2="192" y2="144" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="64" y1="176" x2="192" y2="176" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                All Bookings</a>
+                        </li>
+                        <li class="slide {{ request()->is('trainer/bookings/google-calendar*') ? 'active' : '' }}">
+                            <a href="{{route('trainer.bookings.google-calendar')}}" class="side-menu__item">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><line x1="40" y1="128" x2="216" y2="128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="128" y1="40" x2="128" y2="216" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                Create Booking</a>
+                        </li>
+                        <li class="slide {{ request()->is('trainer/bookings/schedule') ? 'active' : '' }}">
+                            <a href="{{route('trainer.bookings.schedule')}}" class="side-menu__item">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><rect x="40" y="40" width="176" height="176" rx="8" opacity="0.2"/><rect x="40" y="40" width="176" height="176" rx="8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="176" y1="24" x2="176" y2="56" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="80" y1="24" x2="80" y2="56" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="40" y1="88" x2="216" y2="88" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                Calendar View</a>
+                        </li>
+                        <li class="slide {{ request()->is('trainer/bookings/settings') || request()->is('trainer/bookings/availability') || request()->is('trainer/bookings/blocked-times') || request()->is('trainer/bookings/session-capacity') || request()->is('trainer/bookings/booking-approval') ? 'active' : '' }}">
+                            <a href="{{route('trainer.bookings.settings')}}" class="side-menu__item">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="128" cy="128" r="40" opacity="0.2"/><circle cx="128" cy="128" r="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M41.43,178.09A99.54,99.54,0,0,1,31.36,153.8l16.78-21a81.59,81.59,0,0,1,0-9.64l-16.77-21a99.54,99.54,0,0,1,10.07-24.29l26.71-3.49a80.25,80.25,0,0,1,6.81-6.81l3.49-26.71a99.54,99.54,0,0,1,24.29-10.07l21,16.77a81.59,81.59,0,0,1,9.64,0l21-16.78a99.54,99.54,0,0,1,24.29,10.07l3.49,26.71a80.25,80.25,0,0,1,6.81,6.81l26.71,3.49a99.54,99.54,0,0,1,10.07,24.29l-16.77,21a81.59,81.59,0,0,1,0,9.64l16.78,21a99.54,99.54,0,0,1-10.07,24.29l-26.71,3.49a80.25,80.25,0,0,1-6.81-6.81l-3.49-26.71a99.54,99.54,0,0,1-24.29-10.07l-21-16.77a81.59,81.59,0,0,1-9.64,0l-21,16.78a99.54,99.54,0,0,1-24.29-10.07l-3.49-26.71a80.25,80.25,0,0,1-6.81-6.81Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                Scheduling Settings</a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- End::slide Booking Management -->
+
 				<!-- Start::slide -->
 				<li class="slide has-sub">
 					<a href="javascript:void(0);" class="side-menu__item">

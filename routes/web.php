@@ -709,6 +709,54 @@ Route::middleware('auth')->group(function () {
                 Route::delete('/bulk-delete', [\App\Http\Controllers\Trainer\NutritionRecipesController::class, 'bulkDelete'])->name('bulk-delete');
             });
         });
+
+        /**
+         * TRAINER BOOKING MANAGEMENT
+         * Trainer-specific booking management system
+         */
+        Route::prefix('bookings')->name('trainer.bookings.')->group(function () {
+            // Main booking management
+            Route::get('/', [\App\Http\Controllers\Trainer\BookingController::class, 'index'])->name('index');
+            Route::get('/dashboard', [\App\Http\Controllers\Trainer\BookingController::class, 'dashboard'])->name('dashboard');
+            Route::get('/{id}/show', [\App\Http\Controllers\Trainer\BookingController::class, 'show'])->name('show');
+            Route::get('/create', [\App\Http\Controllers\Trainer\BookingController::class, 'create'])->name('create');
+            Route::post('/store', [\App\Http\Controllers\Trainer\BookingController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [\App\Http\Controllers\Trainer\BookingController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [\App\Http\Controllers\Trainer\BookingController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\Trainer\BookingController::class, 'destroy'])->name('destroy');
+            Route::put('/{id}/status', [\App\Http\Controllers\Trainer\BookingController::class, 'updateStatus'])->name('update-status');
+            Route::get('/export', [\App\Http\Controllers\Trainer\BookingController::class, 'export'])->name('export');
+            
+            // Calendar/Schedule
+            Route::get('/schedule', [\App\Http\Controllers\Trainer\BookingController::class, 'schedule'])->name('schedule');
+            Route::get('/events', [\App\Http\Controllers\Trainer\BookingController::class, 'getEvents'])->name('events');
+            
+            // Scheduling Settings
+            Route::get('/settings', [\App\Http\Controllers\Trainer\BookingController::class, 'settings'])->name('settings');
+            Route::get('/availability', [\App\Http\Controllers\Trainer\BookingController::class, 'availability'])->name('availability');
+            Route::post('/availability', [\App\Http\Controllers\Trainer\BookingController::class, 'updateAvailability'])->name('availability.update');
+            Route::get('/blocked-times', [\App\Http\Controllers\Trainer\BookingController::class, 'blockedTimes'])->name('blocked-times');
+            Route::post('/blocked-times', [\App\Http\Controllers\Trainer\BookingController::class, 'storeBlockedTime'])->name('blocked-times.store');
+            Route::delete('/blocked-times/{id}', [\App\Http\Controllers\Trainer\BookingController::class, 'destroyBlockedTime'])->name('blocked-times.destroy');
+            Route::get('/session-capacity', [\App\Http\Controllers\Trainer\BookingController::class, 'sessionCapacity'])->name('session-capacity');
+            Route::post('/session-capacity', [\App\Http\Controllers\Trainer\BookingController::class, 'updateSessionCapacity'])->name('session-capacity.update');
+            Route::get('/booking-approval', [\App\Http\Controllers\Trainer\BookingController::class, 'bookingApproval'])->name('booking-approval');
+            Route::post('/booking-approval', [\App\Http\Controllers\Trainer\BookingController::class, 'updateBookingApproval'])->name('booking-approval.update');
+            
+            // Google Calendar Booking (Trainer)
+            Route::get('/google-calendar', [\App\Http\Controllers\Trainer\BookingController::class, 'googleCalendarBooking'])->name('google-calendar');
+            Route::post('/google-calendar', [\App\Http\Controllers\Trainer\BookingController::class, 'storeGoogleCalendarBooking'])->name('google-calendar.store');
+            Route::get('/google-calendar/{id}/edit', [\App\Http\Controllers\Trainer\BookingController::class, 'editGoogleCalendarBooking'])->name('google-calendar.edit');
+            Route::put('/google-calendar/{id}', [\App\Http\Controllers\Trainer\BookingController::class, 'updateGoogleCalendarBooking'])->name('google-calendar.update');
+            Route::delete('/google-calendar/{id}', [\App\Http\Controllers\Trainer\BookingController::class, 'destroyGoogleCalendarBooking'])->name('google-calendar.destroy');
+
+            // Trainer utilities for Google integration
+            Route::get('/trainer-connection/{trainerId}', [\App\Http\Controllers\Trainer\BookingController::class, 'checkTrainerGoogleConnection'])->name('trainer.google-connection');
+            Route::get('/available-slots', [\App\Http\Controllers\Trainer\BookingController::class, 'getTrainerAvailableSlots'])->name('trainer.available-slots');
+
+            // Google Calendar Integration
+            Route::post('/{id}/sync-google-calendar', [\App\Http\Controllers\Trainer\BookingController::class, 'syncWithGoogleCalendar'])->name('sync-google-calendar');
+        });
     });
 
     /**

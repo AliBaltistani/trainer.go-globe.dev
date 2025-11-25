@@ -1,4 +1,4 @@
-@extends('layouts.master')
+﻿@extends('layouts.master')
 
 @section('styles')
     <!-- Select2 CSS -->
@@ -15,16 +15,16 @@
             <div class="">
                 <nav>
                     <ol class="breadcrumb mb-0">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.bookings.index') }}">Bookings</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('admin.bookings.show', $booking->id) }}">Booking #{{ $booking->id }}</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('trainer.dashboard') }}">Dashboard</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('trainer.bookings.index') }}">Bookings</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('trainer.bookings.show', $booking->id) }}">Booking #{{ $booking->id }}</a></li>
                         <li class="breadcrumb-item active" aria-current="page">Edit</li>
                     </ol>
                 </nav>
             </div>
         </div>
         <div class="ms-auto pageheader-btn">
-            <a href="{{ route('admin.bookings.show', $booking->id) }}" class="btn btn-secondary btn-wave waves-effect waves-light">
+            <a href="{{ route('trainer.bookings.show', $booking->id) }}" class="btn btn-secondary btn-wave waves-effect waves-light">
                 <i class="ri-arrow-left-line fw-semibold align-middle me-1"></i> Back to Booking
             </a>
         </div>
@@ -50,7 +50,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('admin.bookings.update', $booking->id) }}" method="POST" id="bookingForm">
+                    <form action="{{ route('trainer.bookings.update', $booking->id) }}" method="POST" id="bookingForm">
                         @csrf
                         @method('PUT')
                         
@@ -236,7 +236,7 @@
                         <div class="row">
                             <div class="col-xl-12">
                                 <div class="d-flex justify-content-end gap-2">
-                                    <a href="{{ route('admin.bookings.show', $booking->id) }}" class="btn btn-light">
+                                    <a href="{{ route('trainer.bookings.show', $booking->id) }}" class="btn btn-light">
                                         Cancel
                                     </a>
                                     <button type="submit" class="btn btn-primary" id="submitBtn">
