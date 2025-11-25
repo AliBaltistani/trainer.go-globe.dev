@@ -4,6 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\ApiBaseController;
 use App\Models\Program;
+use App\Models\Week;
+use App\Models\Day;
+use App\Models\Circuit;
+use App\Models\ProgramExercise;
+use App\Models\ExerciseSet;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -115,6 +120,188 @@ class ClientProgramController extends ApiBaseController
             ]);
         } catch (\Exception $e) {
             return $this->sendError('Retrieval Failed', ['error' => 'Program not found'], 404);
+        }
+    }
+
+    public function weeks(Program $program): JsonResponse
+    {
+        try {
+            if ($program->client_id !== Auth::id()) {
+                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            }
+            $weeks = Week::byProgram($program->id)->orderBy('week_number')->get()->map(function ($week) {
+                return [
+                    'id' => $week->id,
+                    'week_number' => $week->week_number,
+                    'title' => $week->title,
+                    'description' => $week->description,
+                ];
+            });
+            return $this->sendResponse(['weeks' => $weeks, 'total' => $weeks->count()], 'Weeks retrieved');
+        } catch (\Exception $e) {
+            return $this->sendError('Retrieval Failed', ['error' => 'Unable to retrieve weeks'], 500);
+        }
+    }
+
+    public function showWeek(Program $program, Week $week): JsonResponse
+    {
+        try {
+            if ($program->client_id !== Auth::id() || $week->program_id !== $program->id) {
+                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            }
+            $week->load(['days.circuits.programExercises.exerciseSets', 'days.circuits.programExercises.workout']);
+            return $this->sendResponse(['week' => $week], 'Week retrieved');
+        } catch (\Exception $e) {
+            return $this->sendError('Retrieval Failed', ['error' => 'Unable to retrieve week'], 500);
+        }
+    }
+
+    public function days(Program $program, Week $week): JsonResponse
+    {
+        try {
+            if ($program->client_id !== Auth::id() || $week->program_id !== $program->id) {
+                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            }
+            $days = Day::byWeek($week->id)->orderBy('day_number')->get()->map(function ($day) {
+                return [
+                    'id' => $day->id,
+                    'day_number' => $day->day_number,
+                    'title' => $day->title,
+                    'description' => $day->description,
+                ];
+            });
+            return $this->sendResponse(['days' => $days, 'total' => $days->count()], 'Days retrieved');
+        } catch (\Exception $e) {
+            return $this->sendError('Retrieval Failed', ['error' => 'Unable to retrieve days'], 500);
+        }
+    }
+
+    public function showDay(Program $program, Week $week, Day $day): JsonResponse
+    {
+        try {
+            if ($program->client_id !== Auth::id() || $week->program_id !== $program->id || $day->week_id !== $week->id) {
+                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            }
+            $day->load(['circuits.programExercises.exerciseSets', 'circuits.programExercises.workout']);
+            return $this->sendResponse(['day' => $day], 'Day retrieved');
+        } catch (\Exception $e) {
+            return $this->sendError('Retrieval Failed', ['error' => 'Unable to retrieve day'], 500);
+        }
+    }
+
+    public function circuits(Program $program, Week $week, Day $day): JsonResponse
+    {
+        try {
+            if ($program->client_id !== Auth::id() || $week->program_id !== $program->id || $day->week_id !== $week->id) {
+                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            }
+            $circuits = Circuit::byDay($day->id)->orderBy('circuit_number')->get()->map(function ($circuit) {
+                return [
+                    'id' => $circuit->id,
+                    'circuit_number' => $circuit->circuit_number,
+                    'title' => $circuit->title,
+                    'description' => $circuit->description,
+                ];
+            });
+            return $this->sendResponse(['circuits' => $circuits, 'total' => $circuits->count()], 'Circuits retrieved');
+        } catch (\Exception $e) {
+            return $this->sendError('Retrieval Failed', ['error' => 'Unable to retrieve circuits'], 500);
+        }
+    }
+
+    public function showCircuit(Program $program, Week $week, Day $day, Circuit $circuit): JsonResponse
+    {
+        try {
+            if ($program->client_id !== Auth::id() || $week->program_id !== $program->id || $day->week_id !== $week->id || $circuit->day_id !== $day->id) {
+                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            }
+            $circuit->load(['programExercises.exerciseSets', 'programExercises.workout']);
+            return $this->sendResponse(['circuit' => $circuit], 'Circuit retrieved');
+        } catch (\Exception $e) {
+            return $this->sendError('Retrieval Failed', ['error' => 'Unable to retrieve circuit'], 500);
+        }
+    }
+
+    public function exercises(Program $program, Week $week, Day $day, Circuit $circuit): JsonResponse
+    {
+        try {
+            if ($program->client_id !== Auth::id() || $week->program_id !== $program->id || $day->week_id !== $week->id || $circuit->day_id !== $day->id) {
+                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            }
+            $exercises = ProgramExercise::byCircuit($circuit->id)->ordered()->get()->map(function ($ex) {
+                return [
+                    'id' => $ex->id,
+                    'name' => $ex->name,
+                    'workout_id' => $ex->workout_id,
+                    'order' => $ex->order,
+                    'tempo' => $ex->tempo,
+                    'rest_interval' => $ex->rest_interval,
+                    'notes' => $ex->notes,
+                ];
+            });
+            return $this->sendResponse(['exercises' => $exercises, 'total' => $exercises->count()], 'Exercises retrieved');
+        } catch (\Exception $e) {
+            return $this->sendError('Retrieval Failed', ['error' => 'Unable to retrieve exercises'], 500);
+        }
+    }
+
+    public function showExercise(Program $program, Week $week, Day $day, Circuit $circuit, ProgramExercise $exercise): JsonResponse
+    {
+        try {
+            if ($program->client_id !== Auth::id() || $week->program_id !== $program->id || $day->week_id !== $week->id || $circuit->day_id !== $day->id || $exercise->circuit_id !== $circuit->id) {
+                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            }
+            $exercise->load(['exerciseSets', 'workout']);
+            return $this->sendResponse(['exercise' => [
+                'id' => $exercise->id,
+                'name' => $exercise->name,
+                'workout_id' => $exercise->workout_id,
+                'order' => $exercise->order,
+                'tempo' => $exercise->tempo,
+                'rest_interval' => $exercise->rest_interval,
+                'notes' => $exercise->notes,
+                'workout' => $exercise->workout ? [
+                    'id' => $exercise->workout->id,
+                    'name' => $exercise->workout->name,
+                    'title' => $exercise->workout->name,
+                ] : null,
+                'sets' => $exercise->exerciseSets->map(function ($set) {
+                    return [
+                        'id' => $set->id,
+                        'set_number' => $set->set_number,
+                        'reps' => $set->reps,
+                        'weight' => $set->weight,
+                    ];
+                }),
+            ]], 'Exercise retrieved');
+        } catch (\Exception $e) {
+            return $this->sendError('Retrieval Failed', ['error' => 'Unable to retrieve exercise'], 500);
+        }
+    }
+
+    public function exerciseSets(Program $program, ProgramExercise $exercise): JsonResponse
+    {
+        try {
+            if ($program->client_id !== Auth::id()) {
+                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            }
+            $belongs = Week::byProgram($program->id)->whereHas('days.circuits.programExercises', function ($q) use ($exercise) {
+                $q->where('program_exercises.id', $exercise->id);
+            })->exists();
+            if (!$belongs) {
+                return $this->sendError('Unauthorized', ['error' => 'Access denied'], 403);
+            }
+            $sets = ExerciseSet::byProgramExercise($exercise->id)->ordered()->get()->map(function ($set) {
+                return [
+                    'id' => $set->id,
+                    'set_number' => $set->set_number,
+                    'reps' => $set->reps,
+                    'weight' => $set->weight,
+                ];
+            });
+            return $this->sendResponse(['sets' => $sets, 'total' => $sets->count()], 'Sets retrieved');
+        } catch (\Exception $e) {
+            return $this->sendError('Retrieval Failed', ['error' => 'Unable to retrieve sets'], 500);
         }
     }
 

@@ -413,6 +413,22 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/{program}/pdf-data', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfData'])->name('pdf-data');
             Route::get('/{program}/pdf-view', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfView'])->name('pdf-view');
             Route::get('/{program}/pdf-download', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfDownload'])->name('pdf-download');
+
+            Route::prefix('{program}/builder')->name('builder.')->group(function () {
+                Route::get('/weeks', [\App\Http\Controllers\Api\ClientProgramController::class, 'weeks'])->name('weeks.index');
+                Route::get('/weeks/{week}', [\App\Http\Controllers\Api\ClientProgramController::class, 'showWeek'])->name('weeks.show');
+
+                Route::get('/weeks/{week}/days', [\App\Http\Controllers\Api\ClientProgramController::class, 'days'])->name('days.index');
+                Route::get('/weeks/{week}/days/{day}', [\App\Http\Controllers\Api\ClientProgramController::class, 'showDay'])->name('days.show');
+
+                Route::get('/weeks/{week}/days/{day}/circuits', [\App\Http\Controllers\Api\ClientProgramController::class, 'circuits'])->name('circuits.index');
+                Route::get('/weeks/{week}/days/{day}/circuits/{circuit}', [\App\Http\Controllers\Api\ClientProgramController::class, 'showCircuit'])->name('circuits.show');
+
+                Route::get('/weeks/{week}/days/{day}/circuits/{circuit}/exercises', [\App\Http\Controllers\Api\ClientProgramController::class, 'exercises'])->name('exercises.index');
+                Route::get('/weeks/{week}/days/{day}/circuits/{circuit}/exercises/{exercise}', [\App\Http\Controllers\Api\ClientProgramController::class, 'showExercise'])->name('exercises.show');
+
+                Route::get('/exercises/{exercise}/sets', [\App\Http\Controllers\Api\ClientProgramController::class, 'exerciseSets'])->name('exercises.sets');
+            });
         });
 
         Route::post('/subscription', [\App\Http\Controllers\Api\ClientController::class, 'manageSubscription'])->name('subscription.manage');
