@@ -235,6 +235,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/my-plans/{id}', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'show'])->name('plans.show');
             Route::get('/clients', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'getClients'])->name('clients');
 
+            Route::post('/my-plans/assign', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'assignPlan'])->name('plans.assign');
+            Route::put('/my-plans/{planId}/recommendations', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'updateRecommendations'])->name('plans.recommendations.update');
+            Route::get('/clients/{clientId}/food-diary', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'viewClientFoodDiary'])->name('clients.food-diary');
+
             // Meal management for nutrition plans
             Route::post('/my-plans/{planId}/meals', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'addMeal'])->name('plans.meals.store');
 
@@ -246,6 +250,13 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/my-plans/{id}/pdf-data', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'pdfData'])->name('plans.pdf-data');
             Route::get('/my-plans/{id}/pdf-view', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'pdfView'])->name('plans.pdf-view');
             Route::get('/my-plans/{id}/pdf-download', [\App\Http\Controllers\Api\TrainerNutritionController::class, 'pdfDownload'])->name('plans.pdf-download');
+
+            Route::post('/calculate', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'calculate'])->name('calculate');
+            Route::post('/save-plan', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'savePlan'])->name('save-plan');
+            Route::get('/client/{clientId}', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'getClientNutrition'])->name('client-nutrition');
+            Route::put('/plans/{planId}/recalculate', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'recalculate'])->name('recalculate');
+            Route::get('/activity-levels', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'getActivityLevels'])->name('activity-levels');
+            Route::get('/calculator-goal-types', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'getGoalTypes'])->name('calculator-goal-types');
         });
 
         /**

@@ -543,13 +543,13 @@ class TrainerNutritionController extends Controller
                 'meal_type' => $request->meal_type,
                 'ingredients' => $request->ingredients,
                 'instructions' => $request->instructions,
-                'prep_time' => $request->prep_time,
-                'cook_time' => $request->cook_time,
-                'servings' => $request->servings,
-                'calories_per_serving' => $request->calories_per_serving,
-                'protein_per_serving' => $request->protein_per_serving,
-                'carbs_per_serving' => $request->carbs_per_serving,
-                'fats_per_serving' => $request->fats_per_serving,
+                'prep_time' => $request->prep_time ?? 0,
+                'cook_time' => $request->cook_time ?? 0,
+                'servings' => $request->servings ?? 1,
+                'calories_per_serving' => $request->calories_per_serving ?? 0,
+                'protein_per_serving' => $request->protein_per_serving ?? 0,
+                'carbs_per_serving' => $request->carbs_per_serving ?? 0,
+                'fats_per_serving' => $request->fats_per_serving ?? 0,
                 'sort_order' => $nextSortOrder
             ]);
             
