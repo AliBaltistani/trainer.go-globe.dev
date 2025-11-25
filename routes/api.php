@@ -408,6 +408,8 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::prefix('programs')->name('programs.')->group(function () {
+            Route::get('/assigned', [\App\Http\Controllers\Api\ClientProgramController::class, 'getAssignedPrograms'])->name('assigned');
+            Route::get('/{program}/plan', [\App\Http\Controllers\Api\ClientProgramController::class, 'plan'])->name('plan');
             Route::get('/{program}/pdf-data', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfData'])->name('pdf-data');
             Route::get('/{program}/pdf-view', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfView'])->name('pdf-view');
             Route::get('/{program}/pdf-download', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfDownload'])->name('pdf-download');
@@ -453,19 +455,19 @@ Route::middleware('auth:sanctum')->group(function () {
             // Recipe management
             Route::get('/plans/{planId}/recipes', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getPlanRecipes'])->name('plan-recipes');
             Route::get('/plans/{planId}/recipes/{recipeId}', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getPlanRecipe'])->name('plan-recipe');
-            Route::get('/global-recipes', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getGlobalRecipes'])->name('global-recipes');
+            // Route::get('/global-recipes', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getGlobalRecipes'])->name('global-recipes');
 
             // Meal management
             Route::get('/meals', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getMeals'])->name('meals');
             Route::get('/plans/{planId}/meals', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getPlanMeals'])->name('plan-meals');
             Route::get('/plans/{planId}/meals/{mealId}', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getPlanMeal'])->name('plan-meal');
-            Route::get('/global-meals', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getGlobalMeals'])->name('global-meals');
+            // Route::get('/global-meals', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getGlobalMeals'])->name('global-meals');
 
             // Food diary management
-            Route::post('/food-diary', [\App\Http\Controllers\Api\ClientNutritionController::class, 'logFoodDiary'])->name('food-diary.store');
+            // Route::post('/food-diary', [\App\Http\Controllers\Api\ClientNutritionController::class, 'logFoodDiary'])->name('food-diary.store');
             Route::get('/food-diary', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getFoodDiary'])->name('food-diary.index');
-            Route::put('/food-diary/{id}', [\App\Http\Controllers\Api\ClientNutritionController::class, 'updateFoodDiary'])->name('food-diary.update');
-            Route::delete('/food-diary/{id}', [\App\Http\Controllers\Api\ClientNutritionController::class, 'deleteFoodDiary'])->name('food-diary.destroy');
+            // Route::put('/food-diary/{id}', [\App\Http\Controllers\Api\ClientNutritionController::class, 'updateFoodDiary'])->name('food-diary.update');
+            // Route::delete('/food-diary/{id}', [\App\Http\Controllers\Api\ClientNutritionController::class, 'deleteFoodDiary'])->name('food-diary.destroy');
 
             // Nutrition recommendations management
             Route::get('/recommendations', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getCurrentRecommendations'])->name('recommendations.current');
@@ -480,12 +482,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('/plans/{planId}/pdf-download', [\App\Http\Controllers\Api\ClientNutritionController::class, 'pdfDownload'])->name('plans.pdf-download');
 
             // Nutrition Calculator
-            Route::post('/calculate', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'calculate'])->name('calculate');
-            Route::post('/save-plan', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'savePlan'])->name('save-plan');
-            Route::get('/client/{clientId}', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'getClientNutrition'])->name('client-nutrition');
-            Route::put('/plans/{planId}/recalculate', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'recalculate'])->name('recalculate');
-            Route::get('/activity-levels', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'getActivityLevels'])->name('activity-levels');
-            Route::get('/calculator-goal-types', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'getGoalTypes'])->name('calculator-goal-types');
+            // Route::post('/calculate', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'calculate'])->name('calculate');
+            // Route::post('/save-plan', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'savePlan'])->name('save-plan');
+            // Route::get('/client/{clientId}', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'getClientNutrition'])->name('client-nutrition');
+            // Route::put('/plans/{planId}/recalculate', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'recalculate'])->name('recalculate');
+            // Route::get('/activity-levels', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'getActivityLevels'])->name('activity-levels');
+            // Route::get('/calculator-goal-types', [\App\Http\Controllers\Api\NutritionCalculatorController::class, 'getGoalTypes'])->name('calculator-goal-types');
         });
 
         /**
