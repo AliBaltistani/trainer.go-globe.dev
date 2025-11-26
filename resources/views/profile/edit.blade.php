@@ -217,7 +217,7 @@
                             
                             <div class="col-xl-12">
                                 <label for="profile-specializations" class="form-label">Specializations :</label>
-                                <select class="form-select @error('specializations') is-invalid @enderror" id="profile-specializations" name="specializations[]" multiple>
+                                <select class="form-select @error('specializations') is-invalid @enderror" id="profile-specializations" name="specializations[]" >
                                     @php
                                         $specializations = \App\Models\Specialization::where('status', 1)->orderBy('name')->get();
                                         $userSpecializations = $user->specializations->pluck('id')->toArray();

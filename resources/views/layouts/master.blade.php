@@ -19,7 +19,7 @@ $user = Auth::user();
         <meta name="csrf-token" content="{{ csrf_token() }}">
     
         <!-- Title-->
-        <title> Admin TrainerHQ </title>
+        <title> {{env('APP_NAME')}} - {{$user->role}} panel </title>
         
         <!-- Favicon -->
         <link rel="icon" href="{{asset('build/assets/images/brand-logos/fav-icon.png')}}" type="image/x-icon">

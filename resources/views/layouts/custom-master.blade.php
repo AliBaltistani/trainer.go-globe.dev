@@ -12,10 +12,10 @@
         <meta name="keywords" content="laravel, laravel admin panel, laravel dashboard, bootstrap dashboard, bootstrap admin panel, vite laravel, admin dashboard, admin panel in laravel, admin dashboard ui, laravel admin, admin panel template, laravel framework, dashboard, admin dashboard template, laravel template.">
        
         <!-- Title-->
-        <title> Admin  </title>
+        <title>{{env('APP_NAME')}} - Login </title>
         
         <!-- Favicon -->
-        <link rel="icon" href="{{asset('build/assets/images/brand-logos/favicon.ico')}}" type="image/x-icon">
+        <link rel="icon" href="{{asset('build/assets/images/brand-logos/fav-icon.png')}}" type="image/x-icon">
 
         <!-- Main Theme Js -->
         <script src="{{asset('build/assets/authentication-main.js')}}"></script>
