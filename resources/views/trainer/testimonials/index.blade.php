@@ -127,9 +127,9 @@
                     Client Reviews
                 </div>
                 <div class="prism-toggle">
-                    <button class="btn btn-sm btn-primary-light" onclick="openTestimonialModal()">
+                    {{-- <button class="btn btn-sm btn-primary-light" onclick="openTestimonialModal()">
                         <i class="ri-add-line me-1"></i>Add Review
-                    </button>
+                    </button> --}}
                 </div>
             </div>
             <div class="card-body">
@@ -183,12 +183,12 @@
                                     <button class="btn btn-sm btn-info btn-wave waves-effect waves-light" onclick="viewTestimonial({{ $testimonial->id }})">
                                         <i class="ri-eye-line align-middle me-2 d-inline-block"></i>View
                                     </button>
-                                    <button class="btn btn-sm btn-success btn-wave waves-effect waves-light" onclick="editTestimonial({{ $testimonial->id }})">
+                                    {{-- <button class="btn btn-sm btn-success btn-wave waves-effect waves-light" onclick="editTestimonial({{ $testimonial->id }})">
                                         <i class="ri-edit-2-line align-middle me-2 d-inline-block"></i>Edit
                                     </button>
                                     <button class="btn btn-sm btn-danger btn-wave waves-effect waves-light" onclick="deleteTestimonial({{ $testimonial->id }})">
                                         <i class="ri-delete-bin-5-line align-middle me-2 d-inline-block"></i>Delete
-                                    </button>
+                                    </button> --}}
                                 </td>
                             </tr>
                             @empty
