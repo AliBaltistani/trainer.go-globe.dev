@@ -187,6 +187,15 @@
                 </li>
                 <!-- End::slide Booking Management -->
 
+                <!-- Start::slide Subscriptions -->
+                <li class="slide {{ request()->is('trainer/subscriptions*') ? 'active' : '' }}">
+                    <a href="{{ route('trainer.subscriptions.index') }}" class="side-menu__item">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="88" cy="108" r="44" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M12,204a84,84,0,0,1,152,0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="200" cy="56" r="20" fill="currentColor"/></svg>
+                        <span class="side-menu__label">Subscriptions</span>
+                    </a>
+                </li>
+                <!-- End::slide Subscriptions -->
+
                 <!-- Start::slide Billing & Payment -->
                 <li class="slide has-sub {{ request()->is('trainer/billing*') ? 'open' : '' }}">
                     <a href="javascript:void(0);" class="side-menu__item">

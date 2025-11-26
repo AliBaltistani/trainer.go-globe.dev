@@ -771,6 +771,11 @@ Route::middleware('auth')->group(function () {
             Route::get('/payouts/export', [\App\Http\Controllers\Trainer\PayoutController::class, 'export'])->name('payouts.export');
             Route::get('/dashboard', [\App\Http\Controllers\Trainer\BillingController::class, 'dashboard'])->name('dashboard');
         });
+
+        Route::prefix('subscriptions')->name('trainer.subscriptions.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Trainer\SubscriptionController::class, 'index'])->name('index');
+            Route::delete('/{id}', [\App\Http\Controllers\Trainer\SubscriptionController::class, 'destroy'])->name('destroy');
+        });
     });
 
     /**
