@@ -22,7 +22,7 @@
             <div class="card-header"><div class="card-title">Invoice Details</div></div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">Client</label>
                         <select name="client_id" class="form-select" id="clientSelect" required>
                             <option value="">Select client</option>
@@ -31,7 +31,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label">Currency</label>
                         <input type="text" name="currency" class="form-control" value="USD" maxlength="3" />
                     </div>

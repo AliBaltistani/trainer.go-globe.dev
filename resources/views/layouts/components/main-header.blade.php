@@ -95,7 +95,7 @@
 							<!-- Start::header-link|dropdown-toggle -->
 							<a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-auto-close="outside" data-bs-toggle="dropdown">
 								<svg xmlns="http://www.w3.org/2000/svg" class="header-link-icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M70.55,144H196.1a16,16,0,0,0,15.74-13.14L224,64H56Z" opacity="0.2"/><path d="M188,184H91.17a16,16,0,0,1-15.74-13.14L48.73,24H24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="92" cy="204" r="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="188" cy="204" r="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M70.55,144H196.1a16,16,0,0,0,15.74-13.14L224,64H56" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-								<span class="badge bg-primary rounded-pill header-icon-badge" id="cart-icon-badge">5</span>
+								<span class="badge bg-primary rounded-pill header-icon-badge" id="cart-icon-badge">0</span>
 							</a>
 							<!-- End::header-link|dropdown-toggle -->
 							<!-- Start::main-header-dropdown -->
@@ -107,7 +107,7 @@
 									</div>
 								</div>
 								<div class="dropdown-divider"></div>
-								<ul class="list-unstyled mb-0" id="header-cart-items-scroll">
+								<!-- <ul class="list-unstyled mb-0" id="header-cart-items-scroll">
 									<li class="dropdown-item">
 										<div class="d-flex align-items-start cart-dropdown-item gap-3">
 											<div class="lh-1">
@@ -149,176 +149,12 @@
 											</div>
 										</div>
 									</li>
-									<li class="dropdown-item">
-										<div class="d-flex align-items-start cart-dropdown-item gap-3">
-											<div class="lh-1">
-												<span class="avatar avatar-xl bg-gray-300">
-													<img src="{{asset('build/assets/images/ecommerce/png/15.png')}}" alt="img">
-												</span>
-											</div>
-											<div class="flex-fill w-75">
-												<div class="d-flex align-items-start justify-content-between mb-3">
-													<div class="fs-14 fw-medium w-75">
-														<div class="text-truncate">
-															<a href="javascript:void(0);">TrailBlaze Runners</a>
-														</div>
-														<div class="fs-11 text-muted text-truncate">
-															<span>Lightweight and built for comfort</span>
-														</div>
-													</div>
-													<div class="text-end">
-														<a href="javascript:void(0);" class="header-cart-remove dropdown-item-close"><i class="ri-delete-bin-line"></i></a>
-													</div>
-												</div>
-												<div class="d-flex align-items-center justify-content-between">
-													<div class="flex-fill">
-														<div class="lh-1 fs-12 mb-1">
-															<span class="text-muted fw-normal d-inline-block text-decoration-line-through">$80</span><span class="text-success ms-1">25% off</span>
-														</div>
-														<h6 class="fw-medium mb-0">$60</h6>
-													</div>
-													<div class="d-flex rounded align-items-center flex-nowrap order-qnt gap-2"> 
-														<a href="javascript:void(0);" class="badge bg-white p-1 border text-muted fs-13 product-quantity-minus">
-															<i class="ri-subtract-line"></i> 
-														</a> 
-														<input type="text" class="form-control form-control-cart border-0 text-center w-100" aria-label="quantity" id="product-qty-2" value="1"> 
-														<a href="javascript:void(0);" class="badge bg-white p-1 border text-muted fs-13 product-quantity-plus">
-															<i class="ri-add-line"></i> 
-														</a> 
-													</div>
-												</div>
-											</div>
-										</div>
-									</li>
-									<li class="dropdown-item">
-										<div class="d-flex align-items-start cart-dropdown-item gap-3">
-											<div class="lh-1">
-												<span class="avatar avatar-xl bg-gray-300">
-													<img src="{{asset('build/assets/images/ecommerce/png/19.png')}}" alt="img">
-												</span>
-											</div>
-											<div class="flex-fill w-75">
-												<div class="d-flex align-items-start justify-content-between mb-3">
-													<div class="fs-14 fw-medium w-75">
-														<div class="text-truncate">
-															<a href="javascript:void(0);">VisionTech SLR</a>
-														</div>
-														<div class="fs-11 text-muted text-truncate">
-															<span>High-quality shots with every click</span>
-														</div>
-													</div>
-													<div class="text-end">
-														<a href="javascript:void(0);" class="header-cart-remove dropdown-item-close"><i class="ri-delete-bin-line"></i></a>
-													</div>
-												</div>
-												<div class="d-flex align-items-center justify-content-between">
-													<div class="flex-fill">
-														<div class="lh-1 fs-12 mb-1">
-															<span class="text-muted fw-normal d-inline-block text-decoration-line-through">$500</span><span class="text-success ms-1">25% off</span>
-														</div>
-														<h6 class="fw-medium mb-0">$375</h6>
-													</div>
-													<div class="d-flex rounded align-items-center flex-nowrap order-qnt gap-2"> 
-														<a href="javascript:void(0);" class="badge bg-white p-1 border text-muted fs-13 product-quantity-minus">
-															<i class="ri-subtract-line"></i> 
-														</a> 
-														<input type="text" class="form-control form-control-cart border-0 text-center w-100" aria-label="quantity" id="product-qty-3" value="1"> 
-														<a href="javascript:void(0);" class="badge bg-white p-1 border text-muted fs-13 product-quantity-plus">
-															<i class="ri-add-line"></i> 
-														</a> 
-													</div>
-												</div>
-											</div>
-										</div>
-									</li>
-									<li class="dropdown-item">
-										<div class="d-flex align-items-start cart-dropdown-item gap-3">
-											<div class="lh-1">
-												<span class="avatar avatar-xl bg-gray-300">
-													<img src="{{asset('build/assets/images/ecommerce/png/6.png')}}" alt="img">
-												</span>
-											</div>
-											<div class="flex-fill w-75">
-												<div class="d-flex align-items-start justify-content-between mb-3">
-													<div class="fs-14 fw-medium w-75">
-														<div class="text-truncate">
-															<a href="javascript:void(0);">FlexiSeat Office Chair</a>
-														</div>
-														<div class="fs-11 text-muted text-truncate">
-															<span>Comfortable support for long hours</span>
-														</div>
-													</div>
-													<div class="text-end">
-														<a href="javascript:void(0);" class="header-cart-remove dropdown-item-close"><i class="ri-delete-bin-line"></i></a>
-													</div>
-												</div>
-												<div class="d-flex align-items-center justify-content-between">
-													<div class="flex-fill">
-														<div class="lh-1 fs-12 mb-1">
-															<span class="text-muted fw-normal d-inline-block text-decoration-line-through">$200</span><span class="text-success ms-1">25% off</span>
-														</div>
-														<h6 class="fw-medium mb-0">$150</h6>
-													</div>
-													<div class="d-flex rounded align-items-center flex-nowrap order-qnt gap-2"> 
-														<a href="javascript:void(0);" class="badge bg-white p-1 border text-muted fs-13 product-quantity-minus">
-															<i class="ri-subtract-line"></i> 
-														</a> 
-														<input type="text" class="form-control form-control-cart border-0 text-center w-100" aria-label="quantity" id="product-qty-4" value="5"> 
-														<a href="javascript:void(0);" class="badge bg-white p-1 border text-muted fs-13 product-quantity-plus">
-															<i class="ri-add-line"></i> 
-														</a> 
-													</div>
-												</div>
-											</div>
-										</div>
-									</li>
-									<li class="dropdown-item">
-										<div class="d-flex align-items-start cart-dropdown-item gap-3">
-											<div class="lh-1">
-												<span class="avatar avatar-xl bg-gray-300">
-													<img src="{{asset('build/assets/images/ecommerce/png/11.png')}}" alt="img">
-												</span>
-											</div>
-											<div class="flex-fill w-75">
-												<div class="d-flex align-items-start justify-content-between mb-3">
-													<div class="fs-14 fw-medium w-75">
-														<div class="text-truncate">
-															<a href="javascript:void(0);">DecoDial Classic</a>
-														</div>
-														<div class="fs-11 text-muted text-truncate">
-															<span>A bold, colorful timepiece for any room</span>
-														</div>
-													</div>
-													<div class="text-end">
-														<a href="javascript:void(0);" class="header-cart-remove dropdown-item-close"><i class="ri-delete-bin-line"></i></a>
-													</div>
-												</div>
-												<div class="d-flex align-items-center justify-content-between">
-													<div class="flex-fill">
-														<div class="lh-1 fs-12 mb-1">
-															<span class="text-muted fw-normal d-inline-block text-decoration-line-through">$50</span><span class="text-success ms-1">30% off</span>
-														</div>
-														<h6 class="fw-medium mb-0">$35</h6>
-													</div>
-													<div class="d-flex rounded align-items-center flex-nowrap order-qnt gap-2"> 
-														<a href="javascript:void(0);" class="badge bg-white p-1 border text-muted fs-13 product-quantity-minus">
-															<i class="ri-subtract-line"></i> 
-														</a> 
-														<input type="text" class="form-control form-control-cart border-0 text-center w-100" aria-label="quantity" id="product-qty-5" value="2"> 
-														<a href="javascript:void(0);" class="badge bg-white p-1 border text-muted fs-13 product-quantity-plus">
-															<i class="ri-add-line"></i> 
-														</a> 
-													</div>
-												</div>
-											</div>
-										</div>
-									</li>
-								</ul>
-								<div class="p-3 empty-header-item border-top">
+								</ul> -->
+								<!-- <div class="p-3 empty-header-item border-top">
 									<div class="text-center d-grid">
 										<a href="javascript:void(0);" class="btn btn-primary btn-wave">Proceed to checkout</a>
 									</div>
-								</div>
+								</div> -->
 								<div class="p-5 empty-item d-block">
 									<div class="text-center">
 										<span class="avatar avatar-xl avatar-rounded bg-success-transparent">
@@ -355,91 +191,18 @@
 										<a href="javascript:void(0);" class="stretched-link"></a>
 										<div class="d-flex align-items-start gap-3">
 											<div class="lh-1">
-												<span class="avatar avatar-sm avatar-rounded bg-primary-transparent">
+												<!-- <span class="avatar avatar-sm avatar-rounded bg-primary-transparent">
 													<img src="{{asset('build/assets/images/faces/1.jpg')}}" alt="">
-												</span>
+												</span> -->
 											</div>
 											<div class="flex-fill">
-												<span class="d-block fw-semibold">New Message</span>
-												<span class="d-block text-muted fs-12">You have received a new message from John Doe</span>
+												<!-- <span class="d-block fw-semibold">New Message</span> -->
+												<span class="d-block text-muted fs-12">No message found</span>
 											</div>
-											<div class="text-end">
+											<!-- <div class="text-end">
 												<span class="d-block mb-1 fs-12 text-muted">11:45am</span>
 												<span class="d-block text-primary d-none"><i class="ri-circle-fill fs-9"></i></span>
-											</div>
-										</div>
-									</li>
-									<li class="dropdown-item position-relative">
-										<a href="javascript:void(0);" class="stretched-link"></a>
-										<div class="d-flex align-items-start gap-3">
-											<div class="lh-1">
-												<span class="avatar avatar-sm avatar-rounded bg-primary-transparent">
-													<i class="ri-notification-line fs-16"></i>
-												</span>
-											</div>
-											<div class="flex-fill">
-												<span class="d-block fw-semibold">Task Reminder</span>
-												<span class="d-block text-muted fs-12">Don't forget to submit your report by 3 PM today</span>
-											</div>
-											<div class="text-end">
-												<span class="d-block mb-1 fs-12 text-muted">02:16pm</span>
-												<span class="d-block text-primary d-none"><i class="ri-circle-fill fs-9"></i></span>
-											</div>
-										</div>
-									</li>
-									<li class="dropdown-item position-relative">
-										<a href="javascript:void(0);" class="stretched-link"></a>
-										<div class="d-flex align-items-start gap-3">
-											<div class="lh-1">
-												<span class="avatar avatar-sm avatar-rounded bg-primary-transparent fs-5">
-													{{-- <img src="{{asset('build/assets/images/faces/12.jpg')}}" alt=""> --}}
-													 {{ strtoupper(substr($user->name, 0, 1)) }}
-												</span>
-											</div>
-											<div class="flex-fill">
-												<span class="d-block fw-semibold">Friend Request</span>
-												<span class="d-block text-muted fs-12">Jane Smith sent you a friend request</span>
-											</div>
-											<div class="text-end">
-												<span class="d-block mb-1 fs-12 text-muted">10:04am</span>
-												<span class="d-block text-primary"><i class="ri-circle-fill fs-9"></i></span>
-											</div>
-										</div>
-									</li>
-									<li class="dropdown-item position-relative">
-										<a href="javascript:void(0);" class="stretched-link"></a>
-										<div class="d-flex align-items-start gap-3">
-											<div class="lh-1">
-												<span class="avatar avatar-sm avatar-rounded bg-primary-transparent fs-5">
-													<i class="ri-notification-line fs-16"></i>
-												</span>
-											</div>
-											<div class="flex-fill">
-												<span class="d-block fw-semibold">Event Reminder</span>
-												<span class="d-block text-muted fs-12">You have an upcoming event: Team Meeting on October 25 at 10 AM.</span>
-											</div>
-											<div class="text-end">
-												<span class="d-block mb-1 fs-12 text-muted">12:58pm</span>
-												<span class="d-block text-primary"><i class="ri-circle-fill fs-9"></i></span>
-											</div>
-										</div>
-									</li>
-									<li class="dropdown-item position-relative">
-										<a href="javascript:void(0);" class="stretched-link"></a>
-										<div class="d-flex align-items-start gap-3">
-											<div class="lh-1">
-												<span class="avatar avatar-sm avatar-rounded bg-primary-transparent fs-5">
-													<i class="ri-notification-line fs-16"></i>
-												</span>
-											</div>
-											<div class="flex-fill">
-												<span class="d-block fw-semibold">File Uploaded</span>
-												<span class="d-block text-muted fs-12">The file "Project_Proposal.pdf" has been uploaded successfully</span>
-											</div>
-											<div class="text-end">
-												<span class="d-block mb-1 fs-12 text-muted">05:13pm</span>
-												<span class="d-block text-primary"><i class="ri-circle-fill fs-9"></i></span>
-											</div>
+											</div> -->
 										</div>
 									</li>
 								</ul>
@@ -544,9 +307,9 @@
 						<!-- Start::header-element -->
 						<li class="header-element">
 							<!-- Start::header-link|switcher-icon -->
-							<a href="javascript:void(0);" class="header-link switcher-icon" data-bs-toggle="offcanvas" data-bs-target="#switcher-canvas">
+							<!-- <a href="javascript:void(0);" class="header-link switcher-icon" data-bs-toggle="offcanvas" data-bs-target="#switcher-canvas">
 								<svg xmlns="http://www.w3.org/2000/svg" class="header-link-icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M207.86,123.18l16.78-21a99.14,99.14,0,0,0-10.07-24.29l-26.7-3a81,81,0,0,0-6.81-6.81l-3-26.71a99.43,99.43,0,0,0-24.3-10l-21,16.77a81.59,81.59,0,0,0-9.64,0l-21-16.78A99.14,99.14,0,0,0,77.91,41.43l-3,26.7a81,81,0,0,0-6.81,6.81l-26.71,3a99.43,99.43,0,0,0-10,24.3l16.77,21a81.59,81.59,0,0,0,0,9.64l-16.78,21a99.14,99.14,0,0,0,10.07,24.29l26.7,3a81,81,0,0,0,6.81,6.81l3,26.71a99.43,99.43,0,0,0,24.3,10l21-16.77a81.59,81.59,0,0,0,9.64,0l21,16.78a99.14,99.14,0,0,0,24.29-10.07l3-26.7a81,81,0,0,0,6.81-6.81l26.71-3a99.43,99.43,0,0,0,10-24.3l-16.77-21A81.59,81.59,0,0,0,207.86,123.18ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z" opacity="0.2"/><circle cx="128" cy="128" r="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M41.43,178.09A99.14,99.14,0,0,1,31.36,153.8l16.78-21a81.59,81.59,0,0,1,0-9.64l-16.77-21a99.43,99.43,0,0,1,10.05-24.3l26.71-3a81,81,0,0,1,6.81-6.81l3-26.7A99.14,99.14,0,0,1,102.2,31.36l21,16.78a81.59,81.59,0,0,1,9.64,0l21-16.77a99.43,99.43,0,0,1,24.3,10.05l3,26.71a81,81,0,0,1,6.81,6.81l26.7,3a99.14,99.14,0,0,1,10.07,24.29l-16.78,21a81.59,81.59,0,0,1,0,9.64l16.77,21a99.43,99.43,0,0,1-10,24.3l-26.71,3a81,81,0,0,1-6.81,6.81l-3,26.7a99.14,99.14,0,0,1-24.29,10.07l-21-16.78a81.59,81.59,0,0,1-9.64,0l-21,16.77a99.43,99.43,0,0,1-24.3-10l-3-26.71a81,81,0,0,1-6.81-6.81Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-							</a>
+							</a> -->
 							<!-- End::header-link|switcher-icon -->
 						</li>
 						<!-- End::header-element -->

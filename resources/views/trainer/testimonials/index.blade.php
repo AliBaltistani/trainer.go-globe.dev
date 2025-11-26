@@ -180,13 +180,13 @@
                                 </td>
                                 <td>{{ $testimonial->created_at->format('d-m-Y') }}</td>
                                 <td>
-                                    <button class="btn btn-sm btn-info btn-wave waves-effect waves-light" onclick="viewTestimonial({{ $testimonial->id }})">
+                                    <button class="btn btn-sm btn-info btn-wave waves-effect waves-light" onclick="viewTestimonial('{{ $testimonial->id }}')">
                                         <i class="ri-eye-line align-middle me-2 d-inline-block"></i>View
                                     </button>
-                                    {{-- <button class="btn btn-sm btn-success btn-wave waves-effect waves-light" onclick="editTestimonial({{ $testimonial->id }})">
+                                    {{-- <button class="btn btn-sm btn-success btn-wave waves-effect waves-light" onclick="editTestimonial('{{ $testimonial->id }}')">
                                         <i class="ri-edit-2-line align-middle me-2 d-inline-block"></i>Edit
                                     </button>
-                                    <button class="btn btn-sm btn-danger btn-wave waves-effect waves-light" onclick="deleteTestimonial({{ $testimonial->id }})">
+                                    <button class="btn btn-sm btn-danger btn-wave waves-effect waves-light" onclick="deleteTestimonial('{{ $testimonial->id }}')">
                                         <i class="ri-delete-bin-5-line align-middle me-2 d-inline-block"></i>Delete
                                     </button> --}}
                                 </td>
@@ -384,7 +384,7 @@ function openTestimonialModal(id = null) {
 // Load Testimonial Data for Edit
 function loadTestimonialData(id) {
     $.ajax({
-        url: `/api/trainer/testimonials/${id}`,
+        url: `/trainer/testimonials/${id}`,
         method: 'GET',
         success: function(response) {
             if (response.success) {
@@ -407,7 +407,7 @@ function loadTestimonialData(id) {
 // View Testimonial
 function viewTestimonial(id) {
     $.ajax({
-        url: `/api/trainer/testimonials/${id}`,
+        url: `/trainer/testimonials/${id}`,
         method: 'GET',
         success: function(response) {
             if (response.success) {

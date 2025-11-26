@@ -37,6 +37,7 @@
 .image-upload-container:hover .image-upload-overlay {
     opacity: 1;
 }
+.spec-chip{display:inline-flex;align-items:center;padding:.25rem .5rem;border:1px solid #dee2e6;border-radius:1.25rem;margin:.25rem .5rem .25rem 0;background-color:#f8f9fa;font-size:.85rem}
 </style>
 @endsection
 
@@ -155,6 +156,36 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Specializations -->
+        <div class="card custom-card mb-4">
+            <div class="card-header">
+                <div class="card-title">Specializations</div>
+                <div class="ms-auto">
+                    <a href="{{ route('trainer.specializations.index') }}" class="btn btn-sm btn-outline-primary">
+                        Manage
+                    </a>
+                </div>
+            </div>
+            <div class="card-body">
+                @php($specs = $user->specializations)
+                @if($specs && $specs->count())
+                    <div class="d-flex flex-wrap">
+                        @foreach($specs->sortBy('name') as $spec)
+                            <span class="spec-chip">{{ $spec->name }}</span>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="text-center py-3">
+                        <i class="ri-award-line fs-24 text-muted mb-2"></i>
+                        <p class="text-muted mb-2">No specializations added yet.</p>
+                        <a href="{{ route('trainer.specializations.index') }}" class="btn btn-sm btn-primary">
+                            Add Specializations
+                        </a>
+                    </div>
+                @endif
             </div>
         </div>
         

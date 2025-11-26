@@ -24,7 +24,10 @@ use App\Http\Controllers\Trainer\TrainerWebController;
  * Routes accessible without authentication
  */
 Route::get('/', function () {
-    return view('welcome');
+    if (Auth::check()) {
+        return redirect()->route('dashboard');
+    }
+    return redirect()->route('login');
 });
 
 Route::get('/storage/{path}', function ($path) {
@@ -565,8 +568,15 @@ Route::middleware('auth')->group(function () {
         
         // Testimonial Reaction Routes for Trainers
         Route::prefix('testimonials')->group(function () {
+            Route::get('/{id}', [TrainerDashboardController::class, 'showTestimonial'])->name('trainer.testimonials.show');
             Route::post('/{id}/like', [TrainerDashboardController::class, 'likeTestimonial'])->name('trainer.testimonials.like');
             Route::post('/{id}/dislike', [TrainerDashboardController::class, 'dislikeTestimonial'])->name('trainer.testimonials.dislike');
+        });
+
+        Route::prefix('specializations')->name('trainer.specializations.')->group(function () {
+            Route::get('/', [TrainerDashboardController::class, 'mySpecializations'])->name('index');
+            Route::post('/', [TrainerDashboardController::class, 'attachSpecialization'])->name('store');
+            Route::delete('/{id}', [TrainerDashboardController::class, 'detachSpecialization'])->name('destroy');
         });
 
         // Program Management Routes for Trainers

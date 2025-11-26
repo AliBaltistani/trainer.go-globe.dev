@@ -23,7 +23,7 @@
             <div class="card-header"><div class="card-title">Invoice Details</div></div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label">Client</label>
                         <select name="client_id" class="form-select" id="clientSelect" required>
                             @foreach($clients as $client)
@@ -103,7 +103,7 @@
 @section('scripts')
 <script>
     (function(){
-        let idx = {{ $invoice->items->count() }};
+        let idx = '{{ $invoice->items->count() }}';
         const addBtn = document.getElementById('addItemBtn');
         const tbody = document.querySelector('#itemsTable tbody');
         const clientSelect = document.getElementById('clientSelect');

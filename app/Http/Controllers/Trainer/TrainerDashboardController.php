@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * TrainerDashboardController
@@ -286,6 +287,44 @@ class TrainerDashboardController extends Controller
             return redirect()->back()->with('error', 'Failed to load testimonials: ' . $e->getMessage());
         }
     }
+
+    public function showTestimonial(string $id)
+    {
+        try {
+            $user = Auth::user();
+            $testimonial = Testimonial::where('id', $id)
+                ->where('trainer_id', $user->id)
+                ->first();
+            
+            if (!$testimonial) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Testimonial not found'
+                ], 404);
+            }
+            
+            $data = [
+                'id' => $testimonial->id,
+                'name' => $testimonial->name,
+                'comments' => $testimonial->comments,
+                'likes' => $testimonial->likes,
+                'dislikes' => $testimonial->dislikes,
+                'rate' => $testimonial->rate,
+                'created_at' => $testimonial->created_at->toISOString(),
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Testimonial retrieved successfully',
+                'data' => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve testimonial'
+            ], 500);
+        }
+    }
     
     /**
      * Display trainer profile management.
@@ -295,11 +334,81 @@ class TrainerDashboardController extends Controller
     public function profile()
     {
         try {
-            $user = Auth::user();
+            $user = Auth::user()->load('specializations');
             
             return view('trainer.profile.index', compact('user'));
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Failed to load profile: ' . $e->getMessage());
+        }
+    }
+
+    public function mySpecializations()
+    {
+        try {
+            $user = Auth::user();
+            $current = $user->specializations()
+                ->select(['specializations.id','specializations.name','specializations.description'])
+                ->orderBy('specializations.name')
+                ->get();
+            $active = \App\Models\Specialization::active()
+                ->whereNotIn('id', $current->pluck('id'))
+                ->orderBy('name')
+                ->get(['id','name']);
+            return view('trainer.specializations.index', [
+                'currentSpecializations' => $current,
+                'activeSpecializations' => $active,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to load specializations: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to load specializations');
+        }
+    }
+
+    public function attachSpecialization(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $request->validate([
+                'specialization_id' => 'required|integer|exists:specializations,id',
+            ]);
+            $specId = (int) $request->input('specialization_id');
+            $spec = \App\Models\Specialization::active()->find($specId);
+            if (!$spec) {
+                Log::error('Specialization not found: ' . $specId);
+                return response()->json(['success' => false, 'message' => 'Specialization not available'], 422);
+            }
+            if ($user->hasSpecialization($specId)) {
+                Log::error('Specialization already added: ' . $specId);
+                return response()->json(['success' => false, 'message' => 'Already added'], 409);
+            }
+            $user->specializations()->attach($specId, ['created_at' => now()]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Specialization added',
+                'data' => ['id' => $spec->id, 'name' => $spec->name, 'description' => $spec->description],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            Log::error('Failed to add specialization: ' . $ve->getMessage());
+            return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $ve->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('Failed to add specialization: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to add specialization'], 500);
+        }
+    }
+
+    public function detachSpecialization(string $id)
+    {
+        try {
+            $user = Auth::user();
+            $specId = (int) $id;
+            if (!$user->hasSpecialization($specId)) {
+                return response()->json(['success' => false, 'message' => 'Not found'], 404);
+            }
+            $user->specializations()->detach($specId);
+            return response()->json(['success' => true, 'message' => 'Specialization removed']);
+        } catch (\Exception $e) {
+            Log::error('Failed to remove specialization: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to remove specialization'], 500);
         }
     }
     
@@ -452,7 +561,7 @@ class TrainerDashboardController extends Controller
                     $isConnected = $connectionStatus['connected'];
                     $connectedEmail = $connectionStatus['email'];
                 } catch (\Exception $e) {
-                    \Log::warning('Failed to verify Google Calendar connection: ' . $e->getMessage());
+                    Log::warning('Failed to verify Google Calendar connection: ' . $e->getMessage());
                     $isConnected = false;
                 }
             }
@@ -469,22 +578,22 @@ class TrainerDashboardController extends Controller
      * @param User $user
      * @return int
      */
-    private function calculateProfileCompletion(User $user): int
-    {
-        $fields = [
-            'name' => !empty($user->name),
-            'email' => !empty($user->email),
-            'phone' => !empty($user->phone),
-            'designation' => !empty($user->designation),
-            'experience' => !empty($user->experience),
-            'about' => !empty($user->about),
-            'training_philosophy' => !empty($user->training_philosophy),
-            'profile_image' => !empty($user->profile_image),
-            'certifications' => $user->certifications()->count() > 0
-        ];
+    // private function calculateProfileCompletion(User $user): int
+    // {
+    //     $fields = [
+    //         'name' => !empty($user->name),
+    //         'email' => !empty($user->email),
+    //         'phone' => !empty($user->phone),
+    //         'designation' => !empty($user->designation),
+    //         'experience' => !empty($user->experience),
+    //         'about' => !empty($user->about),
+    //         'training_philosophy' => !empty($user->training_philosophy),
+    //         'profile_image' => !empty($user->profile_image),
+    //         'certifications' => $user->certifications()->count() > 0
+    //     ];
         
-        $completedFields = array_filter($fields);
+    //     $completedFields = array_filter($fields);
         
-        return round((count($completedFields) / count($fields)) * 100);
-    }
+    //     return round((count($completedFields) / count($fields)) * 100);
+    // }
 }
