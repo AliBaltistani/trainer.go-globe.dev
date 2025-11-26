@@ -119,13 +119,17 @@
 							</li>
 							<!-- End::slide -->
 							<!-- Start::slide -->
-							<li class="slide">
-								<a href="{{url('profile')}}" class="side-menu__item p-1 rounded-circle mb-0">
-									<span class="avatar avatar-md avatar-rounded">
-										<img src="{{asset('build/assets/images/faces/10.jpg')}}" alt="">
-									</span>
-								</a>
-							</li>
+                            <li class="slide">
+                                <a href="{{ url('profile') }}" class="side-menu__item p-1 rounded-circle mb-0">
+                                    <span class="avatar avatar-md avatar-rounded">
+                                        @if(Auth::check() && Auth::user()->profile_image)
+                                            <img src="{{ asset('storage/' . Auth::user()->profile_image) }}" alt="{{ Auth::user()->name }}">
+                                        @else
+                                            <img src="{{ asset('build/assets/images/faces/10.jpg') }}" alt="{{ Auth::check() ? Auth::user()->name : 'Profile' }}">
+                                        @endif
+                                    </span>
+                                </a>
+                            </li>
 							<!-- End::slide -->
 						</ul>
 						<div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24"> <path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path> </svg></div>
