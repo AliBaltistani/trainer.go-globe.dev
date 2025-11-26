@@ -757,6 +757,20 @@ Route::middleware('auth')->group(function () {
             // Google Calendar Integration
             Route::post('/{id}/sync-google-calendar', [\App\Http\Controllers\Trainer\BookingController::class, 'syncWithGoogleCalendar'])->name('sync-google-calendar');
         });
+
+        Route::prefix('billing')->name('trainer.billing.')->group(function () {
+            Route::get('/invoices', [\App\Http\Controllers\Trainer\InvoiceController::class, 'index'])->name('invoices.index');
+            Route::get('/invoices/create', [\App\Http\Controllers\Trainer\InvoiceController::class, 'create'])->name('invoices.create');
+            Route::post('/invoices', [\App\Http\Controllers\Trainer\InvoiceController::class, 'store'])->name('invoices.store');
+            Route::get('/invoices/{id}', [\App\Http\Controllers\Trainer\InvoiceController::class, 'show'])->name('invoices.show');
+            Route::get('/invoices/{id}/edit', [\App\Http\Controllers\Trainer\InvoiceController::class, 'edit'])->name('invoices.edit');
+            Route::put('/invoices/{id}', [\App\Http\Controllers\Trainer\InvoiceController::class, 'update'])->name('invoices.update');
+            Route::delete('/invoices/{id}', [\App\Http\Controllers\Trainer\InvoiceController::class, 'destroy'])->name('invoices.destroy');
+            Route::get('/invoices/client-items/{clientId}', [\App\Http\Controllers\Trainer\InvoiceController::class, 'clientItems'])->name('invoices.client-items');
+            Route::get('/payouts', [\App\Http\Controllers\Trainer\PayoutController::class, 'index'])->name('payouts.index');
+            Route::get('/payouts/export', [\App\Http\Controllers\Trainer\PayoutController::class, 'export'])->name('payouts.export');
+            Route::get('/dashboard', [\App\Http\Controllers\Trainer\BillingController::class, 'dashboard'])->name('dashboard');
+        });
     });
 
     /**

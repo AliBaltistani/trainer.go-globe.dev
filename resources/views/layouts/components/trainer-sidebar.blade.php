@@ -187,6 +187,36 @@
                 </li>
                 <!-- End::slide Booking Management -->
 
+                <!-- Start::slide Billing & Payment -->
+                <li class="slide has-sub {{ request()->is('trainer/billing*') ? 'open' : '' }}">
+                    <a href="javascript:void(0);" class="side-menu__item">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><rect x="32" y="56" width="192" height="144" rx="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="32" y1="96" x2="224" y2="96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="96" cy="152" r="16" fill="currentColor"/><circle cx="160" cy="152" r="16" fill="currentColor"/></svg>
+                        <span class="side-menu__label">Billing & Payment</span>
+                        <i class="ri-arrow-right-s-line side-menu__angle"></i>
+                    </a>
+                    <ul class="slide-menu child1">
+                        <li class="slide side-menu__label1">
+                            <a href="javascript:void(0)">Billing & Payment</a>
+                        </li>
+                        <li class="slide {{ request()->is('trainer/billing/invoices') ? 'active' : '' }}">
+                            <a href="{{ route('trainer.billing.invoices.index') }}" class="side-menu__item">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M208,32H80A16,16,0,0,0,64,48V224l48-48h96a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                Invoices</a>
+                        </li>
+                        <li class="slide {{ request()->is('trainer/billing/payouts') ? 'active' : '' }}">
+                            <a href="{{ route('trainer.billing.payouts.index') }}" class="side-menu__item">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><polyline points="24 128 128 24 232 128" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M56,120v72a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V120" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                Payouts</a>
+                        </li>
+                        <li class="slide {{ request()->is('trainer/billing/dashboard') ? 'active' : '' }}">
+                            <a href="{{ route('trainer.billing.dashboard') }}" class="side-menu__item">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><rect x="32" y="48" width="192" height="160" rx="8" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="72" y1="168" x2="96" y2="136" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="96" y1="136" x2="120" y2="152" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="120" y1="152" x2="176" y2="96" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                Billing Dashboard</a>
+                        </li>
+                    </ul>
+                </li>
+                <!-- End::slide Billing & Payment -->
+
 				<!-- Start::slide -->
 				<li class="slide has-sub">
 					<a href="javascript:void(0);" class="side-menu__item">
