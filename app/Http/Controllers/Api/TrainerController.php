@@ -147,6 +147,104 @@ class TrainerController extends Controller
             return 'UTC';
         }
     }
+
+    public function getSubscribedClients(Request $request): JsonResponse
+    {
+        try {
+            $trainer = Auth::user();
+            if (!$trainer || $trainer->role !== 'trainer') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access. Trainer authentication required.'
+                ], 401);
+            }
+
+            $tz = $this->normalizeTimezone($trainer->timezone ?? 'UTC+5');
+            $today = now()->setTimezone($tz)->toDateString();
+
+            $search = trim((string) $request->get('search', ''));
+            $perPage = (int) $request->get('per_page', 20);
+            $perPage = min(max($perPage, 1), 100);
+
+            $subsQuery = TrainerSubscription::where('trainer_id', $trainer->id)
+                ->where('status', 'active')
+                ->with(['client:id,name,email,phone,profile_image']);
+
+            if ($search !== '') {
+                $subsQuery->whereHas('client', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('phone', 'like', "%{$search}%");
+                });
+            }
+
+            $subscriptions = $subsQuery->paginate($perPage);
+            $clientIds = $subscriptions->getCollection()->pluck('client_id')->all();
+
+            $upcomingByClient = Schedule::forTrainer($trainer->id)
+                ->whereIn('client_id', $clientIds)
+                ->whereIn('status', [Schedule::STATUS_CONFIRMED, Schedule::STATUS_PENDING])
+                ->where('date', '>=', $today)
+                ->orderBy('date')
+                ->orderBy('start_time')
+                ->get()
+                ->groupBy('client_id')
+                ->map(function ($group) { return $group->first(); });
+
+            $data = $subscriptions->getCollection()->map(function ($sub) use ($upcomingByClient, $tz, $today) {
+                $client = $sub->client;
+                $image = $client && $client->profile_image ? asset('storage/'.$client->profile_image) : asset('images/defaults/user-placeholder.jpg');
+                $schedule = $upcomingByClient[$sub->client_id] ?? null;
+                $label = 'no upcoming session';
+                $nextSessionDate = null;
+
+                if ($schedule) {
+                    $sessionDate = $schedule->date instanceof \Carbon\Carbon 
+                        ? $schedule->date->format('Y-m-d') 
+                        : (string)$schedule->date;
+                    $nextSessionDate = $sessionDate;
+
+                    // Calculate label based on session date
+                    if ($sessionDate === $today) {
+                        $label = 'Today';
+                    } elseif ($sessionDate === \Carbon\Carbon::parse($today)->addDay()->format('Y-m-d')) {
+                        $label = 'Tomorrow';
+                    } else {
+                        $daysFromNow = \Carbon\Carbon::parse($sessionDate)->diffInDays(\Carbon\Carbon::parse($today));
+                        $label = "In {$daysFromNow} days";
+                    }
+                }
+             
+                return [
+                    'client_id' => $sub->client_id,
+                    'client_name' => $client ? $client->name : null,
+                    'client_image' => $image,
+                    'session_label' => $label,
+                    'next_session_date' => $nextSessionDate,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscribed clients retrieved successfully',
+                'data' => [
+                    'clients' => $data,
+                    'pagination' => [
+                        'total' => $subscriptions->total(),
+                        'per_page' => $subscriptions->perPage(),
+                        'current_page' => $subscriptions->currentPage(),
+                        'last_page' => $subscriptions->lastPage()
+                    ]
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Retrieval Failed',
+                'data' => ['error' => 'Unable to retrieve subscribed clients']
+            ], 500);
+        }
+    }
     /**
      * Display a listing of trainers with advanced filtering options.
      * 
