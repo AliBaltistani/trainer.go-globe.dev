@@ -28,6 +28,8 @@ class User extends Authenticatable
         'password',
         'phone',
         'role',
+        'provider',
+        'provider_id',
         'profile_image',
         'business_logo',
         'designation',

@@ -160,6 +160,7 @@ class GoogleAuthController extends Controller
                     'access_token' => $token['access_token'] ?? null,
                     'refresh_token' => $token['refresh_token'] ?? null,
                     'expires_in' => $token['expires_in'] ?? null,
+                    'id_token' => $token['id_token'] ?? null,
                     'id' => $googleId,
                     'email' => $email,
                     'avatar' => $avatar,
@@ -188,6 +189,7 @@ class GoogleAuthController extends Controller
                     'access_token' => $token['access_token'] ?? null,
                     'refresh_token' => $token['refresh_token'] ?? null,
                     'expires_in' => $token['expires_in'] ?? null,
+                    'id_token' => $token['id_token'] ?? null,
                     'id' => $googleId,
                 ],
             ]]);
@@ -259,6 +261,7 @@ class GoogleAuthController extends Controller
                     'access_token' => $pending['google']['access_token'] ?? null,
                     'refresh_token' => $pending['google']['refresh_token'] ?? null,
                     'expires_in' => $pending['google']['expires_in'] ?? null,
+                    'id_token' => $pending['google']['id_token'] ?? null,
                     'id' => $pending['google']['id'] ?? null,
                     'avatar' => $pending['avatar'] ?? null,
                 ],

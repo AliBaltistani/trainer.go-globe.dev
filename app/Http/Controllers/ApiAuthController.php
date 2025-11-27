@@ -16,6 +16,7 @@ use Carbon\Carbon;
 use App\Mail\PasswordResetOTP;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Google_Client;
 use Google_Service_Oauth2;
 use Google_Service_Calendar;
@@ -107,6 +108,273 @@ class ApiAuthController extends ApiBaseController
             ]);
             return $this->sendError('OAuth URL Error', ['error' => 'Unable to generate Google OAuth URL'], 500);
         }
+    }
+
+    public function socialLogin(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'provider' => 'required|in:google,apple',
+                'token' => 'required|string',
+                'platform' => 'nullable|in:web,mobile',
+                'device_name' => 'nullable|string|max:255'
+            ]);
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors(), 422);
+            }
+
+            $provider = strtolower($request->provider);
+            $token = $request->token;
+            $platform = $request->input('platform');
+            $deviceName = $request->input('device_name', 'API Client');
+
+            $verified = $provider === 'google' ? $this->verifyGoogleToken($token) : $this->verifyAppleToken($token);
+            if (!$verified || empty($verified['sub'])) {
+                return $this->sendError('Unauthorized', ['error' => 'Invalid social token'], 401);
+            }
+
+            $email = isset($verified['email']) ? strtolower(trim($verified['email'])) : null;
+            $providerId = $verified['sub'];
+
+            $user = User::where('provider', $provider)->where('provider_id', $providerId)->first();
+            if (!$user && $email) { $user = User::where('email', $email)->first(); }
+            if (!$user) {
+                return $this->sendError('Not Found', ['error' => 'User not found. Please sign up'], 404);
+            }
+
+            if (!$user->provider || !$user->provider_id) {
+                $user->provider = $provider;
+                $user->provider_id = $providerId;
+                $user->save();
+            }
+
+            if (!$this->isPlatformAllowed($user->role, $platform)) {
+                return $this->sendError('Forbidden', ['error' => 'Role not allowed on this platform'], 403);
+            }
+
+            $apiToken = $user->createToken($deviceName)->plainTextToken;
+            return $this->sendResponse([
+                'token' => $apiToken,
+                'token_type' => 'Bearer',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+                    'isVerified' => !is_null($user->email_verified_at)
+                ]
+            ], 'Login successful');
+        } catch (\Exception $e) {
+            return $this->sendError('Login Failed', ['error' => 'Social login failed'], 500);
+        }
+    }
+
+    public function socialSignup(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'provider' => 'required|in:google,apple',
+                'token' => 'required|string',
+                'role' => 'required|in:admin,trainer,client',
+                'phone' => 'required|string|max:20|unique:users,phone',
+                'platform' => 'nullable|in:web,mobile',
+                'device_name' => 'nullable|string|max:255'
+            ]);
+            if ($validator->fails()) {
+                return $this->sendError('Validation Error', $validator->errors(), 422);
+            }
+
+            $provider = strtolower($request->provider);
+            $token = $request->token;
+            $platform = $request->input('platform');
+            $deviceName = $request->input('device_name', 'API Client');
+            $role = $request->input('role');
+            $phone = $request->input('phone');
+
+            $verified = $provider === 'google' ? $this->verifyGoogleToken($token) : $this->verifyAppleToken($token);
+            if (!$verified || empty($verified['sub'])) {
+                return $this->sendError('Unauthorized', ['error' => 'Invalid social token'], 401);
+            }
+
+            $email = isset($verified['email']) ? strtolower(trim($verified['email'])) : null;
+            $name = isset($verified['name']) ? trim($verified['name']) : null;
+            $providerId = $verified['sub'];
+
+            $existingByProvider = User::where('provider', $provider)->where('provider_id', $providerId)->first();
+            if ($existingByProvider) {
+                return $this->sendError('Conflict', ['error' => 'Account already exists. Please login'], 409);
+            }
+            if ($email && User::where('email', $email)->exists()) {
+                return $this->sendError('Conflict', ['error' => 'Email already registered. Please login'], 409);
+            }
+
+            if (!$this->isPlatformAllowed($role, $platform)) {
+                return $this->sendError('Forbidden', ['error' => 'Role not allowed on this platform'], 403);
+            }
+
+            $finalName = $name ?: ($email ? explode('@', $email)[0] : ucfirst($provider) . ' User');
+            $finalEmail = $email ?: (strtolower($provider) . '_' . Str::random(16) . '@example.local');
+
+            $user = User::create([
+                'name' => $finalName,
+                'email' => $finalEmail,
+                'phone' => $phone,
+                'password' => Hash::make(Str::random(12)),
+                'role' => $role,
+                'provider' => $provider,
+                'provider_id' => $providerId,
+                'email_verified_at' => now()
+            ]);
+
+            $apiToken = $user->createToken($deviceName)->plainTextToken;
+            return $this->sendResponse([
+                'token' => $apiToken,
+                'token_type' => 'Bearer',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'profile_image' => $user->profile_image ? asset('storage/' . $user->profile_image) : null,
+                    'isVerified' => !is_null($user->email_verified_at)
+                ]
+            ], 'Account created successfully');
+        } catch (\Exception $e) {
+            return $this->sendError('Signup Failed', ['error' => 'Social signup failed'], 500);
+        }
+    }
+
+    public function verifyGoogleToken(string $idToken): ?array
+    {
+        try {
+            $clientId = config('services.google.client_id', env('GOOGLE_CLIENT_ID'));
+            $client = new Google_Client(['client_id' => $clientId]);
+            $payload = $client->verifyIdToken($idToken);
+            if ($payload) {
+                return [
+                    'email' => $payload['email'] ?? null,
+                    'name' => $payload['name'] ?? null,
+                    'sub' => $payload['sub'] ?? null,
+                    'aud' => $payload['aud'] ?? null
+                ];
+            }
+            $resp = Http::get('https://oauth2.googleapis.com/tokeninfo', ['id_token' => $idToken]);
+            if ($resp->ok()) {
+                $data = $resp->json();
+                return [
+                    'email' => $data['email'] ?? null,
+                    'name' => $data['name'] ?? null,
+                    'sub' => $data['sub'] ?? null,
+                    'aud' => $data['aud'] ?? null
+                ];
+            }
+        } catch (\Throwable $e) {
+        }
+        return null;
+    }
+
+    public function verifyAppleToken(string $identityToken): ?array
+    {
+        try {
+            $parts = explode('.', $identityToken);
+            if (count($parts) !== 3) {
+                return null;
+            }
+
+            $header = json_decode($this->b64($parts[0]), true);
+            $payload = json_decode($this->b64($parts[1]), true);
+            $signature = $this->b64raw($parts[2]);
+
+            if (!$header || !$payload || !$signature) {
+                return null;
+            }
+
+            $kid = $header['kid'] ?? null;
+            $alg = $header['alg'] ?? null;
+            if (!$kid || $alg !== 'RS256') {
+                return null;
+            }
+
+            $jwks = Http::get('https://appleid.apple.com/auth/keys');
+            if (!$jwks->ok()) {
+                return null;
+            }
+            $keys = $jwks->json('keys');
+            if (!is_array($keys)) {
+                return null;
+            }
+            $jwk = null;
+            foreach ($keys as $k) {
+                if (($k['kid'] ?? null) === $kid) { $jwk = $k; break; }
+            }
+            if (!$jwk) { return null; }
+
+            $pubPem = $this->jwkToPem($jwk);
+            $dataSigned = $parts[0] . '.' . $parts[1];
+            $ok = openssl_verify($dataSigned, $signature, $pubPem, OPENSSL_ALGO_SHA256);
+            if ($ok !== 1) { return null; }
+
+            $aud = $payload['aud'] ?? null;
+            $iss = $payload['iss'] ?? null;
+            $exp = $payload['exp'] ?? null;
+            $clientId = env('APPLE_CLIENT_ID');
+            if ($iss !== 'https://appleid.apple.com' || ($clientId && $aud !== $clientId)) {
+                return null;
+            }
+            if ($exp && $exp < time()) { return null; }
+
+            return [
+                'email' => $payload['email'] ?? null,
+                'name' => $payload['name'] ?? null,
+                'sub' => $payload['sub'] ?? null,
+                'aud' => $aud
+            ];
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    private function isPlatformAllowed(?string $role, ?string $platform): bool
+    {
+        if (!$role || !$platform) { return true; }
+        if ($role === 'admin' && $platform !== 'web') { return false; }
+        if ($role === 'client' && $platform !== 'mobile') { return false; }
+        return true;
+    }
+
+    private function b64(string $data): string
+    {
+        return base64_decode(strtr($data, '-_', '+/')) ?: '';
+    }
+
+    private function b64raw(string $data): string
+    {
+        $remainder = strlen($data) % 4;
+        if ($remainder) { $data .= str_repeat('=', 4 - $remainder); }
+        return base64_decode(strtr($data, '-_', '+/')) ?: '';
+    }
+
+    private function jwkToPem(array $jwk): string
+    {
+        $n = $this->b64raw($jwk['n']);
+        $e = $this->b64raw($jwk['e']);
+        $modulus = chr(0x02) . $this->len(strlen($n)) . $n;
+        $publicExponent = chr(0x02) . $this->len(strlen($e)) . $e;
+        $sequence = chr(0x30) . $this->len(strlen($modulus) + strlen($publicExponent)) . $modulus . $publicExponent;
+        $bitString = chr(0x03) . $this->len(strlen($sequence) + 1) . chr(0x00) . $sequence;
+        $algoID = hex2bin('300d06092a864886f70d0101010500');
+        $pubKey = chr(0x30) . $this->len(strlen($algoID) + strlen($bitString)) . $algoID . $bitString;
+        $pem = "-----BEGIN PUBLIC KEY-----\n" . chunk_split(base64_encode($pubKey), 64, "\n") . "-----END PUBLIC KEY-----";
+        return $pem;
+    }
+
+    private function len(int $length): string
+    {
+        if ($length <= 127) { return chr($length); }
+        $temp = '';
+        while ($length > 0) { $temp = chr($length & 0xff) . $temp; $length >>= 8; }
+        return chr(0x80 | strlen($temp)) . $temp;
     }
 
     /**
