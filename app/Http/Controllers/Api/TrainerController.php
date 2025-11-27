@@ -8,6 +8,7 @@ use App\Http\Requests\StoreTestimonialRequest;
 use App\Http\Requests\UpdateTrainerProfileRequest;
 use App\Models\User;
 use App\Models\TrainerSubscription;
+use App\Models\Program;
 use App\Models\UserCertification;
 use App\Models\Testimonial;
 use App\Models\TestimonialLikesDislike;
@@ -28,6 +29,124 @@ use Carbon\Carbon;
  */
 class TrainerController extends Controller
 {
+    public function getDashboard(Request $request): JsonResponse
+    {
+        try {
+            $trainer = Auth::user();
+            if (!$trainer || $trainer->role !== 'trainer') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized access. Trainer authentication required.'
+                ], 401);
+            }
+
+            $tz = $this->normalizeTimezone($trainer->timezone ?? 'UTC');
+            $today = now()->setTimezone($tz)->toDateString();
+
+            $totalSubscribed = TrainerSubscription::where('trainer_id', $trainer->id)->count();
+            $activeSubscribed = TrainerSubscription::where('trainer_id', $trainer->id)->where('status', 'active')->count();
+
+            $sessions = \App\Models\Schedule::forTrainer($trainer->id)
+                ->where('status', '!=', \App\Models\Schedule::STATUS_CANCELLED)
+                ->where('date', $today)
+                ->with(['client:id,name,profile_image'])
+                ->orderBy('start_time')
+                ->get();
+
+            $todaySessions = $sessions->map(function ($schedule) use ($tz) {
+                $dateVal = $schedule->date;
+                $dateStr = $dateVal instanceof \Carbon\Carbon ? $dateVal->format('Y-m-d') : (string)$dateVal;
+                $startVal = $schedule->start_time;
+                $endVal = $schedule->end_time;
+                $startStr = $startVal instanceof \Carbon\Carbon ? $startVal->format('H:i:s') : (strlen((string)$startVal) === 5 ? ((string)$startVal).':00' : (string)$startVal);
+                $endStr = $endVal instanceof \Carbon\Carbon ? $endVal->format('H:i:s') : (strlen((string)$endVal) === 5 ? ((string)$endVal).':00' : (string)$endVal);
+                $srcTz = $this->normalizeTimezone($schedule->timezone ?: $tz);
+                try {
+                    $start = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $dateStr.' '.$startStr, $srcTz)->setTimezone($tz);
+                } catch (\Throwable $e) {
+                    $start = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $dateStr.' '.$startStr, 'UTC')->setTimezone($tz);
+                }
+                try {
+                    $end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $dateStr.' '.$endStr, $srcTz)->setTimezone($tz);
+                } catch (\Throwable $e) {
+                    $end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $dateStr.' '.$endStr, 'UTC')->setTimezone($tz);
+                }
+
+                $title = $schedule->meeting_agenda ?: 'Client Session with '.($schedule->client ? $schedule->client->name : 'Unknown');
+                return [
+                    'id' => $schedule->id,
+                    'title' => $title,
+                    'client_name' => $schedule->client ? $schedule->client->name : null,
+                    'start_time' => $start->format('h:i A'),
+                    'end_time' => $end->format('h:i A')
+                ];
+            });
+
+            $subscriptions = TrainerSubscription::where('trainer_id', $trainer->id)
+                ->where('status', 'active')
+                ->with(['client:id,name,profile_image'])
+                ->get();
+
+            $clientIds = $subscriptions->pluck('client_id')->all();
+            $programsByClient = Program::active()
+                ->where('trainer_id', $trainer->id)
+                ->whereIn('client_id', $clientIds)
+                ->orderBy('updated_at', 'desc')
+                ->get()
+                ->groupBy('client_id');
+
+            $clientUpdates = $subscriptions->map(function ($sub) use ($programsByClient) {
+                $client = $sub->client;
+                $image = $client && $client->profile_image ? asset('storage/'.$client->profile_image) : asset('images/defaults/user-placeholder.jpg');
+                $program = isset($programsByClient[$sub->client_id]) ? $programsByClient[$sub->client_id]->first() : null;
+                return [
+                    'client_name' => $client ? $client->name : null,
+                    'client_image' => $image,
+                    'program_name' => $program ? $program->name : null
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Trainer dashboard retrieved successfully',
+                'data' => [
+                    'metrics' => [
+                        'total_subscribed_clients' => $totalSubscribed,
+                        'active_subscribed_clients' => $activeSubscribed,
+                    ],
+                    'today_sessions' => $todaySessions,
+                    'client_updates' => $clientUpdates
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Retrieval Failed',
+                'data' => ['error' => 'Unable to retrieve trainer dashboard']
+            ], 500);
+        }
+    }
+
+    private function normalizeTimezone(?string $tz): string
+    {
+        $tz = trim((string) $tz);
+        if ($tz === '') { return 'UTC'; }
+        $lower = strtolower($tz);
+        if ($lower === 'utc') { return 'UTC'; }
+        if (in_array($lower, ['pkt', 'utc+5', 'utc+05', 'utc+05:00'], true)) { return 'Asia/Karachi'; }
+        if (preg_match('/^utc([+-])(\d{1,2})(?::?(\d{2}))?$/i', $tz, $m)) {
+            $sign = $m[1];
+            $h = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+            $min = isset($m[3]) && $m[3] !== '' ? str_pad($m[3], 2, '0', STR_PAD_LEFT) : '00';
+            return $sign.$h.':'.$min;
+        }
+        try {
+            new \DateTimeZone($tz);
+            return $tz;
+        } catch (\Throwable $e) {
+            return 'UTC';
+        }
+    }
     /**
      * Display a listing of trainers with advanced filtering options.
      * 

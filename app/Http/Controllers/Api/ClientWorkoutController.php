@@ -28,6 +28,109 @@ use Illuminate\Support\Facades\Validator;
  */
 class ClientWorkoutController extends Controller
 {
+    public function getDashboard(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            if (!$user || $user->role !== 'client') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized',
+                ], 401);
+            }
+
+            $tz = $this->normalizeTimezone($user->timezone ?? 'UTC');
+            $today = now()->setTimezone($tz)->toDateString();
+
+            $sessions = \App\Models\Schedule::forClient($user->id)
+                ->where('status', '!=', \App\Models\Schedule::STATUS_CANCELLED)
+                ->where('date', ">=", $today)
+                ->with(['trainer:id,name,profile_image'])
+                ->orderBy('date')
+                ->orderBy('start_time')
+                ->limit((int)($request->get('limit', 5)))
+                ->get();
+
+            $upcoming = $sessions->map(function ($schedule) use ($tz) {
+                $dateVal = $schedule->date;
+                $dateStr = $dateVal instanceof \Carbon\Carbon ? $dateVal->format('Y-m-d') : (string)$dateVal;
+                $startVal = $schedule->start_time;
+                $endVal = $schedule->end_time;
+                $startStr = $startVal instanceof \Carbon\Carbon ? $startVal->format('H:i:s') : (strlen((string)$startVal) === 5 ? ((string)$startVal).':00' : (string)$startVal);
+                $endStr = $endVal instanceof \Carbon\Carbon ? $endVal->format('H:i:s') : (strlen((string)$endVal) === 5 ? ((string)$endVal).':00' : (string)$endVal);
+                $srcTz = $this->normalizeTimezone($schedule->timezone ?: $tz);
+                try {
+                    $start = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $dateStr.' '.$startStr, $srcTz)->setTimezone($tz);
+                } catch (\Throwable $e) {
+                    $start = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $dateStr.' '.$startStr, 'UTC')->setTimezone($tz);
+                }
+                try {
+                    $end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $dateStr.' '.$endStr, $srcTz)->setTimezone($tz);
+                } catch (\Throwable $e) {
+                    $end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $dateStr.' '.$endStr, 'UTC')->setTimezone($tz);
+                }
+
+                $title = $schedule->meeting_agenda
+                    ?: ($schedule->session_type ? ucwords(str_replace('_',' ',$schedule->session_type)) : 'Training Session');
+                $dayLabel = $start->isToday() ? 'Today' : $start->format('l');
+                $image = $schedule->trainer && $schedule->trainer->profile_image
+                    ? asset('storage/'.$schedule->trainer->profile_image)
+                    : asset('images/defaults/session-placeholder.jpg');
+
+                return [
+                    'id' => $schedule->id,
+                    'title' => $title,
+                    'day' => $dayLabel,
+                    'date' => $start->toDateString(),
+                    'start_time' => $start->format('h:i A'),
+                    'end_time' => $end->format('h:i A'),
+                    'time' => $start->format('h:i A').' - '.$end->format('h:i A'),
+                    'image' => $image,
+                    'trainer_name' => $schedule->trainer ? $schedule->trainer->name : null,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'upcoming_sessions' => $upcoming,
+                    'count' => $upcoming->count(),
+                ],
+                'message' => 'Client dashboard retrieved successfully'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to retrieve client dashboard: '.$e->getMessage(), [
+                'client_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Retrieval Failed',
+                'data' => ['error' => 'Unable to retrieve dashboard']
+            ], 500);
+        }
+    }
+
+    private function normalizeTimezone(?string $tz): string
+    {
+        $tz = trim((string) $tz);
+        if ($tz === '') { return 'UTC'; }
+        $lower = strtolower($tz);
+        if ($lower === 'utc') { return 'UTC'; }
+        if (in_array($lower, ['pkt', 'utc+5', 'utc+05', 'utc+05:00'], true)) { return 'Asia/Karachi'; }
+        if (preg_match('/^utc([+-])(\d{1,2})(?::?(\d{2}))?$/i', $tz, $m)) {
+            $sign = $m[1];
+            $h = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+            $min = isset($m[3]) && $m[3] !== '' ? str_pad($m[3], 2, '0', STR_PAD_LEFT) : '00';
+            return $sign.$h.':'.$min;
+        }
+        try {
+            new \DateTimeZone($tz);
+            return $tz;
+        } catch (\Throwable $e) {
+            return 'UTC';
+        }
+    }
     /**
      * Get all active workouts with optional filtering and pagination
      * 
@@ -489,94 +592,94 @@ class ClientWorkoutController extends Controller
         }
     }
     
-    /**
-     * Get dashboard data for client including upcoming workouts
-     * 
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function getDashboard(Request $request): JsonResponse
-    {
-        try {
-            // Get upcoming/recent workouts (limit to 5 for dashboard)
-            $upcomingWorkouts = Workout::where('is_active', true)
-                                      ->with([
-                                          'user:id,name,email,profile_image',
-                                          'videos' => function ($q) {
-                                              $q->orderBy('order')->limit(1); // Get first video for preview
-                                          }
-                                      ])
-                                      ->orderBy('created_at', 'desc')
-                                      ->limit(3) // Changed limit to 3 for latest upcoming workouts
-                                      ->get()
-                                      ->map(function ($workout) {
-                                          return [
-                                              'id' => $workout->id,
-                                              'name' => $workout->name,
-                                              'description' => $workout->description,
-                                              'duration' => $workout->duration,
-                                              'formatted_duration' => $workout->formatted_duration,
-                                              'thumbnail' => $workout->thumbnail,
-                                              'trainer' => $workout->user ? [
-                                                  'id' => $workout->user->id,
-                                                  'name' => $workout->user->name,
-                                                  'email' => $workout->user->email,
-                                                  'profile_image' => $workout->user->profile_image ?? null
-                                              ] : [
-                                                  'id' => null,
-                                                  'name' => 'Unknown Trainer',
-                                                  'email' => null,
-                                                  'profile_image' => null
-                                              ],
-                                              'video_count' => $workout->videos->count(),
-                                              'preview_video' => $workout->videos->first() ? [
-                                                  'id' => $workout->videos->first()->id,
-                                                  'title' => $workout->videos->first()->title,
-                                                  'thumbnail' => $workout->videos->first()->thumbnail,
-                                                  'video_url' => $workout->videos->first()->video_url,
-                                                  'video_type' => $workout->videos->first()->video_type
-                                              ] : null,
-                                              'created_at' => $workout->created_at->toISOString()
-                                          ];
-                                      });
+    // /**
+    //  * Get dashboard data for client including upcoming workouts
+    //  * 
+    //  * @param  \Illuminate\Http\Request  $request
+    //  * @return \Illuminate\Http\JsonResponse
+    //  */
+    // public function getDashboard(Request $request): JsonResponse
+    // {
+    //     try {
+    //         // Get upcoming/recent workouts (limit to 5 for dashboard)
+    //         $upcomingWorkouts = Workout::where('is_active', true)
+    //                                   ->with([
+    //                                       'user:id,name,email,profile_image',
+    //                                       'videos' => function ($q) {
+    //                                           $q->orderBy('order')->limit(1); // Get first video for preview
+    //                                       }
+    //                                   ])
+    //                                   ->orderBy('created_at', 'desc')
+    //                                   ->limit(3) // Changed limit to 3 for latest upcoming workouts
+    //                                   ->get()
+    //                                   ->map(function ($workout) {
+    //                                       return [
+    //                                           'id' => $workout->id,
+    //                                           'name' => $workout->name,
+    //                                           'description' => $workout->description,
+    //                                           'duration' => $workout->duration,
+    //                                           'formatted_duration' => $workout->formatted_duration,
+    //                                           'thumbnail' => $workout->thumbnail,
+    //                                           'trainer' => $workout->user ? [
+    //                                               'id' => $workout->user->id,
+    //                                               'name' => $workout->user->name,
+    //                                               'email' => $workout->user->email,
+    //                                               'profile_image' => $workout->user->profile_image ?? null
+    //                                           ] : [
+    //                                               'id' => null,
+    //                                               'name' => 'Unknown Trainer',
+    //                                               'email' => null,
+    //                                               'profile_image' => null
+    //                                           ],
+    //                                           'video_count' => $workout->videos->count(),
+    //                                           'preview_video' => $workout->videos->first() ? [
+    //                                               'id' => $workout->videos->first()->id,
+    //                                               'title' => $workout->videos->first()->title,
+    //                                               'thumbnail' => $workout->videos->first()->thumbnail,
+    //                                               'video_url' => $workout->videos->first()->video_url,
+    //                                               'video_type' => $workout->videos->first()->video_type
+    //                                           ] : null,
+    //                                           'created_at' => $workout->created_at->toISOString()
+    //                                       ];
+    //                                   });
             
-            // Get workout statistics for dashboard
-            $stats = [
-                'total_trainers' => Workout::where('is_active', true)
-                                          ->distinct('user_id')
-                                          ->count('user_id')
-            ];
+    //         // Get workout statistics for dashboard
+    //         $stats = [
+    //             'total_trainers' => Workout::where('is_active', true)
+    //                                       ->distinct('user_id')
+    //                                       ->count('user_id')
+    //         ];
             
             
             
-            // Re-index the array after filtering
+    //         // Re-index the array after filtering
             
-            $dashboardData = [
-                'upcoming_workouts' => $upcomingWorkouts,
-                'statistics' => $stats,
-                'messages' => [],
+    //         $dashboardData = [
+    //             'upcoming_workouts' => $upcomingWorkouts,
+    //             'statistics' => $stats,
+    //             'messages' => [],
                 
-            ];
+    //         ];
             
-            return response()->json([
-                'success' => true,
-                'data' => $dashboardData,
-                'message' => 'Dashboard data retrieved successfully'
-            ]);
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => $dashboardData,
+    //             'message' => 'Dashboard data retrieved successfully'
+    //         ]);
             
-        } catch (\Exception $e) {
-            Log::error('Failed to retrieve dashboard data for client: ' . $e->getMessage(), [
-                'client_id' => Auth::id(),
-                'trace' => $e->getTraceAsString()
-            ]);
+    //     } catch (\Exception $e) {
+    //         Log::error('Failed to retrieve dashboard data for client: ' . $e->getMessage(), [
+    //             'client_id' => Auth::id(),
+    //             'trace' => $e->getTraceAsString()
+    //         ]);
             
-            return response()->json([
-                'success' => false,
-                'message' => 'Dashboard Failed',
-                'data' => ['error' => 'Unable to retrieve dashboard data: ' . $e->getMessage()]
-            ], 500);
-        }
-    }
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Dashboard Failed',
+    //             'data' => ['error' => 'Unable to retrieve dashboard data: ' . $e->getMessage()]
+    //         ], 500);
+    //     }
+    // }
     
     /**
      * Get assigned workouts for the authenticated client with comprehensive video details

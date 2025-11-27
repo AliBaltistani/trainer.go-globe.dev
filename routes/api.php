@@ -92,6 +92,7 @@ Route::middleware('auth:sanctum')->group(function () {
      */
 
     Route::middleware('trainer')->prefix('trainer')->name('api.trainer.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Api\TrainerController::class, 'getDashboard'])->name('dashboard');
         /**
          * Trainer Scheduling & Availability Management
          * Complete scheduling operations for trainers
