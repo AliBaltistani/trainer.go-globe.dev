@@ -197,9 +197,9 @@
                                     <i class="ri-chat-3-line fs-48 text-muted mb-3"></i>
                                     <h5 class="fw-semibold mb-2">No Reviews Yet</h5>
                                     <p class="text-muted mb-3">You haven't received any client reviews yet.</p>
-                                    <button class="btn btn-primary" onclick="openTestimonialModal()">
+                                    <!-- <button class="btn btn-primary" onclick="openTestimonialModal()">
                                         <i class="ri-add-line me-1"></i>Add Your First Review
-                                    </button>
+                                    </button> -->
                                 </td>
                             </tr>
                             @endforelse

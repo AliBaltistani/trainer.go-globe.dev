@@ -185,10 +185,10 @@
                 <div class="text-center py-5">
                     <i class="ri-chat-3-line fs-48 text-muted mb-3"></i>
                     <h6 class="fw-semibold mb-2">No Reviews Yet</h6>
-                    <p class="text-muted mb-3">Complete your profile to start receiving client reviews!</p>
+                    <!-- <p class="text-muted mb-3">Complete your profile to start receiving client reviews!</p>
                     <a href="{{ route('trainers.edit', Auth::id()) }}" class="btn btn-primary btn-sm">
                         <i class="ri-edit-line me-1"></i>Complete Profile
-                    </a>
+                    </a> -->
                 </div>
                 @endforelse
             </div>
@@ -265,7 +265,7 @@
                     <i class="ri-award-line fs-48 text-muted mb-3"></i>
                     <h6 class="fw-semibold mb-2">No Certifications Yet</h6>
                     <p class="text-muted mb-3">Add your certifications to build credibility with clients!</p>
-                    <a href="{{ route('trainers.certifications.create', Auth::id()) }}" class="btn btn-primary btn-sm">
+                    <a href="{{ route('trainer.certifications') }}" class="btn btn-primary btn-sm">
                         <i class="ri-add-line me-1"></i>Add Your First Certification
                     </a>
                 </div>
