@@ -21,16 +21,8 @@ use App\Models\Week;
 
 // Import API Controllers
 use App\Http\Controllers\ApiAuthController;
-use App\Http\Controllers\ApiUserController;
-use App\Http\Controllers\ApiGoalController;
-use App\Http\Controllers\Admin\WorkoutController;
-use App\Http\Controllers\Admin\WorkoutVideoController;
 use App\Http\Controllers\Api\TrainerController;
-use App\Http\Controllers\Api\ClientController;
-use App\Http\Controllers\Api\TrainerBookingController;
-use App\Http\Controllers\Api\ClientBookingController;
 use App\Http\Controllers\Api\SessionBookingController;
-use App\Http\Controllers\Api\ApiProgramVideoController;
 
 
 
@@ -84,6 +76,22 @@ Route::middleware('auth:sanctum')->group(function () {
      * Accessible by both trainers and clients with role-based filtering
      */
     // Route::get('/appointment', [\App\Http\Controllers\Api\ClientBookingController::class, 'getUnifiedSchedule'])->name('api.appointment.unified');
+
+    /**
+     * =========================================================================
+     * ADMIN ROLE ROUTES (Admin Access Only)
+     * =========================================================================
+     */
+    Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->name('api.admin.')->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [\App\Http\Controllers\Api\AdminDashboardController::class, 'index'])->name('dashboard');
+        
+        // User Management
+        Route::get('/users', [\App\Http\Controllers\Api\AdminUserController::class, 'index'])->name('users.index');
+        // Route::post('/users', [\App\Http\Controllers\Api\AdminUserController::class, 'store'])->name('users.store');
+        Route::get('/users/{id}', [\App\Http\Controllers\Api\AdminUserController::class, 'show'])->name('users.show');
+        // Route::put('/users/{id}', [\App\Http\Controllers\Api\AdminUserController::class, 'update'])->name('users.update');
+    });
 
     /**
      * =========================================================================

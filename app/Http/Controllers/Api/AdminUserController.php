@@ -6,6 +6,8 @@ use App\Http\Controllers\ApiBaseController;
 use App\Models\User;
 use App\Models\UserCertification;
 use App\Models\Testimonial;
+use App\Models\Program;
+use App\Models\ClientProgress;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -343,7 +345,18 @@ class AdminUserController extends ApiBaseController
                         'status' => $goal->status,
                         'created_at' => $goal->created_at->toISOString()
                     ];
-                })
+                }),
+                'assigned_programs' => $user->role === 'client' ? Program::where('client_id', $user->id)->get()->map(function($program) {
+                    return [
+                        'id' => $program->id,
+                        'name' => $program->name,
+                        'duration' => $program->duration . ' weeks'
+                    ];
+                }) : [],
+                'progress' => $user->role === 'client' ? [
+                    'workout_completion' => 'Completed 0/0 workouts', // Placeholder until tracking is finalized
+                    'weight_change' => 'Lost 0 lbs' // Placeholder until weight tracking is finalized
+                ] : null
             ];
             
             return $this->sendResponse($transformedUser, 'User retrieved successfully');
