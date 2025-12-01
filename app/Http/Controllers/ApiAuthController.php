@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\DeviceToken;
 use App\Models\PasswordReset;
 use App\Services\TwilioSmsService;
 use Illuminate\Http\Request;
@@ -116,8 +117,10 @@ class ApiAuthController extends ApiBaseController
             $validator = Validator::make($request->all(), [
                 'provider' => 'required|in:google,apple',
                 'token' => 'required|string',
-                'platform' => 'nullable|in:web,mobile',
-                'device_name' => 'nullable|string|max:255'
+                'platform' => 'nullable|in:web,mobile,android,ios',
+                'device_name' => 'nullable|string|max:255',
+                'device_token' => 'nullable|string',
+                'device_type' => 'nullable|in:android,ios,web',
             ]);
             if ($validator->fails()) {
                 return $this->sendError('Validation Error', $validator->errors(), 422);
@@ -153,6 +156,27 @@ class ApiAuthController extends ApiBaseController
             }
 
             $apiToken = $user->createToken($deviceName)->plainTextToken;
+
+            // Save Device Token if provided (Optional)
+            if ($request->filled('device_token')) {
+                $tokenPlatform = $request->platform ?? $request->device_type ?? 'web';
+                
+                try {
+                    DeviceToken::updateOrCreate(
+                        ['device_token' => $request->device_token],
+                        [
+                            'user_id' => $user->id,
+                            'platform' => $tokenPlatform
+                        ]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Failed to save device token during social login', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
             return $this->sendResponse([
                 'token' => $apiToken,
                 'token_type' => 'Bearer',
@@ -178,8 +202,10 @@ class ApiAuthController extends ApiBaseController
                 'token' => 'required|string',
                 'role' => 'required|in:admin,trainer,client',
                 'phone' => 'required|string|max:20|unique:users,phone',
-                'platform' => 'nullable|in:web,mobile',
-                'device_name' => 'nullable|string|max:255'
+                'platform' => 'nullable|in:web,mobile,android,ios',
+                'device_name' => 'nullable|string|max:255',
+                'device_token' => 'nullable|string',
+                'device_type' => 'nullable|in:android,ios,web',
             ]);
             if ($validator->fails()) {
                 return $this->sendError('Validation Error', $validator->errors(), 422);
@@ -228,6 +254,27 @@ class ApiAuthController extends ApiBaseController
             ]);
 
             $apiToken = $user->createToken($deviceName)->plainTextToken;
+
+            // Save Device Token if provided (Optional)
+            if ($request->filled('device_token')) {
+                $tokenPlatform = $request->platform ?? $request->device_type ?? 'web';
+                
+                try {
+                    DeviceToken::updateOrCreate(
+                        ['device_token' => $request->device_token],
+                        [
+                            'user_id' => $user->id,
+                            'platform' => $tokenPlatform
+                        ]
+                    );
+                } catch (\Exception $e) {
+                    Log::error('Failed to save device token during social signup', [
+                        'user_id' => $user->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
             return $this->sendResponse([
                 'token' => $apiToken,
                 'token_type' => 'Bearer',
@@ -338,8 +385,12 @@ class ApiAuthController extends ApiBaseController
     private function isPlatformAllowed(?string $role, ?string $platform): bool
     {
         if (!$role || !$platform) { return true; }
+        
+        // Normalize platform checks
+        $isMobile = in_array($platform, ['mobile', 'android', 'ios']);
+        
         if ($role === 'admin' && $platform !== 'web') { return false; }
-        if ($role === 'client' && $platform !== 'mobile') { return false; }
+        if ($role === 'client' && !$isMobile) { return false; }
         return true;
     }
 
@@ -615,7 +666,10 @@ class ApiAuthController extends ApiBaseController
             $validator = Validator::make($request->all(), [
                 'email' => 'required|email',
                 'password' => 'required|string|min:6',
-                'device_name' => 'nullable|string|max:255'
+                'device_name' => 'nullable|string|max:255',
+                'device_token' => 'nullable|string',
+                'platform' => 'nullable|in:android,ios,web',
+                'device_type' => 'nullable|in:android,ios,web',
             ]);
             
             if ($validator->fails()) {
@@ -630,6 +684,27 @@ class ApiAuthController extends ApiBaseController
                 
                 // Create token
                 $token = $user->createToken($deviceName)->plainTextToken;
+                
+                // Save Device Token if provided (Optional)
+                if ($request->filled('device_token')) {
+                    $platform = $request->platform ?? $request->device_type ?? 'web';
+                    
+                    try {
+                        DeviceToken::updateOrCreate(
+                            ['device_token' => $request->device_token],
+                            [
+                                'user_id' => $user->id,
+                                'platform' => $platform
+                            ]
+                        );
+                    } catch (\Exception $e) {
+                        // Log error but don't fail login
+                        Log::error('Failed to save device token during login', [
+                            'user_id' => $user->id,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
                 
                 // Prepare response data
                 $responseData = [
