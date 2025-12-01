@@ -46,6 +46,7 @@
                             <th>Status</th>
                             <th>Scheduled</th>
                             <th>Created</th>
+                            <th>Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -67,10 +68,22 @@
                                 </td>
                                 <td>{{ $payout->scheduled_at ? $payout->scheduled_at->format('M d, Y H:i') : '—' }}</td>
                                 <td>{{ $payout->created_at->format('M d, Y') }}</td>
+                                <td>
+                                    @if($payout->payout_status !== 'completed')
+                                        <form action="{{ route('admin.payouts.process', $payout->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to process this payout?');">
+                                            @csrf
+                                            <button type="submit" class="btn btn-sm btn-primary-light" title="Process Payout">
+                                                <i class="ri-bank-card-line me-1"></i> Pay
+                                            </button>
+                                        </form>
+                                    @else
+                                        <span class="badge bg-success-transparent"><i class="ri-check-double-line me-1"></i> Paid</span>
+                                    @endif
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4">
+                                <td colspan="9" class="text-center py-4">
                                     <div class="d-flex flex-column align-items-center">
                                         <i class="ri-exchange-dollar-line fs-1 text-muted mb-2"></i>
                                         <h6 class="fw-semibold mb-1">No Payouts Found</h6>

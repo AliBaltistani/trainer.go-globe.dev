@@ -39,7 +39,7 @@ class AdminBillingController extends ApiBaseController
                 ->sum('amount');
 
             // Trainer Payouts: Sum of all completed payouts
-            $trainerPayouts = Payout::where('payout_status', 'paid') // Assuming 'paid' is the status for completed payouts
+            $trainerPayouts = Payout::where('payout_status', 'completed')
                 ->sum('amount');
 
             // Pending Payments: Sum of unpaid invoices (money owed to platform/trainers)
@@ -49,7 +49,7 @@ class AdminBillingController extends ApiBaseController
             // A safe bet for "Pending Payments" in an admin dashboard is usually money waiting to be cleared or paid out.
             // Let's use Pending Payouts + Unpaid Invoices
             
-            $pendingPayouts = Payout::where('payout_status', 'pending')->sum('amount');
+            $pendingPayouts = Payout::where('payout_status', 'processing')->sum('amount');
             $pendingInvoices = Invoice::where('status', 'pending')->sum('total_amount');
             
             // Interpreting "Pending Payments" as pending money movements. 
@@ -139,6 +139,54 @@ class AdminBillingController extends ApiBaseController
         } catch (\Exception $e) {
             Log::error('Billing API Error: ' . $e->getMessage());
             return $this->sendError('Failed to retrieve billing details', ['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get all transactions with pagination and filtering
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function transactions(Request $request)
+    {
+        try {
+            $query = Transaction::with(['invoice.client', 'invoice.trainer']);
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->string('status'));
+            }
+
+            $transactions = $query->latest()->paginate(20);
+
+            return $this->sendResponse($transactions, 'Transactions retrieved successfully');
+        } catch (\Exception $e) {
+            Log::error('Transactions API Error: ' . $e->getMessage());
+            return $this->sendError('Failed to retrieve transactions', ['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get all payouts with pagination and filtering
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function payouts(Request $request)
+    {
+        try {
+            $query = Payout::with(['trainer']);
+
+            if ($request->filled('status')) {
+                $query->where('payout_status', $request->string('status'));
+            }
+
+            $payouts = $query->latest()->paginate(20);
+
+            return $this->sendResponse($payouts, 'Payouts retrieved successfully');
+        } catch (\Exception $e) {
+            Log::error('Payouts API Error: ' . $e->getMessage());
+            return $this->sendError('Failed to retrieve payouts', ['error' => $e->getMessage()], 500);
         }
     }
 }

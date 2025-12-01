@@ -95,5 +95,53 @@ class StripePaymentService
             'payment_intent' => $session->payment_intent,
         ];
     }
+
+    /**
+     * Transfer funds to a connected Stripe account
+     * 
+     * @param float $amount Amount in major units (e.g., 10.50)
+     * @param string $currency Currency code (e.g., 'usd')
+     * @param string $destinationAccountId Stripe Connect Account ID
+     * @param string|null $transferGroup Optional transfer group for reconciliation
+     * @return array Transfer details
+     * @throws \Exception
+     */
+    public function transferToConnectAccount(float $amount, string $currency, string $destinationAccountId, ?string $transferGroup = null): array
+    {
+        $amountCents = (int) round($amount * 100);
+        
+        $params = [
+            'amount' => $amountCents,
+            'currency' => strtolower($currency),
+            'destination' => $destinationAccountId,
+        ];
+
+        if ($transferGroup) {
+            $params['transfer_group'] = $transferGroup;
+        }
+
+        try {
+            $transfer = $this->stripe->transfers->create($params);
+            return [
+                'id' => $transfer->id,
+                'amount' => $transfer->amount,
+                'currency' => $transfer->currency,
+                'destination' => $transfer->destination,
+                'status' => 'success', // Transfers are usually instant
+            ];
+        } catch (\Exception $e) {
+            throw new \Exception('Stripe Transfer Failed: ' . $e->getMessage());
+        }
+    }
+
+    public function refundPayment(string $paymentIntentId, ?float $amount = null): array
+    {
+        $params = ['payment_intent' => $paymentIntentId];
+        if ($amount) {
+            $params['amount'] = (int) round($amount * 100);
+        }
+        $refund = $this->stripe->refunds->create($params);
+        return ['id' => $refund->id, 'status' => $refund->status];
+    }
 }
 

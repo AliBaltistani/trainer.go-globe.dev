@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Trainer\TrainerDashboardController;
 use App\Http\Controllers\Trainer\TrainerWebController;
+use App\Http\Controllers\Trainer\NutritionPlansController;
 
 /**
  * Public Routes
@@ -497,10 +498,15 @@ Route::middleware('auth')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\BillingController::class, 'invoices'])->name('admin.invoices.index');
         });
 
+        Route::prefix('transactions')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\BillingController::class, 'transactions'])->name('admin.transactions.index');
+            Route::post('/{id}/refund', [\App\Http\Controllers\Admin\BillingController::class, 'refundTransaction'])->name('admin.transactions.refund');
+        });
+
         Route::prefix('payouts')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\BillingController::class, 'payouts'])->name('admin.payouts.index');
             Route::get('/export', [\App\Http\Controllers\Admin\BillingController::class, 'exportPayouts'])->name('admin.payouts.export');
-            Route::post('/{id}/retry', [\App\Http\Controllers\Admin\BillingController::class, 'retryPayout'])->name('admin.payouts.retry');
+            Route::post('/{id}/process', [\App\Http\Controllers\Admin\BillingController::class, 'processPayout'])->name('admin.payouts.process');
         });
 
         Route::get('/billing-dashboard', [\App\Http\Controllers\Admin\BillingController::class, 'dashboard'])->name('admin.billing.dashboard');
@@ -660,27 +666,27 @@ Route::middleware('auth')->group(function () {
 
         // Nutrition Plans Management (Trainer)
         Route::prefix('nutrition-plans')->name('trainer.nutrition-plans.')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'index'])->name('index');
-            Route::get('/create', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'create'])->name('create');
-            Route::post('/store', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'store'])->name('store');
-            Route::get('/{id}', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'show'])->name('show');
-            Route::get('/{id}/edit', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'update'])->name('update');
-            Route::delete('/{id}', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'destroy'])->name('destroy');
-            Route::patch('/{id}/toggle-status', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'toggleStatus'])->name('toggle-status');
-            Route::post('/{id}/duplicate', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'duplicate'])->name('duplicate');
-            Route::get('/{id}/pdf-data', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfData'])->name('pdf-data');
-            Route::get('/{id}/pdf-inline', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfInline'])->name('pdf-inline');
-            Route::get('/{id}/pdf-view', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfView'])->name('pdf-view');
-            Route::get('/{id}/pdf-download', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'pdfDownload'])->name('pdf-download');
-            Route::delete('/{id}/delete-media', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'deleteMedia'])->name('delete-media');
+            Route::get('/', [NutritionPlansController::class, 'index'])->name('index');
+            Route::get('/create', [NutritionPlansController::class, 'create'])->name('create');
+            Route::post('/store', [NutritionPlansController::class, 'store'])->name('store');
+            Route::get('/{id}', [NutritionPlansController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [NutritionPlansController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [NutritionPlansController::class, 'update'])->name('update');
+            Route::delete('/{id}', [NutritionPlansController::class, 'destroy'])->name('destroy');
+            Route::patch('/{id}/toggle-status', [NutritionPlansController::class, 'toggleStatus'])->name('toggle-status');
+            Route::post('/{id}/duplicate', [NutritionPlansController::class, 'duplicate'])->name('duplicate');
+            Route::get('/{id}/pdf-data', [NutritionPlansController::class, 'pdfData'])->name('pdf-data');
+            Route::get('/{id}/pdf-inline', [NutritionPlansController::class, 'pdfInline'])->name('pdf-inline');
+            Route::get('/{id}/pdf-view', [NutritionPlansController::class, 'pdfView'])->name('pdf-view');
+            Route::get('/{id}/pdf-download', [NutritionPlansController::class, 'pdfDownload'])->name('pdf-download');
+            Route::delete('/{id}/delete-media', [NutritionPlansController::class, 'deleteMedia'])->name('delete-media');
 
             // Categories and Calculator
-            Route::get('/categories', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'getCategories'])->name('categories');
-            Route::get('/{id}/calculator', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'calculator'])->name('calculator');
-            Route::post('/calculate-nutrition', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'calculateNutrition'])->name('calculate-nutrition');
-            Route::post('/{id}/save-calculated-nutrition', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'saveCalculatedNutrition'])->name('save-calculated-nutrition');
-            Route::get('/{id}/calculator-data', [\App\Http\Controllers\Trainer\NutritionPlansController::class, 'getCalculatorData'])->name('calculator-data');
+            Route::get('/categories', [NutritionPlansController::class, 'getCategories'])->name('categories');
+            Route::get('/{id}/calculator', [NutritionPlansController::class, 'calculator'])->name('calculator');
+            Route::post('/calculate-nutrition', [NutritionPlansController::class, 'calculateNutrition'])->name('calculate-nutrition');
+            Route::post('/{id}/save-calculated-nutrition', [NutritionPlansController::class, 'saveCalculatedNutrition'])->name('save-calculated-nutrition');
+            Route::get('/{id}/calculator-data', [NutritionPlansController::class, 'getCalculatorData'])->name('calculator-data');
 
             // Nutrition Meals Management (Trainer)
             Route::prefix('{planId}/meals')->name('meals.')->group(function () {

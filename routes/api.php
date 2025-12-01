@@ -94,6 +94,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Billing & Payments
         Route::get('/billing', [\App\Http\Controllers\Api\AdminBillingController::class, 'index'])->name('billing.index');
+        Route::get('/billing/transactions', [\App\Http\Controllers\Api\AdminBillingController::class, 'transactions'])->name('billing.transactions');
+        Route::get('/billing/payouts', [\App\Http\Controllers\Api\AdminBillingController::class, 'payouts'])->name('billing.payouts');
     });
 
     /**
