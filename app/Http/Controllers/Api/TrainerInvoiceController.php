@@ -7,12 +7,21 @@ use App\Models\Invoice;
 use App\Models\InvoiceItem;
 use App\Models\Schedule;
 use App\Models\Workout;
+use App\Services\NotificationService;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class TrainerInvoiceController extends ApiBaseController
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function index()
     {
         $invoices = Invoice::where('trainer_id', Auth::id())->latest()->paginate(20);
@@ -93,6 +102,21 @@ class TrainerInvoiceController extends ApiBaseController
         }
 
         $invoice->update(['total_amount' => $total]);
+
+        // Notify Client
+        $client = User::find($data['client_id']);
+        if ($client) {
+            $this->notificationService->sendNotification(
+                $client,
+                'New Invoice Received',
+                'You have received a new invoice for ' . $invoice->currency . ' ' . $invoice->total_amount,
+                [
+                    'type' => 'invoice',
+                    'invoice_id' => $invoice->id,
+                    'redirect' => 'InvoiceScreen'
+                ]
+            );
+        }
 
         return response()->json(['success' => true, 'invoice' => $invoice->load('items')]);
     }

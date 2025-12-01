@@ -7,6 +7,8 @@ use App\Models\PaymentGateway;
 use App\Models\Transaction;
 use App\Models\Payout;
 use App\Models\WebhookLog;
+use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -24,7 +26,7 @@ class ProcessStripeWebhook implements ShouldQueue
         $this->payload = $payload;
     }
 
-    public function handle(): void
+    public function handle(NotificationService $notificationService): void
     {
         $type = $this->payload['type'] ?? null;
         $data = $this->payload['data']['object'] ?? [];
@@ -49,6 +51,17 @@ class ProcessStripeWebhook implements ShouldQueue
                         'fee_amount' => 0,
                         'payout_status' => 'processing',
                     ]);
+
+                    // Notify Trainer
+                    $trainer = User::find($txn->trainer_id);
+                    if ($trainer) {
+                         $notificationService->notifyPaymentStatus($trainer, 'Paid', $txn->id);
+                    }
+                    // Notify Client
+                    $client = User::find($invoice->client_id);
+                    if ($client) {
+                         $notificationService->notifyPaymentStatus($client, 'Paid', $txn->id);
+                    }
                 }
             }
         } elseif ($type === 'payment_intent.payment_failed') {
@@ -62,6 +75,12 @@ class ProcessStripeWebhook implements ShouldQueue
                 if ($invoice && $invoice->status !== 'failed') {
                     $invoice->status = 'failed';
                     $invoice->save();
+
+                    // Notify Client
+                    $client = User::find($invoice->client_id);
+                    if ($client) {
+                         $notificationService->notifyPaymentStatus($client, 'Failed', $txn->id);
+                    }
                 }
             }
         }

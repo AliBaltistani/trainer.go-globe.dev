@@ -174,39 +174,54 @@
 							<!-- Start::header-link|dropdown-toggle -->
 							<a href="javascript:void(0);" class="header-link dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" id="messageDropdown" aria-expanded="false">
 								<svg xmlns="http://www.w3.org/2000/svg" class="header-link-icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M56,104a72,72,0,0,1,144,0c0,35.82,8.3,64.6,14.9,76A8,8,0,0,1,208,192H48a8,8,0,0,1-6.88-12C47.71,168.6,56,139.81,56,104Z" opacity="0.2"/><path d="M96,192a32,32,0,0,0,64,0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M56,104a72,72,0,0,1,144,0c0,35.82,8.3,64.6,14.9,76A8,8,0,0,1,208,192H48a8,8,0,0,1-6.88-12C47.71,168.6,56,139.81,56,104Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+                                @php
+                                    $unreadCount = Auth::check() ? Auth::user()->notifications()->where('status', 'unread')->count() : 0;
+                                    $notifications = Auth::check() ? Auth::user()->notifications()->latest()->take(10)->get() : collect();
+                                @endphp
+                                @if($unreadCount > 0)
 								<span class="header-icon-pulse bg-secondary rounded pulse pulse-secondary"></span>
+                                @endif
 							</a>
 							<!-- End::header-link|dropdown-toggle -->
 							<!-- Start::main-header-dropdown -->
 							<div class="main-header-dropdown dropdown-menu dropdown-menu-end" data-popper-placement="none">
 								<div class="p-3 bg-primary text-fixed-white">
 									<div class="d-flex align-items-center justify-content-between">
-										<p class="mb-0 fs-16">Notifications</p>
-										<a href="javascript:void(0);" class="badge bg-light text-default border">Clear All</a>
+										<p class="mb-0 fs-16">Notifications @if($unreadCount > 0) <span class="badge bg-secondary-transparent text-fixed-white ms-2">{{ $unreadCount }}</span> @endif</p>
+										<a href="{{ route('notifications.clear') }}" class="badge bg-light text-default border" onclick="event.preventDefault(); document.getElementById('clear-notifications-form').submit();">Clear All</a>
+                                        <form id="clear-notifications-form" action="{{ route('notifications.clear') }}" method="POST" class="d-none">
+                                            @csrf
+                                        </form>
 									</div>
 								</div>
 								<div class="dropdown-divider"></div>
 								<ul class="list-unstyled mb-0" id="header-notification-scroll">
+                                    @forelse($notifications as $notification)
 									<li class="dropdown-item position-relative">
 										<a href="javascript:void(0);" class="stretched-link"></a>
 										<div class="d-flex align-items-start gap-3">
 											<div class="lh-1">
-												<!-- <span class="avatar avatar-sm avatar-rounded bg-primary-transparent">
-													<img src="{{asset('build/assets/images/faces/1.jpg')}}" alt="">
-												</span> -->
+												<span class="avatar avatar-sm avatar-rounded bg-primary-transparent">
+													<i class="ri-notification-line fs-14"></i>
+												</span>
 											</div>
 											<div class="flex-fill">
-												<!-- <span class="d-block fw-semibold">New Message</span> -->
-												<span class="d-block text-muted fs-12">No message found</span>
+												<span class="d-block fw-semibold">{{ $notification->title }}</span>
+												<span class="d-block text-muted fs-12">{{ Str::limit($notification->message, 50) }}</span>
 											</div>
-											<!-- <div class="text-end">
-												<span class="d-block mb-1 fs-12 text-muted">11:45am</span>
-												<span class="d-block text-primary d-none"><i class="ri-circle-fill fs-9"></i></span>
-											</div> -->
+                                            <div class="text-end">
+                                                <span class="d-block mb-1 fs-12 text-muted">{{ $notification->created_at->diffForHumans() }}</span>
+                                                @if($notification->status == 'unread')
+                                                <span class="d-block text-primary"><i class="ri-circle-fill fs-9"></i></span>
+                                                @endif
+                                            </div>
 										</div>
 									</li>
+                                    @empty
+                                    <!-- No notifications handled by the empty state div below, but list will be empty -->
+                                    @endforelse
 								</ul>
-								<div class="p-5 empty-item1 d-none">
+								<div class="p-5 empty-item1 @if($notifications->isNotEmpty()) d-none @endif">
 									<div class="text-center">
 										<span class="avatar avatar-xl avatar-rounded bg-secondary-transparent">
 											<i class="ri-notification-off-line fs-2"></i>

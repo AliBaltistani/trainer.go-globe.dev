@@ -72,6 +72,15 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     /**
+     * Push Notification Routes
+     */
+    Route::post('/save-device-token', [\App\Http\Controllers\Api\PushNotificationController::class, 'saveDeviceToken']);
+    Route::post('/remove-device-token', [\App\Http\Controllers\Api\PushNotificationController::class, 'removeDeviceToken']);
+    Route::get('/notifications/history', [\App\Http\Controllers\Api\PushNotificationController::class, 'history']);
+    Route::post('/notification/send-to-user', [\App\Http\Controllers\Api\PushNotificationController::class, 'sendToUser']);
+    Route::post('/notification/broadcast', [\App\Http\Controllers\Api\PushNotificationController::class, 'broadcast']);
+
+    /**
      * Unified Schedule API
      * Accessible by both trainers and clients with role-based filtering
      */

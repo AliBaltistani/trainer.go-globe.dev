@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Availability;
 use App\Models\BlockedTime;
 use App\Services\GoogleCalendarService;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
@@ -37,11 +38,19 @@ class TrainerBookingController extends Controller
     protected $googleCalendarService;
 
     /**
+     * Notification Service instance
+     * 
+     * @var NotificationService
+     */
+    protected $notificationService;
+
+    /**
      * Constructor
      */
-    public function __construct(GoogleCalendarService $googleCalendarService)
+    public function __construct(GoogleCalendarService $googleCalendarService, NotificationService $notificationService)
     {
         $this->googleCalendarService = $googleCalendarService;
+        $this->notificationService = $notificationService;
     }
 
     /**
@@ -225,6 +234,12 @@ class TrainerBookingController extends Controller
 
             // Load the created booking with relationships
             $schedule->load(['client:id,name,email,phone']);
+
+            // Notify Client
+            $this->notificationService->notifyNewSession($schedule->client, [
+                'id' => $schedule->id,
+                'date' => $schedule->date,
+            ]);
 
             $response = [
                 'success' => true,

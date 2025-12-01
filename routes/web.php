@@ -120,6 +120,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/activity-log', [UserProfileController::class, 'activityLog'])->name('profile.activity-log');
     });
 
+    // Notification Routes
+    Route::post('/notifications/clear', [\App\Http\Controllers\NotificationController::class, 'clearAll'])->name('notifications.clear');
+    Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
+
     /**
      * ADMIN ROUTES - Admin Role Required
      * System administration and management

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\ApiBaseController;
 use App\Models\Program;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -16,6 +17,13 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class TrainerProgramController extends ApiBaseController
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function index(Request $request): JsonResponse
     {
         try {
@@ -94,6 +102,22 @@ class TrainerProgramController extends ApiBaseController
                 'is_active' => (bool) $request->boolean('is_active', true),
             ]);
 
+            if ($clientId) {
+                $client = User::find($clientId);
+                if ($client) {
+                    $this->notificationService->sendNotification(
+                        $client,
+                        'New Program Assigned',
+                        "You have been assigned a new program: {$program->name}",
+                        [
+                            'type' => 'program_assignment',
+                            'program_id' => $program->id,
+                            'redirect' => 'ProgramScreen'
+                        ]
+                    );
+                }
+            }
+
             return $this->sendResponse(['program' => $program], 'Program created successfully', 201);
         } catch (\Exception $e) {
             Log::error('TrainerProgramController@store failed: ' . $e->getMessage(), [
@@ -158,6 +182,24 @@ class TrainerProgramController extends ApiBaseController
                 'client_id' => $clientId,
                 'is_active' => (bool) $request->boolean('is_active', $program->is_active),
             ]);
+
+            // Notify new client if client_id changed or just notify current client about update?
+            // Let's notify if client_id is set
+            if ($clientId) {
+                $client = User::find($clientId);
+                if ($client) {
+                    $this->notificationService->sendNotification(
+                        $client,
+                        'Program Updated',
+                        "Your program '{$program->name}' has been updated.",
+                        [
+                            'type' => 'program_update',
+                            'program_id' => $program->id,
+                            'redirect' => 'ProgramScreen'
+                        ]
+                    );
+                }
+            }
 
             return $this->sendResponse(['program' => $program], 'Program updated successfully');
         } catch (\Exception $e) {

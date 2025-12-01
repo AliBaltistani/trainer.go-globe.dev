@@ -9,6 +9,7 @@ use App\Models\Testimonial;
 use App\Models\TrainerSubscription;
 use App\Models\WorkoutAssignment;
 use App\Models\Schedule;
+use App\Services\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -32,6 +33,21 @@ use Carbon\Carbon;
  */
 class ClientController extends ApiBaseController
 {
+    /**
+     * Notification Service instance
+     * 
+     * @var NotificationService
+     */
+    protected $notificationService;
+
+    /**
+     * Constructor
+     */
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     /**
      * Find trainers with filtering and search capabilities
      * 
@@ -316,6 +332,9 @@ class ClientController extends ApiBaseController
             ]);
         }
 
+        // Notify Trainer
+        $this->notificationService->notifySubscription($trainer, $client);
+
         return response()->json([
             'success' => true,
             'message' => 'Subscribed successfully'
@@ -430,6 +449,9 @@ class ClientController extends ApiBaseController
                     'subscribed_at' => now(),
                 ]);
             }
+
+            // Notify Trainer
+            $this->notificationService->notifySubscription($trainer, $client);
 
             return response()->json([
                 'success' => true,

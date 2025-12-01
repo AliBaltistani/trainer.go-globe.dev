@@ -4,6 +4,8 @@ namespace App\Jobs;
 
 use App\Models\Invoice;
 use App\Models\Transaction;
+use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -20,7 +22,7 @@ class ProcessPayPalWebhook implements ShouldQueue
         $this->payload = $payload;
     }
 
-    public function handle(): void
+    public function handle(NotificationService $notificationService): void
     {
         $event = $this->payload['event_type'] ?? null;
         $resource = $this->payload['resource'] ?? [];
@@ -36,6 +38,17 @@ class ProcessPayPalWebhook implements ShouldQueue
                     if ($invoice && $invoice->status !== 'paid') {
                         $invoice->status = 'paid';
                         $invoice->save();
+
+                        // Notify Trainer
+                        $trainer = User::find($txn->trainer_id);
+                        if ($trainer) {
+                             $notificationService->notifyPaymentStatus($trainer, 'Paid', $txn->id);
+                        }
+                        // Notify Client
+                        $client = User::find($invoice->client_id);
+                        if ($client) {
+                             $notificationService->notifyPaymentStatus($client, 'Paid', $txn->id);
+                        }
                     }
                 }
             }
@@ -50,9 +63,14 @@ class ProcessPayPalWebhook implements ShouldQueue
                 if ($invoice && $invoice->status !== 'failed') {
                     $invoice->status = 'failed';
                     $invoice->save();
+
+                    // Notify Client
+                    $client = User::find($invoice->client_id);
+                    if ($client) {
+                         $notificationService->notifyPaymentStatus($client, 'Failed', $txn->id);
+                    }
                 }
             }
         }
     }
 }
-

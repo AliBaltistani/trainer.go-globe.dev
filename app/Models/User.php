@@ -101,6 +101,16 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserLocation::class);
     }
+
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(NotificationLog::class);
+    }
     
     /**
      * Get the certifications for the trainer.
