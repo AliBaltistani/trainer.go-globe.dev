@@ -16,10 +16,35 @@ class NotificationController extends Controller
     {
         $user = Auth::user();
         if ($user) {
-            $user->notifications()->update(['status' => 'read']);
+            $user->notifications()->where('status', '!=', 'read')->update(['status' => 'read']);
         }
 
         return back()->with('success', 'All notifications marked as read.');
+    }
+
+    /**
+     * Fetch latest notifications for polling.
+     */
+    public function getNotifications()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['count' => 0, 'html' => '']);
+        }
+
+        // Count all non-read notifications (pending, unread, etc.)
+        $unreadCount = $user->notifications()->where('status', '!=', 'read')->count();
+        
+        // Fetch only non-read notifications for the list
+        $notifications = $user->notifications()->where('status', '!=', 'read')->latest()->take(10)->get();
+
+        // Render the list HTML
+        $html = view('layouts.components.notification-items', compact('notifications'))->render();
+
+        return response()->json([
+            'count' => $unreadCount,
+            'html' => $html
+        ]);
     }
 
     /**
@@ -36,5 +61,21 @@ class NotificationController extends Controller
         }
 
         return back();
+    }
+
+    /**
+     * Show notification details.
+     */
+    public function show($id)
+    {
+        $user = Auth::user();
+        $notification = $user->notifications()->findOrFail($id);
+
+        // Mark as read if not already
+        if ($notification->status === 'unread') {
+            $notification->update(['status' => 'read']);
+        }
+
+        return view('notifications.show', compact('notification'));
     }
 }

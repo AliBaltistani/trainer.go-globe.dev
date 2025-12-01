@@ -121,7 +121,9 @@ Route::middleware('auth')->group(function () {
     });
 
     // Notification Routes
+    Route::get('/notifications/latest', [\App\Http\Controllers\NotificationController::class, 'getNotifications'])->name('notifications.latest');
     Route::post('/notifications/clear', [\App\Http\Controllers\NotificationController::class, 'clearAll'])->name('notifications.clear');
+    Route::get('/notifications/{id}', [\App\Http\Controllers\NotificationController::class, 'show'])->name('notifications.show');
     Route::post('/notifications/{id}/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
 
     /**

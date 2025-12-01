@@ -19,12 +19,6 @@ class NotificationService
      */
     public function sendNotification(User $user, string $title, string $message, array $payload = [])
     {
-        // $tokens = $user->deviceTokens()->pluck('device_token')->toArray();
-
-        // if (empty($tokens)) {
-        //     return;
-        // }
-
         // Create Log
         $log = NotificationLog::create([
             'user_id' => $user->id,
@@ -34,6 +28,11 @@ class NotificationService
             'status' => 'pending',
         ]);
 
+        $tokens = $user->deviceTokens()->pluck('device_token')->toArray();
+
+        if (empty($tokens)) {
+            return;
+        }
         // Dispatch Job
         SendNotificationJob::dispatch([
             'type' => 'tokens',
