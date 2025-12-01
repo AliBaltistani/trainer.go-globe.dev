@@ -91,6 +91,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Route::post('/users', [\App\Http\Controllers\Api\AdminUserController::class, 'store'])->name('users.store');
         Route::get('/users/{id}', [\App\Http\Controllers\Api\AdminUserController::class, 'show'])->name('users.show');
         // Route::put('/users/{id}', [\App\Http\Controllers\Api\AdminUserController::class, 'update'])->name('users.update');
+
+        // Billing & Payments
+        Route::get('/billing', [\App\Http\Controllers\Api\AdminBillingController::class, 'index'])->name('billing.index');
     });
 
     /**
