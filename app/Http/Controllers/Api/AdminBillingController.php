@@ -135,13 +135,6 @@ class AdminBillingController extends ApiBaseController
             // Trainer Payouts: Sum of all completed payouts
             $trainerPayouts = Payout::where('payout_status', 'completed')
                 ->sum('amount');
-
-            // Pending Payments: Sum of unpaid invoices (money owed to platform/trainers)
-            // OR Pending Payouts (money platform owes to trainers)
-            // Based on the image showing a positive amount, it could be either.
-            // Let's assume it tracks pending payouts to trainers for now, or pending invoice payments.
-            // A safe bet for "Pending Payments" in an admin dashboard is usually money waiting to be cleared or paid out.
-            // Let's use Pending Payouts + Unpaid Invoices
             
             $pendingPayouts = Payout::where('payout_status', 'processing')->sum('amount');
             $pendingInvoices = Invoice::where('status', 'pending')->sum('total_amount');
