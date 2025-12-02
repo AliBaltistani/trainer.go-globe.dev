@@ -54,68 +54,84 @@ class SessionBookingController extends ApiBaseController
     {
         try {
             $user = Auth::user();
-            $status = $request->get('status');
-            // Default to today if no date provided
-            $startDate = $request->get('start_date', Carbon::now(config('app.timezone'))->toDateString());
-            $endDate = $request->get('end_date');
+            $scheduleDate = $request->get('date', Carbon::now(config('app.timezone'))->toDateString());
+            
+            // Helper to build base query
+            $buildQuery = function() use ($user) {
+                $query = Schedule::with(['trainer:id,name,email,phone,profile_image', 'client:id,name,email,phone,profile_image']);
+                
+                if ($user->role === 'trainer') {
+                    $query->forTrainer($user->id);
+                } elseif ($user->role === 'client') {
+                    $query->forClient($user->id);
+                }
+                
+                return $query;
+            };
 
-            // Build query based on user role
-            $query = Schedule::with(['trainer:id,name,email,phone,profile_image', 'client:id,name,email,phone,profile_image']);
+            // 1. Upcoming Programs (Next upcoming sessions)
+            $now = Carbon::now(config('app.timezone'));
+            $upcomingQuery = $buildQuery();
+            
+            // Filter for upcoming: future dates OR today with future time
+            $upcomingQuery->where(function($q) use ($now) {
+                $q->where('date', '>', $now->toDateString())
+                  ->orWhere(function($subQ) use ($now) {
+                      $subQ->where('date', '=', $now->toDateString())
+                           ->where('start_time', '>', $now->format('H:i:s'));
+                  });
+            });
+            
+            // Only show active bookings in upcoming
+            $upcomingQuery->whereIn('status', [Schedule::STATUS_PENDING, Schedule::STATUS_CONFIRMED]);
+            $upcomingQuery->orderBy('date', 'asc')->orderBy('start_time', 'asc');
+            $upcomingPrograms = $upcomingQuery->limit(3)->get();
 
-            if ($user->role === 'trainer') {
-                $query->forTrainer($user->id);
-            } elseif ($user->role === 'client') {
-                $query->forClient($user->id);
-            } else {
-                return $this->sendError('Unauthorized', ['error' => 'Invalid user role'], 403);
+            // 2. Session Schedule (For specific date)
+            $scheduleQuery = $buildQuery();
+            $scheduleQuery->whereDate('date', $scheduleDate);
+            
+            // Apply status filter if provided
+            if ($request->has('status') && in_array($request->get('status'), [Schedule::STATUS_PENDING, Schedule::STATUS_CONFIRMED, Schedule::STATUS_CANCELLED])) {
+                $scheduleQuery->withStatus($request->get('status'));
             }
+            
+            $scheduleQuery->orderBy('start_time', 'asc');
+            $sessionSchedule = $scheduleQuery->get();
 
-            // Apply filters
-            if ($status && in_array($status, [Schedule::STATUS_PENDING, Schedule::STATUS_CONFIRMED, Schedule::STATUS_CANCELLED])) {
-                $query->withStatus($status);
-            }
-
-            // Apply date filters
-            if ($endDate) {
-                $query->dateRange($startDate, $endDate);
-            } else {
-                $query->whereDate('date', '>=', $startDate);
-            }
-
-            // Order by date and time
-            $query->orderBy('date', 'asc')->orderBy('start_time', 'asc');
-
-            $bookings = $query->get();
-
-            $formattedBookings = $bookings->map(function ($booking) use ($user) {
+            // Transformation function
+            $transform = function($booking) use ($user) {
                 $isTrainer = $user->role === 'trainer';
                 $otherParty = $isTrainer ? $booking->client : $booking->trainer;
                 
                 $name = $otherParty ? $otherParty->name : 'Unknown';
-                $image = $otherParty ? $otherParty->profile_image : null;
+                $image = ($otherParty && $otherParty->profile_image) ? asset('storage/' . $otherParty->profile_image) : null;
                 
                 $startTime = $booking->start_time->format('g:i A');
                 $endTime = $booking->end_time->format('g:i A');
                 
+                // Use meeting agenda as title, fallback to session type or default
+                $title = $booking->meeting_agenda ?? 
+                         ($booking->session_type ? ucwords(str_replace('_', ' ', $booking->session_type)) : 'Training Session');
+
                 return [
                     'id' => $booking->id,
                     'image' => $image,
-                    'title' => "{$startTime} - {$endTime} • {$name}",
-                    'subtitle' => $booking->session_type ? ucwords(str_replace('_', ' ', $booking->session_type)) : 'Training Session',
-                    'date' => $booking->date->format('Y-m-d'),
+                    'title' => $title,
                     'start_time' => $startTime,
                     'end_time' => $endTime,
+                    'date' => $booking->date->format('Y-m-d'),
                     'status' => $booking->status,
-                    'other_party_name' => $name
+                    'other_party_name' => $name,
+                    // Keeping subtitle for additional context if needed
+                    'subtitle' => $booking->session_type ? ucwords(str_replace('_', ' ', $booking->session_type)) : 'Training Session'
                 ];
-            });
+            };
 
-            // Group by date if needed, but for now returning flat list as per request "api should be same as in the provided image" 
-            // which implies a list of items. The UI likely groups them or shows "Today".
-            // If the request was for "Today's schedule", we might want to filter strict today, 
-            // but the code supports date range.
-            
-            return $this->sendResponse($formattedBookings, 'Schedule retrieved successfully');
+            return $this->sendResponse([
+                'upcoming_programs' => $upcomingPrograms->map($transform),
+                'session_schedule' => $sessionSchedule->map($transform)
+            ], 'Schedule retrieved successfully');
 
         } catch (\Exception $e) {
             Log::error('Error retrieving schedule', [
