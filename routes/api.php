@@ -115,6 +115,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('trainer')->prefix('trainer')->name('api.trainer.')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Api\TrainerController::class, 'getDashboard'])->name('dashboard');
+        // Route::get('/appointment', [\App\Http\Controllers\Api\TrainerBookingController::class, 'getTodaysSchedule'])->name('appointment');
         Route::get('/clients/subscribed', [\App\Http\Controllers\Api\TrainerController::class, 'getSubscribedClients'])->name('clients.subscribed');
         /**
          * Trainer Scheduling & Availability Management
@@ -650,6 +651,7 @@ Route::middleware(['auth:sanctum'])->prefix('appointment')->name('api.appointmen
     Route::get('/available-slots', [SessionBookingController::class, 'getAvailableSlots'])->name('available-slots');
 
     // Basic CRUD operations
+    Route::get('/schedule', [SessionBookingController::class, 'index'])->name('index');
     Route::get('/', [SessionBookingController::class, 'index'])->name('index');
     Route::post('/', [SessionBookingController::class, 'store'])->name('store');
     Route::get('/{id}', [SessionBookingController::class, 'show'])->whereNumber('id')->name('show');

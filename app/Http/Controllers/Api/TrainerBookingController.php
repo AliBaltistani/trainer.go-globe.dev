@@ -666,4 +666,55 @@ class TrainerBookingController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get today's schedule for the authenticated trainer
+     * 
+     * @return JsonResponse
+     */
+    public function getTodaysSchedule(): JsonResponse
+    {
+        try {
+            $trainer = Auth::user();
+            $today = Carbon::today()->format('Y-m-d');
+
+            $schedules = Schedule::with(['client:id,name,email,phone,profile_image'])
+                ->where('trainer_id', $trainer->id)
+                ->where('date', $today)
+                ->where('status', '!=', Schedule::STATUS_CANCELLED)
+                ->orderBy('start_time', 'asc')
+                ->get();
+
+            $formattedSchedule = $schedules->map(function ($schedule) {
+                return [
+                    'id' => $schedule->id,
+                    'time' => $schedule->start_time->format('g:i A') . ' - ' . $schedule->end_time->format('g:i A'),
+                    'client_name' => $schedule->client ? $schedule->client->name : 'Unknown Client',
+                    'client_image' => $schedule->client ? $schedule->client->profile_image : null,
+                    'activity' => $schedule->session_type ? ucwords(str_replace('_', ' ', $schedule->session_type)) : 'Training Session',
+                    'status' => $schedule->status
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Todays schedule retrieved successfully',
+                'data' => $formattedSchedule,
+                'month_year' => Carbon::today()->format('F Y'),
+                'day' => Carbon::today()->format('j')
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Failed to retrieve todays schedule', [
+                'trainer_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve todays schedule',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
