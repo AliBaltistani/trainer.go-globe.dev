@@ -561,37 +561,6 @@
         </div>
     </div>
     <!-- End::row-1 -->
-
-    <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title" id="deleteModalLabel">Delete Booking</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete this booking? This action will:</p>
-                    <ul>
-                        <li>Permanently delete the booking from the system</li>
-                        <li>Remove the Google Calendar event (if exists)</li>
-                        <li>Cancel any Google Meet links</li>
-                        <li>This action cannot be undone</li>
-                    </ul>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form id="deleteForm" method="POST" style="display: inline;">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">
-                            <i class="ri-delete-bin-line me-1"></i> Delete Booking
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('scripts')
@@ -864,37 +833,78 @@
          }
 
          function confirmDelete(bookingId) {
-             $('#deleteForm').attr('action', '{{ route("admin.bookings.destroy", ":id") }}'.replace(':id', bookingId));
-             $('#deleteModal').modal('show');
-         }
+            Swal.fire({
+                title: 'Delete Booking?',
+                text: "Are you sure you want to delete this booking? This action will remove the Google Calendar event and cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Create a hidden form and submit it
+                    var form = $('<form>', {
+                        'method': 'POST',
+                        'action': '{{ route("admin.bookings.destroy", ":id") }}'.replace(':id', bookingId)
+                    });
+                    
+                    var token = $('<input>', {
+                        'type': 'hidden',
+                        'name': '_token',
+                        'value': '{{ csrf_token() }}'
+                    });
 
-         // Form submission handling
-         $('#googleCalendarBookingForm').on('submit', function(e) {
-             @if(isset($booking))
-             // For editing, show confirmation if date/time changed
-             const originalDate = $('input[name="original_date"]').val();
-             const originalStartTime = $('input[name="original_start_time"]').val();
-             const originalEndTime = $('input[name="original_end_time"]').val();
-             
-             const newDate = $('#bookingDate').val();
-             const newStartTime = $('#bookingStartTime').val();
-             const newEndTime = $('#bookingEndTime').val();
-             
-             if (originalDate !== newDate || originalStartTime !== newStartTime || originalEndTime !== newEndTime) {
-                 if (!confirm('This will update the Google Calendar event. Are you sure you want to continue?')) {
-                     e.preventDefault();
-                     return false;
-                 }
-             }
-             @else
-             // For new bookings, ensure a time slot is selected
-             if (!$('#bookingDate').val() || !$('#bookingStartTime').val() || !$('#bookingEndTime').val()) {
-                 e.preventDefault();
-                 alert('Please select a time slot before submitting.');
-                 return false;
-             }
-             @endif
-         });
+                    var hiddenInput = $('<input>', {
+                        'type': 'hidden',
+                        'name': '_method',
+                        'value': 'DELETE'
+                    });
+
+                    form.append(token, hiddenInput);
+                    $('body').append(form);
+                    form.submit();
+                }
+            });
+        }
+
+        // Form submission handling
+        $('#googleCalendarBookingForm').on('submit', function(e) {
+            @if(isset($booking))
+            // For editing, show confirmation if date/time changed
+            const originalDate = $('input[name="original_date"]').val();
+            const originalStartTime = $('input[name="original_start_time"]').val();
+            const originalEndTime = $('input[name="original_end_time"]').val();
+            
+            const newDate = $('#bookingDate').val();
+            const newStartTime = $('#bookingStartTime').val();
+            const newEndTime = $('#bookingEndTime').val();
+            
+            if (originalDate !== newDate || originalStartTime !== newStartTime || originalEndTime !== newEndTime) {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Update Booking?',
+                    text: "This will update the Google Calendar event. Are you sure you want to continue?",
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, update it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Submit the form bypassing jQuery handler
+                        e.target.submit();
+                    }
+                });
+            }
+            @else
+            // For new bookings, ensure a time slot is selected
+            if (!$('#bookingDate').val() || !$('#bookingStartTime').val() || !$('#bookingEndTime').val()) {
+                e.preventDefault();
+                Swal.fire('Error', 'Please select a time slot before submitting.', 'error');
+                return false;
+            }
+            @endif
+        });
 
          // Auto-check trainer connection if editing existing booking
          @if(isset($booking))

@@ -1,0 +1,47 @@
+{
+	"info": {
+		"_postman_id": "81a01cef-5a9e-43e1-9f1e-fc56ef8a727a",
+		"name": "trainer-settings",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "48440069",
+		"_collection_link": "https://aligoglobe1-8474015.postman.co/workspace/Muhammad-Ali's-Workspace~031006ad-5965-4e7a-881c-56e5a891c946/collection/48440069-81a01cef-5a9e-43e1-9f1e-fc56ef8a727a?action=share&source=collection_link&creator=48440069"
+	},
+	"item": [
+		{
+			"name": "availability",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "117|xOGJvmPXeOWykDzm2eOjib4xGaIbmMIJm6j1Fgbf3464919e",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\t\"trainer_id\": \"3\",\r\n\t\"action\": \"subscribe\" //unsubscribe , subscribe\r\n}"
+				},
+				"url": {
+					"raw": "{{api_base_url_live}}/trainer/scheduling/availability",
+					"host": [
+						"{{api_base_url_live}}"
+					],
+					"path": [
+						"trainer",
+						"scheduling",
+						"availability"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

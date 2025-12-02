@@ -295,10 +295,10 @@
                                             <a href="{{ route('workout-videos.edit', [$workout->id, $video->id]) }}" class="btn btn-sm btn-success">
                                                 <i class="ri-edit-2-line"></i> Edit
                                             </a>
-                                            <form action="{{ route('workout-videos.destroy', [$workout->id, $video->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this video?')">
+                                            <form action="{{ route('workout-videos.destroy', [$workout->id, $video->id]) }}" method="POST" class="d-inline" id="delete-video-{{ $video->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger">
+                                                <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete('delete-video-{{ $video->id }}', 'Are you sure you want to delete this video?')">
                                                     <i class="ri-delete-bin-5-line"></i> Delete
                                                 </button>
                                             </form>
@@ -348,10 +348,10 @@
                                         <a href="{{ route('workout-exercises.edit', [$workout->id, $workoutExercise->id]) }}" class="btn btn-sm btn-success me-1">
                                             <i class="ri-edit-2-line"></i>
                                         </a>
-                                        <form action="{{ route('workout-exercises.destroy', [$workout->id, $workoutExercise->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this exercise?')">
+                                        <form action="{{ route('workout-exercises.destroy', [$workout->id, $workoutExercise->id]) }}" method="POST" class="d-inline" id="delete-exercise-{{ $workoutExercise->id }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete('delete-exercise-{{ $workoutExercise->id }}', 'Are you sure you want to delete this exercise?')">
                                                 <i class="ri-delete-bin-5-line"></i>
                                             </button>
                                         </form>
@@ -634,81 +634,104 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Update assignment status
 function updateAssignmentStatus(assignmentId, status) {
-    if (confirm(`Are you sure you want to mark this assignment as ${status}?`)) {
-        fetch(`/admin/workout-assignments/${assignmentId}/status`, {
-            method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ status: status })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showAlert('success', data.message);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                showAlert('error', data.message || 'Failed to update assignment status');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('error', 'An error occurred while updating the assignment');
-        });
-    }
+    Swal.fire({
+        title: 'Update Status?',
+        text: `Are you sure you want to mark this assignment as ${status}?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, update it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/workout-assignments/${assignmentId}/status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                },
+                body: JSON.stringify({ status: status })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Success', data.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'Failed to update assignment status', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'An error occurred while updating the assignment', 'error');
+            });
+        }
+    });
 }
 
 // Remove assignment
 function removeAssignment(assignmentId) {
-    if (confirm('Are you sure you want to remove this assignment? This action cannot be undone.')) {
-        fetch(`/admin/workout-assignments/${assignmentId}`, {
-            method: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showAlert('success', data.message);
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1000);
-            } else {
-                showAlert('error', data.message || 'Failed to remove assignment');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showAlert('error', 'An error occurred while removing the assignment');
-        });
-    }
+    Swal.fire({
+        title: 'Remove Assignment?',
+        text: "Are you sure you want to remove this assignment? This action cannot be undone.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, remove it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/admin/workout-assignments/${assignmentId}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire('Removed!', data.message, 'success').then(() => {
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', data.message || 'Failed to remove assignment', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'An error occurred while removing the assignment', 'error');
+            });
+        }
+    });
 }
 
-// Show alert function
+// Show alert function (Updated to use SweetAlert for better UX)
 function showAlert(type, message) {
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-    const alertHtml = `
-        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    `;
-    
-    // Insert alert at the top of the page
-    const container = document.querySelector('.container-fluid');
-    container.insertAdjacentHTML('afterbegin', alertHtml);
-    
-    // Auto-dismiss after 5 seconds
-    setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if (alert) {
-            alert.remove();
+    Swal.fire({
+        icon: type === 'success' ? 'success' : 'error',
+        title: type === 'success' ? 'Success' : 'Error',
+        text: message,
+        timer: 3000,
+        showConfirmButton: false
+    });
+}
+
+// Generic Confirm Delete Function
+function confirmDelete(formId, message = "You won't be able to revert this!") {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById(formId).submit();
         }
-    }, 5000);
+    });
 }
 </script>
 

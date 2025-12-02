@@ -18,6 +18,8 @@
 <script src="{{asset('build/assets/libs/filepond-plugin-image-crop/filepond-plugin-image-crop.min.js')}}"></script>
 <script src="{{asset('build/assets/libs/filepond-plugin-image-resize/filepond-plugin-image-resize.min.js')}}"></script>
 <script src="{{asset('build/assets/libs/filepond-plugin-image-transform/filepond-plugin-image-transform.min.js')}}"></script>
+<!-- Sweet Alert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 $(document).ready(function() {
@@ -133,27 +135,37 @@ $(document).ready(function() {
 
     // Delete profile image
     $('#deleteImageBtn').on('click', function() {
-        if (confirm('Are you sure you want to delete the profile image?')) {
-            $.ajax({
-                url: '{{ route("admin.trainees.index") }}/{{ $trainee->id }}/delete-image',
-                type: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    if (response.success) {
-                        $('#currentImage').hide();
-                        showAlert('success', response.message);
-                    } else {
-                        showAlert('error', response.message);
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Are you sure you want to delete the profile image?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '{{ route("admin.trainees.index") }}/{{ $trainee->id }}/delete-image',
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            $('#currentImage').hide();
+                            showAlert('success', response.message);
+                        } else {
+                            showAlert('error', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message || 'Failed to delete image';
+                        showAlert('error', message);
                     }
-                },
-                error: function(xhr) {
-                    const message = xhr.responseJSON?.message || 'Failed to delete image';
-                    showAlert('error', message);
-                }
-            });
-        }
+                });
+            }
+        });
     });
 });
 

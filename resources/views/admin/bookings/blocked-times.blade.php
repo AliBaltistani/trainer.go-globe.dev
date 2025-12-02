@@ -290,13 +290,9 @@
                                 <div class="reason">{{ $blockedTime->reason }}</div>
                             </div>
                         </div>
-                        <form action="{{ route('admin.bookings.blocked-times.destroy', $blockedTime->id) }}" method="POST" style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="delete-btn" onclick="return confirm('Are you sure you want to remove this blocked time?')">
-                                <i class="ri-delete-bin-line"></i>
-                            </button>
-                        </form>
+                        <button type="button" class="delete-btn" onclick="deleteBlockedTime('{{ $blockedTime->id }}')">
+                            <i class="ri-delete-bin-line"></i>
+                        </button>
                     </div>
                 @empty
                     <div class="text-center py-4">
@@ -401,5 +397,54 @@
                 dateInput.min = today;
             }
         });
+
+        function deleteBlockedTime(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch(`/admin/bookings/blocked-times/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire(
+                                'Deleted!',
+                                'Blocked time has been deleted.',
+                                'success'
+                            ).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                data.message || 'Something went wrong.',
+                                'error'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire(
+                            'Error!',
+                            'An error occurred while deleting the blocked time.',
+                            'error'
+                        );
+                    });
+                }
+            });
+        }
     </script>
 @endsection

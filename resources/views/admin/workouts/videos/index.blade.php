@@ -78,10 +78,10 @@
                                             <a href="{{ route('workout-videos.edit', [$workout->id, $video->id]) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="ri-edit-line"></i>
                                             </a>
-                                            <form method="POST" action="{{ route('workout-videos.destroy', [$workout->id, $video->id]) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this video?')">
+                                            <form method="POST" action="{{ route('workout-videos.destroy', [$workout->id, $video->id]) }}" class="d-inline" id="delete-form-{{ $video->id }}">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete('delete-form-{{ $video->id }}')">
                                                     <i class="ri-delete-bin-line"></i>
                                                 </button>
                                             </form>
@@ -114,4 +114,26 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+    <!-- Sweet Alert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete(formId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
+    </script>
 @endsection

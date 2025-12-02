@@ -88,10 +88,10 @@
                                     <a href="{{ route('program-videos.edit', [$program->id, $video->id]) }}" class="btn btn-outline-primary" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </a>
-                                    <form method="POST" action="{{ route('program-videos.destroy', [$program->id, $video->id]) }}" class="d-inline" onsubmit="return confirm('Delete this video?');">
+                                    <form method="POST" action="{{ route('program-videos.destroy', [$program->id, $video->id]) }}" class="d-inline" id="delete-form-{{ $video->id }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                        <button type="button" class="btn btn-outline-danger" title="Delete" onclick="confirmDelete('delete-form-{{ $video->id }}')">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     </form>
@@ -125,4 +125,26 @@
     </div>
     @endif
 </div>
+@endsection
+
+@section('scripts')
+    <!-- Sweet Alert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete(formId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
+    </script>
 @endsection

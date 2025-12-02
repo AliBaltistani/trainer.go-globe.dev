@@ -506,38 +506,43 @@
 
         // Send setup reminder function
         function sendReminder(trainerId) {
-            if (confirm('Send setup reminder to this trainer?')) {
-                $.ajax({
-                    url: '/admin/trainers-scheduling/send-reminder',
-                    method: 'POST',
-                    data: {
-                        trainer_id: trainerId,
-                        _token: '{{ csrf_token() }}'
-                    },
-                    success: function(response) {
-                        showAlert('success', 'Setup reminder sent successfully!');
-                    },
-                    error: function(xhr) {
-                        showAlert('danger', 'Failed to send reminder. Please try again.');
-                    }
-                });
-            }
+            Swal.fire({
+                title: 'Send Reminder?',
+                text: "Send setup reminder to this trainer?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, send it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/admin/trainers-scheduling/send-reminder',
+                        method: 'POST',
+                        data: {
+                            trainer_id: trainerId,
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            Swal.fire('Success', 'Setup reminder sent successfully!', 'success');
+                        },
+                        error: function(xhr) {
+                            Swal.fire('Error', 'Failed to send reminder. Please try again.', 'error');
+                        }
+                    });
+                }
+            });
         }
 
-        // Show alert function
+        // Show alert function (Deprecated in favor of SweetAlert, but kept for compatibility if called elsewhere)
         function showAlert(type, message) {
-            var alertHtml = `
-                <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            `;
-            $('#alert-container').html(alertHtml);
-            
-            // Auto hide after 5 seconds
-            setTimeout(function() {
-                $('.alert').fadeOut();
-            }, 5000);
+             Swal.fire({
+                title: type.charAt(0).toUpperCase() + type.slice(1),
+                text: message,
+                icon: type === 'danger' ? 'error' : type,
+                timer: 5000,
+                timerProgressBar: true
+             });
         }
     </script>
 @endsection

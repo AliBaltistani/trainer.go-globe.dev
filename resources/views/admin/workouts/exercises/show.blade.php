@@ -174,10 +174,10 @@
                                                 <button type="button" class="btn btn-sm btn-{{ $set->is_completed ? 'warning' : 'success' }}" onclick="toggleSetStatus('{{ $set->id }}')" title="{{ $set->is_completed ? 'Mark as Pending' : 'Mark as Completed' }}">
                                                     <i class="ri-{{ $set->is_completed ? 'time' : 'check' }}-line"></i>
                                                 </button>
-                                                <form action="{{ route('workout-exercise-sets.destroy', [$workout->id, $workoutExercise->id, $set->id]) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure?')">
+                                                <form action="{{ route('workout-exercise-sets.destroy', [$workout->id, $workoutExercise->id, $set->id]) }}" method="POST" class="d-inline" id="delete-set-{{ $set->id }}">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Delete">
+                                                    <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="confirmDelete('delete-set-{{ $set->id }}')">
                                                         <i class="ri-delete-bin-5-line"></i>
                                                     </button>
                                                 </form>
@@ -301,6 +301,22 @@
 
 @section('scripts')
 <script>
+function confirmDelete(formId) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById(formId).submit();
+        }
+    });
+}
+
 function editSet(setId) {
     // You would typically fetch set data via AJAX here
     // For now, we'll show the modal

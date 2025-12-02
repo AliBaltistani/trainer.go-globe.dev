@@ -426,26 +426,38 @@
 @endsection
 
 @section('scripts')
+<!-- Sweet Alert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 // Toggle user status function
 function toggleUserStatus(userId) {
-    if (confirm('Are you sure you want to toggle this user\'s status?')) {
-        $.ajax({
-            url: `/admin/users/${userId}/toggle-status`,
-            method: 'PATCH',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    location.reload();
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "Are you sure you want to toggle this user's status?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, toggle it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/admin/users/${userId}/toggle-status`,
+                method: 'PATCH',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        location.reload();
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Failed to update user status.', 'error');
                 }
-            },
-            error: function() {
-                alert('Failed to update user status.');
-            }
-        });
-    }
+            });
+        }
+    });
 }
 </script>
 @endsection

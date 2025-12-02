@@ -188,7 +188,7 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
 
 <!-- Sweet Alert -->
-<script src="{{asset('build/assets/libs/sweetalert2/sweetalert2.min.js')}}"></script>
+<!-- <script src="{{asset('build/assets/libs/sweetalert2/sweetalert2.min.js')}}"></script> -->
 
 <script>
 $(document).ready(function() {
@@ -366,72 +366,102 @@ $(document).ready(function() {
 
 // Action Functions
 function toggleStatus(planId) {
-    if (confirm('Are you sure you want to change the status of this nutrition plan?')) {
-        $.ajax({
-            url: '/admin/nutrition-plans/' + planId + '/toggle-status',
-            type: 'PATCH',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Success: ' + response.message);
-                    $('#nutritionPlansTable').DataTable().ajax.reload();
-                } else {
-                    alert('Error: ' + response.message);
+    Swal.fire({
+        title: 'Change Status?',
+        text: "Are you sure you want to change the status of this nutrition plan?",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, change it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/admin/nutrition-plans/' + planId + '/toggle-status',
+                type: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Success', response.message, 'success');
+                        $('#nutritionPlansTable').DataTable().ajax.reload();
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', 'Failed to toggle plan status', 'error');
                 }
-            },
-            error: function(xhr) {
-                alert('Error: Failed to toggle plan status');
-            }
-        });
-    }
+            });
+        }
+    });
 }
 
 function duplicatePlan(planId) {
-    if (confirm('This will create a copy of the nutrition plan. Continue?')) {
-        $.ajax({
-            url: '/admin/nutrition-plans/' + planId + '/duplicate',
-            type: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Success: ' + response.message);
-                    $('#nutritionPlansTable').DataTable().ajax.reload();
-                } else {
-                    alert('Error: ' + response.message);
+    Swal.fire({
+        title: 'Duplicate Plan?',
+        text: "This will create a copy of the nutrition plan. Continue?",
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, duplicate it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/admin/nutrition-plans/' + planId + '/duplicate',
+                type: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Success', response.message, 'success');
+                        $('#nutritionPlansTable').DataTable().ajax.reload();
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', 'Failed to duplicate plan', 'error');
                 }
-            },
-            error: function(xhr) {
-                alert('Error: Failed to duplicate plan');
-            }
-        });
-    }
+            });
+        }
+    });
 }
 
 function deletePlan(planId) {
-    if (confirm('Are you sure you want to delete this nutrition plan? This action cannot be undone!')) {
-        $.ajax({
-            url: '/admin/nutrition-plans/' + planId,
-            type: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Success: ' + response.message);
-                    $('#nutritionPlansTable').DataTable().ajax.reload();
-                } else {
-                    alert('Error: ' + response.message);
+    Swal.fire({
+        title: 'Delete Plan?',
+        text: "Are you sure you want to delete this nutrition plan? This action cannot be undone!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/admin/nutrition-plans/' + planId,
+                type: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Deleted!', response.message, 'success');
+                        $('#nutritionPlansTable').DataTable().ajax.reload();
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', 'Failed to delete plan', 'error');
                 }
-            },
-            error: function(xhr) {
-                alert('Error: Failed to delete plan');
-            }
-        });
-    }
+            });
+        }
+    });
 }
 </script>
 @endsection

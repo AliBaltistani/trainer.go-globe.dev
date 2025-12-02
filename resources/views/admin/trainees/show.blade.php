@@ -59,6 +59,8 @@
 @endsection
 
 @section('scripts')
+<!-- Sweet Alert -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 $(document).ready(function() {
     // Toggle trainee status
@@ -66,56 +68,77 @@ $(document).ready(function() {
         const traineeId = {{ $trainee->id }};
         const currentStatus = '{{ $trainee->email_verified_at ? "active" : "inactive" }}';
         const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+        const actionText = newStatus === 'active' ? 'activate' : 'deactivate';
         
-        if (confirm(`Are you sure you want to ${newStatus === 'active' ? 'activate' : 'deactivate'} this trainee?`)) {
-            $.ajax({
-                url: `{{ route('admin.trainees.index') }}/${traineeId}/toggle-status`,
-                type: 'PATCH',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    if (response.success) {
-                        location.reload();
-                    } else {
-                        showAlert('error', response.message);
+        Swal.fire({
+            title: 'Are you sure?',
+            text: `Are you sure you want to ${actionText} this trainee?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: `Yes, ${actionText} it!`
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `{{ route('admin.trainees.index') }}/${traineeId}/toggle-status`,
+                    type: 'PATCH',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            location.reload();
+                        } else {
+                            showAlert('error', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message || 'Failed to update status';
+                        showAlert('error', message);
                     }
-                },
-                error: function(xhr) {
-                    const message = xhr.responseJSON?.message || 'Failed to update status';
-                    showAlert('error', message);
-                }
-            });
-        }
+                });
+            }
+        });
     });
 
     // Delete trainee
     $('#deleteTraineeBtn').on('click', function() {
         const traineeId = {{ $trainee->id }};
         
-        if (confirm('Are you sure you want to delete this trainee? This action cannot be undone.')) {
-            $.ajax({
-                url: `{{ route('admin.trainees.index') }}/${traineeId}`,
-                type: 'DELETE',
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(response) {
-                    if (response.success) {
-                        showAlert('success', response.message);
-                        setTimeout(function() {
-                            window.location.href = '{{ route("admin.trainees.index") }}';
-                        }, 2000);
-                    } else {
-                        showAlert('error', response.message);
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `{{ route('admin.trainees.index') }}/${traineeId}`,
+                    type: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            showAlert('success', response.message);
+                            setTimeout(function() {
+                                window.location.href = '{{ route("admin.trainees.index") }}';
+                            }, 2000);
+                        } else {
+                            showAlert('error', response.message);
+                        }
+                    },
+                    error: function(xhr) {
+                        const message = xhr.responseJSON?.message || 'Failed to delete trainee';
+                        showAlert('error', message);
                     }
-                },
-                error: function(xhr) {
-                    const message = xhr.responseJSON?.message || 'Failed to delete trainee';
-                    showAlert('error', message);
-                }
-            });
-        }
+                });
+            }
+        });
     });
 });
 

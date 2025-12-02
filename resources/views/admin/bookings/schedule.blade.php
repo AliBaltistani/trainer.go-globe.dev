@@ -384,7 +384,7 @@
                 .then(response => response.json())
                 .then(data => {
                     if (!data.success) {
-                        alert(data.message);
+                        Swal.fire('Error', data.message, 'error');
                         calendar.refetchEvents(); // Revert changes
                     }
                 })
@@ -419,14 +419,14 @@
                     if (data.success) {
                         bookingModal.hide();
                         calendar.refetchEvents();
-                        alert(data.message);
+                        Swal.fire('Success', data.message, 'success');
                     } else {
-                        alert(data.message);
+                        Swal.fire('Error', data.message, 'error');
                     }
                 })
                 .catch(error => {
                     console.error('Error saving booking:', error);
-                    alert('Error saving booking');
+                    Swal.fire('Error', 'Error saving booking', 'error');
                 });
             });
             
@@ -438,54 +438,76 @@
             
             // Delete booking from modal
             document.querySelector('#bookingModal #deleteBookingBtn').addEventListener('click', function() {
-                if (currentEvent && confirm('Are you sure you want to delete this booking? This will also remove the Google Calendar event if it exists.')) {
-                    fetch(`{{ route('admin.bookings.delete-event', 'PLACEHOLDER') }}`.replace('PLACEHOLDER', currentEvent.id), {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                if (currentEvent) {
+                    Swal.fire({
+                        title: 'Delete Booking?',
+                        text: "Are you sure you want to delete this booking? This will also remove the Google Calendar event if it exists.",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#3085d6',
+                        confirmButtonText: 'Yes, delete it!'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            fetch(`{{ route('admin.bookings.delete-event', 'PLACEHOLDER') }}`.replace('PLACEHOLDER', currentEvent.id), {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    bookingModal.hide();
+                                    calendar.refetchEvents();
+                                    Swal.fire('Deleted!', data.message, 'success');
+                                } else {
+                                    Swal.fire('Error', data.message, 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error deleting booking:', error);
+                                Swal.fire('Error', 'Error deleting booking', 'error');
+                            });
                         }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            bookingModal.hide();
-                            calendar.refetchEvents();
-                            alert(data.message);
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error deleting booking:', error);
-                        alert('Error deleting booking');
                     });
                 }
             });
             
             // Delete booking from details modal
             document.querySelector('#eventDetailsModal #deleteBookingBtn').addEventListener('click', function() {
-                if (confirm('Are you sure you want to delete this booking? This will also remove the Google Calendar event if it exists.')) {
-                    fetch(`{{ route('admin.bookings.delete-event', 'PLACEHOLDER') }}`.replace('PLACEHOLDER', currentEvent.id), {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            eventDetailsModal.hide();
-                            calendar.refetchEvents();
-                            alert(data.message);
-                        } else {
-                            alert(data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error deleting booking:', error);
-                        alert('Error deleting booking');
-                    });
-                }
+                Swal.fire({
+                    title: 'Delete Booking?',
+                    text: "Are you sure you want to delete this booking? This will also remove the Google Calendar event if it exists.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`{{ route('admin.bookings.delete-event', 'PLACEHOLDER') }}`.replace('PLACEHOLDER', currentEvent.id), {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                eventDetailsModal.hide();
+                                calendar.refetchEvents();
+                                Swal.fire('Deleted!', data.message, 'success');
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error deleting booking:', error);
+                            Swal.fire('Error', 'Error deleting booking', 'error');
+                        });
+                    }
+                });
             });
         });
     </script>

@@ -197,10 +197,10 @@
                     <h6 class="m-0 font-weight-bold text-primary">Danger Zone</h6>
                 </div>
                 <div class="card-body">
-                    <form method="POST" action="{{ route('program-videos.destroy', [$program->id, $video->id]) }}" onsubmit="return confirm('Are you sure you want to delete this video?');">
+                    <form method="POST" action="{{ route('program-videos.destroy', [$program->id, $video->id]) }}" id="delete-form">
                         @csrf
                         @method('DELETE')
-                        <button type="submit" class="btn btn-danger w-100">
+                        <button type="button" class="btn btn-danger w-100" onclick="confirmDelete('delete-form')">
                             <i class="fas fa-trash me-2"></i>Delete Video
                         </button>
                     </form>
@@ -263,4 +263,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+@endsection
+
+@section('scripts')
+    <!-- Sweet Alert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete(formId) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You won't be able to revert this!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(formId).submit();
+                }
+            });
+        }
+    </script>
 @endsection

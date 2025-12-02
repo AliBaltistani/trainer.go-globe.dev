@@ -322,6 +322,8 @@
 @endsection
 
 @section('scripts')
+    <!-- Sweet Alert -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     // =====================================================================
     // Backend Integration Context
@@ -594,23 +596,33 @@
     }
 
     function removeWeek(weekId) {
-        if (confirm('Are you sure you want to remove this week?')) {
-            const el = document.getElementById(`week-${weekId}`);
-            const backendId = el?.dataset?.weekId;
-            if (backendId) {
-                ajax(`${BASE_PROGRAM_BUILDER_URL}/weeks/${backendId}`, { method: 'DELETE' })
-                .then(() => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this! All days and exercises in this week will be deleted.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const el = document.getElementById(`week-${weekId}`);
+                const backendId = el?.dataset?.weekId;
+                if (backendId) {
+                    ajax(`${BASE_PROGRAM_BUILDER_URL}/weeks/${backendId}`, { method: 'DELETE' })
+                    .then(() => {
+                        el.remove();
+                        showNotification('success', 'Week removed');
+                        reindexWeeksAndDays();
+                    }).catch(err => {
+                        showAjaxError(err, 'Failed to remove week');
+                    });
+                } else {
                     el.remove();
-                    showNotification('success', 'Week removed');
                     reindexWeeksAndDays();
-                }).catch(err => {
-                    showAjaxError(err, 'Failed to remove week');
-                });
-            } else {
-                el.remove();
-                reindexWeeksAndDays();
+                }
             }
-        }
+        });
     }
 
     function duplicateWeek(weekId) {
@@ -765,27 +777,37 @@
     }
 
     function removeDay(dayId) {
-        if (confirm('Are you sure you want to remove this day?')) {
-            const el = document.getElementById(dayId);
-            const backendId = el?.dataset?.dayId;
-            if (backendId) {
-                ajax(`${BASE_PROGRAM_BUILDER_URL}/days/${backendId}`, { method: 'DELETE' })
-                .then(() => {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this! This day and its exercises will be deleted.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const el = document.getElementById(dayId);
+                const backendId = el?.dataset?.dayId;
+                if (backendId) {
+                    ajax(`${BASE_PROGRAM_BUILDER_URL}/days/${backendId}`, { method: 'DELETE' })
+                    .then(() => {
+                        el.remove();
+                        showNotification('success', 'Day removed');
+                        const m = dayId.match(/^week-(\d+)-/);
+                        const wIndex = m ? Number(m[1]) : null;
+                        if (wIndex) { reindexDaysInWeek(document.getElementById(`week-${wIndex}`)); }
+                    }).catch(err => {
+                        showAjaxError(err, 'Failed to remove day');
+                    });
+                } else {
                     el.remove();
-                    showNotification('success', 'Day removed');
                     const m = dayId.match(/^week-(\d+)-/);
                     const wIndex = m ? Number(m[1]) : null;
                     if (wIndex) { reindexDaysInWeek(document.getElementById(`week-${wIndex}`)); }
-                }).catch(err => {
-                    showAjaxError(err, 'Failed to remove day');
-                });
-            } else {
-                el.remove();
-                const m = dayId.match(/^week-(\d+)-/);
-                const wIndex = m ? Number(m[1]) : null;
-                if (wIndex) { reindexDaysInWeek(document.getElementById(`week-${wIndex}`)); }
+                }
             }
-        }
+        });
     }
 
     function duplicateDay(dayId, weekId) {
@@ -1059,37 +1081,48 @@ function renderDayIntoExisting(weekIndex, d, dayId) {
 
     // Remove Circuit: deletes backend record if persisted, then removes row
     function removeCircuit(rowId) {
-        if (!confirm('Are you sure you want to remove this circuit?')) { return; }
-        const row = document.getElementById(rowId);
-        const circuitBackendId = row?.dataset?.circuitId;
-        const match = rowId.match(/^(week-\d+-day-\d+)-exercise-\d+$/);
-        const dayId = match ? match[1] : null;
-        if (circuitBackendId) {
-            ajax(`${BASE_PROGRAM_BUILDER_URL}/circuits/${circuitBackendId}`, { method: 'DELETE' })
-            .then(() => {
-                // Remove header and all exercises until next circuit header
-                let walker = row.nextElementSibling;
-                row.remove();
-                while (walker && !walker.classList.contains('circuit-row')) {
-                    const next = walker.nextElementSibling;
-                    walker.remove();
-                    walker = next;
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this! The circuit and its exercises will be removed.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const row = document.getElementById(rowId);
+                const circuitBackendId = row?.dataset?.circuitId;
+                const match = rowId.match(/^(week-\d+-day-\d+)-exercise-\d+$/);
+                const dayId = match ? match[1] : null;
+                if (circuitBackendId) {
+                    ajax(`${BASE_PROGRAM_BUILDER_URL}/circuits/${circuitBackendId}`, { method: 'DELETE' })
+                    .then(() => {
+                        // Remove header and all exercises until next circuit header
+                        let walker = row.nextElementSibling;
+                        row.remove();
+                        while (walker && !walker.classList.contains('circuit-row')) {
+                            const next = walker.nextElementSibling;
+                            walker.remove();
+                            walker = next;
+                        }
+                        showNotification('success', 'Circuit removed');
+                        if (dayId) { reindexCircuits(dayId); }
+                    }).catch(err => {
+                        showAjaxError(err, 'Failed to remove circuit');
+                    });
+                } else {
+                    let walker = row.nextElementSibling;
+                    row.remove();
+                    while (walker && !walker.classList.contains('circuit-row')) {
+                        const next = walker.nextElementSibling;
+                        walker.remove();
+                        walker = next;
+                    }
+                    if (dayId) { reindexCircuits(dayId); }
                 }
-                showNotification('success', 'Circuit removed');
-                if (dayId) { reindexCircuits(dayId); }
-            }).catch(err => {
-                showAjaxError(err, 'Failed to remove circuit');
-            });
-        } else {
-            let walker = row.nextElementSibling;
-            row.remove();
-            while (walker && !walker.classList.contains('circuit-row')) {
-                const next = walker.nextElementSibling;
-                walker.remove();
-                walker = next;
             }
-            if (dayId) { reindexCircuits(dayId); }
-        }
+        });
     }
 
     function addExerciseToCircuit(headerRowId) {
@@ -1208,58 +1241,68 @@ function renderDayIntoExisting(weekIndex, d, dayId) {
     }
 
     function removeExercise(exerciseId) {
-        if (confirm('Remove this row?')) {
-            const row = document.getElementById(exerciseId);
-            const dayEl = row?.closest('.day-container');
-            const backendDayId = dayEl?.dataset?.dayId;
-            const backendId = row?.dataset?.exerciseId;
-            // Handle removal for persisted exercise rows
-            if (backendId) {
-                ajax(`${BASE_PROGRAM_BUILDER_URL}/exercises/${backendId}`, { method: 'DELETE' })
-                .then(() => {
-                    row.remove();
-                    showNotification('success', 'Exercise removed');
-                }).catch(err => {
-                    showAjaxError(err, 'Failed to remove exercise');
-                });
-            } else if (row.querySelector('.cool-down')) {
-                // Removing day-level cool down; clear in backend
-                row.remove();
-                if (backendDayId) {
-                    ajax(`${BASE_PROGRAM_BUILDER_URL}/days/${backendDayId}`, {
-                        method: 'PUT',
-                        body: JSON.stringify({ cool_down: null })
-                    }).then(() => {
-                        showNotification('success', 'Cool down removed');
+        Swal.fire({
+            title: 'Remove this row?',
+            text: "This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const row = document.getElementById(exerciseId);
+                const dayEl = row?.closest('.day-container');
+                const backendDayId = dayEl?.dataset?.dayId;
+                const backendId = row?.dataset?.exerciseId;
+                // Handle removal for persisted exercise rows
+                if (backendId) {
+                    ajax(`${BASE_PROGRAM_BUILDER_URL}/exercises/${backendId}`, { method: 'DELETE' })
+                    .then(() => {
+                        row.remove();
+                        showNotification('success', 'Exercise removed');
                     }).catch(err => {
-                        showAjaxError(err, 'Failed to remove cool down');
+                        showAjaxError(err, 'Failed to remove exercise');
                     });
-                }
-            } else if (row.classList.contains('custom-row')) {
-                // Removing a custom row; persist remaining custom rows
-                row.remove();
-                if (backendDayId) {
-                    try {
-                        const values = Array.from(dayEl.querySelectorAll('tr.custom-row textarea'))
-                            .map(t => (t.value || '').trim())
-                            .filter(v => v.length > 0);
+                } else if (row.querySelector('.cool-down')) {
+                    // Removing day-level cool down; clear in backend
+                    row.remove();
+                    if (backendDayId) {
                         ajax(`${BASE_PROGRAM_BUILDER_URL}/days/${backendDayId}`, {
                             method: 'PUT',
-                            body: JSON.stringify({ custom_rows: values })
+                            body: JSON.stringify({ cool_down: null })
                         }).then(() => {
-                            showNotification('success', 'Custom row removed');
+                            showNotification('success', 'Cool down removed');
                         }).catch(err => {
-                            showAjaxError(err, 'Failed to update custom rows');
+                            showAjaxError(err, 'Failed to remove cool down');
                         });
-                    } catch (e) {
-                        showAjaxError(e, 'Failed to update custom rows');
                     }
+                } else if (row.classList.contains('custom-row')) {
+                    // Removing a custom row; persist remaining custom rows
+                    row.remove();
+                    if (backendDayId) {
+                        try {
+                            const values = Array.from(dayEl.querySelectorAll('tr.custom-row textarea'))
+                                .map(t => (t.value || '').trim())
+                                .filter(v => v.length > 0);
+                            ajax(`${BASE_PROGRAM_BUILDER_URL}/days/${backendDayId}`, {
+                                method: 'PUT',
+                                body: JSON.stringify({ custom_rows: values })
+                            }).then(() => {
+                                showNotification('success', 'Custom row removed');
+                            }).catch(err => {
+                                showAjaxError(err, 'Failed to update custom rows');
+                            });
+                        } catch (e) {
+                            showAjaxError(e, 'Failed to update custom rows');
+                        }
+                    }
+                } else {
+                    // Unpersisted, non day-level row
+                    row.remove();
                 }
-            } else {
-                // Unpersisted, non day-level row
-                row.remove();
             }
-        }
+        });
     }
 
     function moveExerciseUp(exerciseId) {
@@ -1529,11 +1572,21 @@ function renderDayIntoExisting(weekIndex, d, dayId) {
     }
 
     function removeColumn(index) {
-        if (confirm('Remove this column?')) {
-            columnConfig.splice(index, 1);
-            renderColumnSettings();
-            saveColumnConfigRemote();
-        }
+        Swal.fire({
+            title: 'Remove this column?',
+            text: "Data in this column will be lost.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                columnConfig.splice(index, 1);
+                renderColumnSettings();
+                saveColumnConfigRemote();
+            }
+        });
     }
 
     function updateColumnName(index, value) {
@@ -1554,12 +1607,22 @@ function renderDayIntoExisting(weekIndex, d, dayId) {
     function removeColumnFromTable(columnId) {
         const index = columnConfig.findIndex(col => col.id === columnId);
         if (index !== -1 && !columnConfig[index].required) {
-            if (confirm('Remove this column from all tables?')) {
-                const prevConfig = columnConfig.slice();
-                columnConfig.splice(index, 1);
-                refreshAllTables(prevConfig);
-                saveColumnConfigRemote();
-            }
+            Swal.fire({
+                title: 'Remove this column from all tables?',
+                text: "This will remove the column and its data from all weeks/days.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, remove it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const prevConfig = columnConfig.slice();
+                    columnConfig.splice(index, 1);
+                    refreshAllTables(prevConfig);
+                    saveColumnConfigRemote();
+                }
+            });
         }
     }
 
@@ -2191,14 +2254,24 @@ function renderDayIntoExisting(weekIndex, d, dayId) {
     });
 
     function clearAll() {
-        if (confirm('Are you sure you want to clear all weeks and start over? This cannot be undone.')) {
-            document.getElementById('weeksContainer').innerHTML = '';
-            weekCounter = 0;
-            dayCounter = {};
-            exerciseCounter = {};
-            addWeek();
-            addDay(1);
-        }
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "Are you sure you want to clear all weeks and start over? This cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, clear all!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('weeksContainer').innerHTML = '';
+                weekCounter = 0;
+                dayCounter = {};
+                exerciseCounter = {};
+                addWeek();
+                addDay(1);
+            }
+        });
     }
 
     // Batch Save: Iterate all rows and persist changes (create/update)

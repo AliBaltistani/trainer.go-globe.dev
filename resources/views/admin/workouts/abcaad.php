@@ -125,10 +125,10 @@
                                         <a href="{{ route('workouts.edit', $workout->id) }}" class="btn btn-sm btn-success btn-wave waves-effect waves-light">
                                             <i class="ri-edit-2-line align-middle me-1 d-inline-block"></i>Edit
                                         </a>
-                                        <form action="{{ route('workouts.destroy', $workout->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this workout?')">
+                                        <form action="{{ route('workouts.destroy', $workout->id) }}" method="POST" class="d-inline" id="delete-form-{{ $workout->id }}">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger btn-wave waves-effect waves-light">
+                                            <button type="button" class="btn btn-sm btn-danger btn-wave waves-effect waves-light" onclick="confirmDelete('delete-form-{{ $workout->id }}')">
                                                 <i class="ri-delete-bin-5-line align-middle me-1 d-inline-block"></i>Delete
                                             </button>
                                         </form>
@@ -155,4 +155,24 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    function confirmDelete(formId) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById(formId).submit();
+            }
+        });
+    }
+</script>
 @endsection
