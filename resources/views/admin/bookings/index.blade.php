@@ -132,6 +132,7 @@
                                         <td>{{ $booking->id }}</td>
                                         <td>
                                             <div class="d-flex align-items-center">
+                                                @if($booking->trainer)
                                                 <div class="avatar avatar-sm me-2">
                                                     @if($booking->trainer->profile_image)
                                                         <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer" class="avatar-img rounded-circle">
@@ -145,10 +146,14 @@
                                                     <span class="fw-semibold">{{ $booking->trainer->name }}</span>
                                                     <br><small class="text-muted">{{ $booking->trainer->email }}</small>
                                                 </div>
+                                                @else
+                                                <span class="text-danger">Trainer Deleted</span>
+                                                @endif
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
+                                                @if($booking->client)
                                                 <div class="avatar avatar-sm me-2">
                                                     @if($booking->client->profile_image)
                                                         <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client" class="avatar-img rounded-circle">
@@ -162,6 +167,9 @@
                                                     <span class="fw-semibold">{{ $booking->client->name }}</span>
                                                     <br><small class="text-muted">{{ $booking->client->email }}</small>
                                                 </div>
+                                                @else
+                                                <span class="text-danger">Client Deleted</span>
+                                                @endif
                                             </div>
                                         </td>
                                         <td>
