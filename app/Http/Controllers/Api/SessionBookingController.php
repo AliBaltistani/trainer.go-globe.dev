@@ -45,6 +45,88 @@ class SessionBookingController extends ApiBaseController
     }
 
     /**
+     * Get formatted schedule for the UI
+     * 
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function getSchedule(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            $status = $request->get('status');
+            // Default to today if no date provided
+            $startDate = $request->get('start_date', Carbon::now(config('app.timezone'))->toDateString());
+            $endDate = $request->get('end_date');
+
+            // Build query based on user role
+            $query = Schedule::with(['trainer:id,name,email,phone,profile_image', 'client:id,name,email,phone,profile_image']);
+
+            if ($user->role === 'trainer') {
+                $query->forTrainer($user->id);
+            } elseif ($user->role === 'client') {
+                $query->forClient($user->id);
+            } else {
+                return $this->sendError('Unauthorized', ['error' => 'Invalid user role'], 403);
+            }
+
+            // Apply filters
+            if ($status && in_array($status, [Schedule::STATUS_PENDING, Schedule::STATUS_CONFIRMED, Schedule::STATUS_CANCELLED])) {
+                $query->withStatus($status);
+            }
+
+            // Apply date filters
+            if ($endDate) {
+                $query->dateRange($startDate, $endDate);
+            } else {
+                $query->whereDate('date', '>=', $startDate);
+            }
+
+            // Order by date and time
+            $query->orderBy('date', 'asc')->orderBy('start_time', 'asc');
+
+            $bookings = $query->get();
+
+            $formattedBookings = $bookings->map(function ($booking) use ($user) {
+                $isTrainer = $user->role === 'trainer';
+                $otherParty = $isTrainer ? $booking->client : $booking->trainer;
+                
+                $name = $otherParty ? $otherParty->name : 'Unknown';
+                $image = $otherParty ? $otherParty->profile_image : null;
+                
+                $startTime = $booking->start_time->format('g:i A');
+                $endTime = $booking->end_time->format('g:i A');
+                
+                return [
+                    'id' => $booking->id,
+                    'image' => $image,
+                    'title' => "{$startTime} - {$endTime} • {$name}",
+                    'subtitle' => $booking->session_type ? ucwords(str_replace('_', ' ', $booking->session_type)) : 'Training Session',
+                    'date' => $booking->date->format('Y-m-d'),
+                    'start_time' => $startTime,
+                    'end_time' => $endTime,
+                    'status' => $booking->status,
+                    'other_party_name' => $name
+                ];
+            });
+
+            // Group by date if needed, but for now returning flat list as per request "api should be same as in the provided image" 
+            // which implies a list of items. The UI likely groups them or shows "Today".
+            // If the request was for "Today's schedule", we might want to filter strict today, 
+            // but the code supports date range.
+            
+            return $this->sendResponse($formattedBookings, 'Schedule retrieved successfully');
+
+        } catch (\Exception $e) {
+            Log::error('Error retrieving schedule', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage()
+            ]);
+            return $this->sendError('Server Error', ['error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
      * Get all bookings for the authenticated user
      * 
      * @param Request $request

@@ -651,7 +651,7 @@ Route::middleware(['auth:sanctum'])->prefix('appointment')->name('api.appointmen
     Route::get('/available-slots', [SessionBookingController::class, 'getAvailableSlots'])->name('available-slots');
 
     // Basic CRUD operations
-    Route::get('/schedule', [SessionBookingController::class, 'index'])->name('index');
+    Route::get('/schedule', [SessionBookingController::class, 'getSchedule'])->name('schedule');
     Route::get('/', [SessionBookingController::class, 'index'])->name('index');
     Route::post('/', [SessionBookingController::class, 'store'])->name('store');
     Route::get('/{id}', [SessionBookingController::class, 'show'])->whereNumber('id')->name('show');
