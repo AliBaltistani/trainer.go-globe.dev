@@ -53,7 +53,6 @@ class SessionBookingController extends ApiBaseController
     public function index(Request $request): JsonResponse
     {
         try {
-            dd('test');
             $user = Auth::user();
             $perPage = $request->get('per_page', 15);
             $status = $request->get('status');
