@@ -182,7 +182,7 @@
 <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
 
 <!-- Sweet Alert -->
-<script src="{{asset('build/assets/libs/sweetalert2/sweetalert2.min.js')}}"></script>
+<!-- Script is already included in master layout -->
 
 <script>
 $(document).ready(function() {
@@ -311,49 +311,69 @@ $(document).ready(function() {
 
 // Action Functions
 function toggleStatus(goalId) {
-    if (confirm('Are you sure you want to change the status of this goal?')) {
-        $.ajax({
-            url: '/admin/goals/' + goalId + '/toggle-status',
-            type: 'PATCH',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Success: ' + response.message);
-                    $('#goalsTable').DataTable().ajax.reload();
-                } else {
-                    alert('Error: ' + response.message);
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You want to change the status of this goal?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, change it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/admin/goals/' + goalId + '/toggle-status',
+                type: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Success!', response.message, 'success');
+                        $('#goalsTable').DataTable().ajax.reload();
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error!', 'Failed to toggle goal status', 'error');
                 }
-            },
-            error: function(xhr) {
-                alert('Error: Failed to toggle goal status');
-            }
-        });
-    }
+            });
+        }
+    });
 }
 
 function deleteGoal(goalId) {
-    if (confirm('Are you sure you want to delete this goal? This action cannot be undone!')) {
-        $.ajax({
-            url: '/admin/goals/' + goalId,
-            type: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Success: ' + response.message);
-                    $('#goalsTable').DataTable().ajax.reload();
-                } else {
-                    alert('Error: ' + response.message);
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You want to delete this goal? This action cannot be undone!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/admin/goals/' + goalId,
+                type: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Deleted!', response.message, 'success');
+                        $('#goalsTable').DataTable().ajax.reload();
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error!', 'Failed to delete goal', 'error');
                 }
-            },
-            error: function(xhr) {
-                alert('Error: Failed to delete goal');
-            }
-        });
-    }
+            });
+        }
+    });
 }
 </script>
 @endsection

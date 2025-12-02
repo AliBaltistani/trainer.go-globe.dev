@@ -447,61 +447,82 @@ function showVideos(workoutId) {
                 $('#videosContent').html(videosHtml);
                 $('#videosModal').modal('show');
             } else {
-                alert('Failed to load videos: ' + response.message);
+                Swal.fire('Error!', 'Failed to load videos: ' + response.message, 'error');
             }
         },
         error: function() {
-            alert('Error loading videos');
+            Swal.fire('Error!', 'Error loading videos', 'error');
         }
     });
 }
 
 // Action Functions
 function toggleStatus(workoutId) {
-    if (confirm('Are you sure you want to change the status of this workout?')) {
-        $.ajax({
-            url: '/admin/workouts/' + workoutId + '/toggle-status',
-            type: 'PATCH',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    alert('Success: ' + response.message);
-                    $('#workoutsTable').DataTable().ajax.reload();
-                    loadStatistics(); // Reload stats
-                } else {
-                    alert('Error: ' + response.message);
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You want to change the status of this workout?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, change it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/admin/workouts/' + workoutId + '/toggle-status',
+                type: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('Success!', response.message, 'success');
+                        $('#workoutsTable').DataTable().ajax.reload();
+                        loadStatistics(); // Reload stats
+                    } else {
+                        Swal.fire('Error!', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    Swal.fire('Error!', 'Failed to toggle workout status', 'error');
                 }
-            },
-            error: function(xhr) {
-                alert('Error: Failed to toggle workout status');
-            }
-        });
-    }
+            });
+        }
+    });
 }
 
 function deleteWorkout(workoutId) {
-    if (confirm('Are you sure you want to delete this workout? This action cannot be undone.')) {
-        $.ajax({
-            url: '/admin/workouts/' + workoutId,
-            type: 'DELETE',
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#workoutsTable').DataTable().ajax.reload();
-                    alert('Workout deleted successfully');
-                } else {
-                    alert('Failed to delete workout: ' + response.message);
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this! This action cannot be undone.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '/admin/workouts/' + workoutId,
+                type: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#workoutsTable').DataTable().ajax.reload();
+                        Swal.fire('Deleted!', 'Workout deleted successfully', 'success');
+                        loadStatistics(); // Reload stats
+                    } else {
+                        Swal.fire('Error!', 'Failed to delete workout: ' + response.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error!', 'Error deleting workout', 'error');
                 }
-            },
-            error: function() {
-                alert('Error deleting workout');
-            }
-        });
-    }
+            });
+        }
+    });
 }
 </script>
 @endsection

@@ -319,60 +319,69 @@ $(document).ready(function() {
         var id = $(this).data('id');
         var button = $(this);
         
-        if (confirm('Are you sure you want to delete this specialization? This action cannot be undone.')) {
-            $.ajax({
-                url: "{{ route('admin.specializations.destroy', ':id') }}".replace(':id', id),
-                type: 'DELETE',
-                data: {
-                    _token: '{{ csrf_token() }}'
-                },
-                beforeSend: function() {
-                    button.prop('disabled', true);
-                },
-                success: function(response) {
-                    if (response.success) {
-                        // Show success message
-                        showAlert('success', response.message);
-                        
-                        // Reload table
-                        table.ajax.reload(null, false);
-                    } else {
-                        showAlert('error', response.message);
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You won't be able to revert this! This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "{{ route('admin.specializations.destroy', ':id') }}".replace(':id', id),
+                    type: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    beforeSend: function() {
+                        button.prop('disabled', true);
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Show success message
+                            Swal.fire(
+                                'Deleted!',
+                                response.message,
+                                'success'
+                            );
+                            
+                            // Reload table
+                            table.ajax.reload(null, false);
+                        } else {
+                            Swal.fire(
+                                'Error!',
+                                response.message,
+                                'error'
+                            );
+                        }
+                    },
+                    error: function(xhr) {
+                        var message = xhr.responseJSON?.message || 'An error occurred while deleting specialization.';
+                        Swal.fire(
+                            'Error!',
+                            message,
+                            'error'
+                        );
+                    },
+                    complete: function() {
+                        button.prop('disabled', false);
                     }
-                },
-                error: function(xhr) {
-                    var message = xhr.responseJSON?.message || 'An error occurred while deleting specialization.';
-                    showAlert('error', message);
-                },
-                complete: function() {
-                    button.prop('disabled', false);
-                }
-            });
-        }
+                });
+            }
+        });
     });
 
     // Show Alert Function
     function showAlert(type, message) {
-        var alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-        var iconClass = type === 'success' ? 'ri-check-line' : 'ri-error-warning-line';
-        
-        var alertHtml = `
-            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-                <i class="${iconClass} me-2"></i>${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
-        
-        // Remove existing alerts
-        $('.alert').remove();
-        
-        // Add new alert at the top of content
-        $('.page-header-breadcrumb').after(alertHtml);
-        
-        // Auto dismiss after 5 seconds
-        setTimeout(function() {
-            $('.alert').fadeOut();
-        }, 5000);
+        Swal.fire({
+            icon: type,
+            title: type.charAt(0).toUpperCase() + type.slice(1),
+            text: message,
+            timer: 5000,
+            timerProgressBar: true
+        });
     }
 });
 </script>

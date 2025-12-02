@@ -272,62 +272,6 @@
         </div>
     </div>
     <!-- End::row-1 -->
-
-    <!-- Delete Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title" id="deleteModalLabel">Delete Booking</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete this booking? This action will:</p>
-                    <ul>
-                        <li>Permanently delete the booking from the system</li>
-                        <li>Remove the Google Calendar event (if exists)</li>
-                        <li>Cancel any Google Meet links</li>
-                        <li>This action cannot be undone</li>
-                    </ul>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form id="deleteForm" method="POST" style="display: inline;">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="btn btn-danger">
-                            <i class="ri-delete-bin-line me-1"></i> Delete Booking
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Bulk Action Modal -->
-    <div class="modal fade" id="bulkActionModal" tabindex="-1" aria-labelledby="bulkActionModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h6 class="modal-title" id="bulkActionModalLabel">Bulk Action</h6>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="bulkActionText"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form id="bulkActionForm" method="POST" action="{{ route('admin.bookings.bulk-update') }}" style="display: inline;">
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="booking_ids" id="bulkBookingIds">
-                        <input type="hidden" name="status" id="bulkStatus">
-                        <button type="submit" class="btn btn-primary" id="bulkActionBtn">Confirm</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 @endsection
 
 @section('scripts')
@@ -358,14 +302,47 @@
         });
 
         function deleteBooking(id) {
-            $('#deleteForm').attr('action', '/admin/bookings/google-calendar/' + id);
-            $('#deleteModal').modal('show');
+            Swal.fire({
+                title: 'Delete Booking',
+                html: `
+                    <p>Are you sure you want to delete this booking? This action will:</p>
+                    <ul class="text-start">
+                        <li>Permanently delete the booking from the system</li>
+                        <li>Remove the Google Calendar event (if exists)</li>
+                        <li>Cancel any Google Meet links</li>
+                        <li>This action cannot be undone</li>
+                    </ul>
+                `,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/admin/bookings/google-calendar/' + id,
+                        type: 'POST',
+                        data: {
+                            _method: 'DELETE',
+                            _token: '{{ csrf_token() }}'
+                        },
+                        success: function(response) {
+                            Swal.fire('Deleted!', 'Booking has been deleted.', 'success')
+                            .then(() => location.reload());
+                        },
+                        error: function() {
+                            Swal.fire('Error!', 'Failed to delete booking.', 'error');
+                        }
+                    });
+                }
+            });
         }
 
         function bulkAction(status) {
             const checkedBoxes = $('.booking-checkbox:checked');
             if (checkedBoxes.length === 0) {
-                alert('Please select at least one booking.');
+                Swal.fire('Warning', 'Please select at least one booking.', 'warning');
                 return;
             }
 
@@ -374,84 +351,119 @@
                 bookingIds.push($(this).val());
             });
 
-            $('#bulkBookingIds').val(JSON.stringify(bookingIds));
-            $('#bulkStatus').val(status);
-            
             const actionText = status === 'confirmed' ? 'confirm' : 'cancel';
-            $('#bulkActionText').text(`Are you sure you want to ${actionText} ${bookingIds.length} selected booking(s)?`);
-            $('#bulkActionBtn').text(status === 'confirmed' ? 'Confirm Bookings' : 'Cancel Bookings');
             
-            $('#bulkActionModal').modal('show');
+            Swal.fire({
+                title: 'Bulk Action',
+                text: `Are you sure you want to ${actionText} ${bookingIds.length} selected booking(s)?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: status === 'confirmed' ? 'Confirm Bookings' : 'Cancel Bookings',
+                confirmButtonColor: status === 'confirmed' ? '#28a745' : '#dc3545'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "{{ route('admin.bookings.bulk-update') }}",
+                        type: 'POST',
+                        data: {
+                            _method: 'PATCH',
+                            _token: '{{ csrf_token() }}',
+                            booking_ids: JSON.stringify(bookingIds),
+                            status: status
+                        },
+                        success: function(response) {
+                            Swal.fire('Success!', 'Bookings updated successfully.', 'success')
+                            .then(() => location.reload());
+                        },
+                        error: function() {
+                            Swal.fire('Error!', 'Failed to update bookings.', 'error');
+                        }
+                    });
+                }
+            });
         }
 
         function syncToGoogleCalendar(bookingId) {
-            if (confirm('Are you sure you want to sync this booking to Google Calendar?')) {
-                // Show loading state
-                const button = event.target.closest('button');
-                const originalHtml = button.innerHTML;
-                button.innerHTML = '<i class="ri-loader-2-line"></i>';
-                button.disabled = true;
+            Swal.fire({
+                title: 'Sync to Google Calendar',
+                text: 'Are you sure you want to sync this booking to Google Calendar?',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, sync it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Syncing...',
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
 
-                fetch(`/admin/bookings/${bookingId}/sync-google-calendar`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Booking synced to Google Calendar successfully!');
-                        location.reload();
-                    } else {
-                        alert('Error syncing to Google Calendar: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error syncing to Google Calendar. Please try again.');
-                })
-                .finally(() => {
-                    button.innerHTML = originalHtml;
-                    button.disabled = false;
-                });
-            }
+                    fetch(`/admin/bookings/${bookingId}/sync-google-calendar`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Synced!', 'Booking synced to Google Calendar successfully!', 'success')
+                            .then(() => location.reload());
+                        } else {
+                            Swal.fire('Error!', 'Error syncing to Google Calendar: ' + (data.message || 'Unknown error'), 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error!', 'Error syncing to Google Calendar. Please try again.', 'error');
+                    });
+                }
+            });
         }
 
         function createGoogleCalendarEvent(bookingId) {
-            if (confirm('Are you sure you want to create a Google Calendar event for this booking?')) {
-                // Show loading state
-                const button = event.target.closest('button');
-                const originalHtml = button.innerHTML;
-                button.innerHTML = '<i class="ri-loader-2-line"></i>';
-                button.disabled = true;
+            Swal.fire({
+                title: 'Create Google Calendar Event',
+                text: 'Are you sure you want to create a Google Calendar event for this booking?',
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, create it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Creating...',
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
 
-                fetch(`/admin/bookings/${bookingId}/sync-google-calendar`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Google Calendar event created successfully!');
-                        location.reload();
-                    } else {
-                        alert('Error creating Google Calendar event: ' + (data.message || 'Unknown error'));
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('Error creating Google Calendar event. Please try again.');
-                })
-                .finally(() => {
-                    button.innerHTML = originalHtml;
-                    button.disabled = false;
-                });
-            }
+                    fetch(`/admin/bookings/${bookingId}/sync-google-calendar`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('Created!', 'Google Calendar event created successfully!', 'success')
+                            .then(() => location.reload());
+                        } else {
+                            Swal.fire('Error!', 'Error creating Google Calendar event: ' + (data.message || 'Unknown error'), 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire('Error!', 'Error creating Google Calendar event. Please try again.', 'error');
+                    });
+                }
+            });
         }
+             
     </script>
 @endsection

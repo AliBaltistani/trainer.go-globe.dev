@@ -105,11 +105,11 @@
                                             <i class="ri-eye-line"></i>
                                         </a>
                                         @if($transaction->status == 'success')
-                                            <form action="{{ route('admin.transactions.refund', $transaction->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to refund this transaction?');">
+                                            <button type="button" class="btn btn-sm btn-icon btn-danger-light" data-bs-toggle="tooltip" title="Refund" onclick="confirmRefund('{{ $transaction->id }}')">
+                                                <i class="ri-refund-line"></i>
+                                            </button>
+                                            <form id="refund-form-{{ $transaction->id }}" action="{{ route('admin.transactions.refund', $transaction->id) }}" method="POST" style="display: none;">
                                                 @csrf
-                                                <button type="submit" class="btn btn-sm btn-icon btn-danger-light" data-bs-toggle="tooltip" title="Refund">
-                                                    <i class="ri-refund-line"></i>
-                                                </button>
                                             </form>
                                         @endif
                                     </td>
@@ -129,4 +129,24 @@
         </div>
     </div>
 </div>
+@endsection
+
+@section('scripts')
+<script>
+    function confirmRefund(id) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You want to refund this transaction? This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, refund it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('refund-form-' + id).submit();
+            }
+        });
+    }
+</script>
 @endsection

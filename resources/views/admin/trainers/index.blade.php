@@ -705,46 +705,66 @@ function addCertification(trainerId) {
 
 // Toggle trainer status function
 function toggleTrainerStatus(trainerId) {
-    if (confirm('Are you sure you want to toggle this trainer\'s status?')) {
-        $.ajax({
-            url: `/admin/trainers/${trainerId}/toggle-status`,
-            method: 'PATCH',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#trainersTable').DataTable().ajax.reload();
-                    showAlert('success', response.message);
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You want to toggle this trainer's status?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, toggle it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/admin/trainers/${trainerId}/toggle-status`,
+                method: 'PATCH',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#trainersTable').DataTable().ajax.reload();
+                        Swal.fire('Success!', response.message, 'success');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error!', 'Failed to update trainer status.', 'error');
                 }
-            },
-            error: function() {
-                showAlert('error', 'Failed to update trainer status.');
-            }
-        });
-    }
+            });
+        }
+    });
 }
 
 // Delete trainer function
 function deleteTrainer(trainerId) {
-    if (confirm('Are you sure you want to delete this trainer? This action cannot be undone.')) {
-        $.ajax({
-            url: `/admin/trainers/${trainerId}`,
-            method: 'DELETE',
-            data: {
-                _token: '{{ csrf_token() }}'
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('#trainersTable').DataTable().ajax.reload();
-                    showAlert('success', response.message);
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this! This action cannot be undone.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: `/admin/trainers/${trainerId}`,
+                method: 'DELETE',
+                data: {
+                    _token: '{{ csrf_token() }}'
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#trainersTable').DataTable().ajax.reload();
+                        Swal.fire('Deleted!', response.message, 'success');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error!', 'Failed to delete trainer.', 'error');
                 }
-            },
-            error: function() {
-                showAlert('error', 'Failed to delete trainer.');
-            }
-        });
-    }
+            });
+        }
+    });
 }
 
 // Show alert function

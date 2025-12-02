@@ -30,5 +30,8 @@
 
          <!-- Date & Time Picker JS -->
          <script src="{{asset('build/assets/libs/flatpickr/flatpickr.min.js')}}"></script>
+
+         <!-- Sweet Alert -->
+         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
          
          @yield('scripts')

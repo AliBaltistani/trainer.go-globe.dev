@@ -341,59 +341,79 @@ $(document).ready(function() {
         });
 
         if (selectedIds.length === 0) {
-            alert('Please select locations to delete.');
+            Swal.fire('Warning', 'Please select locations to delete.', 'warning');
             return;
         }
 
-        if (confirm('Are you sure you want to delete ' + selectedIds.length + ' selected location(s)?')) {
-            $.ajax({
-                url: "{{ route('admin.user-locations.bulk-delete') }}",
-                type: 'POST',
-                data: {
-                    ids: selectedIds,
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        table.draw();
-                        $('#selectAll').prop('checked', false);
-                        toggleBulkActions();
-                        alert('Locations deleted successfully.');
-                    } else {
-                        alert('Error deleting locations: ' + response.message);
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'You want to delete ' + selectedIds.length + ' selected location(s)?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete them!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "{{ route('admin.user-locations.bulk-delete') }}",
+                    type: 'POST',
+                    data: {
+                        ids: selectedIds,
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            table.draw();
+                            $('#selectAll').prop('checked', false);
+                            toggleBulkActions();
+                            Swal.fire('Deleted!', 'Locations deleted successfully.', 'success');
+                        } else {
+                            Swal.fire('Error!', 'Error deleting locations: ' + response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error!', 'Error deleting locations. Please try again.', 'error');
                     }
-                },
-                error: function() {
-                    alert('Error deleting locations. Please try again.');
-                }
-            });
-        }
+                });
+            }
+        });
     });
 
     // Individual delete
     $(document).on('click', '.delete-btn', function() {
         var id = $(this).data('id');
         
-        if (confirm('Are you sure you want to delete this location?')) {
-            $.ajax({
-                url: '/admin/user-locations/' + id,
-                type: 'DELETE',
-                data: {
-                    _token: '{{ csrf_token() }}'
-                },
-                success: function(response) {
-                    if (response.success) {
-                        table.draw();
-                        alert('Location deleted successfully.');
-                    } else {
-                        alert('Error deleting location: ' + response.message);
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "You want to delete this location?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/admin/user-locations/' + id,
+                    type: 'DELETE',
+                    data: {
+                        _token: '{{ csrf_token() }}'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            table.draw();
+                            Swal.fire('Deleted!', 'Location deleted successfully.', 'success');
+                        } else {
+                            Swal.fire('Error!', 'Error deleting location: ' + response.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error!', 'Error deleting location. Please try again.', 'error');
                     }
-                },
-                error: function() {
-                    alert('Error deleting location. Please try again.');
-                }
-            });
-        }
+                });
+            }
+        });
     });
 });
 </script>

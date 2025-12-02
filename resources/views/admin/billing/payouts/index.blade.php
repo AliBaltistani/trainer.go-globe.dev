@@ -70,11 +70,11 @@
                                 <td>{{ $payout->created_at->format('M d, Y') }}</td>
                                 <td>
                                     @if($payout->payout_status !== 'completed')
-                                        <form action="{{ route('admin.payouts.process', $payout->id) }}" method="POST" class="d-inline-block" onsubmit="return confirm('Are you sure you want to process this payout?');">
+                                        <button type="button" class="btn btn-sm btn-primary-light" title="Process Payout" onclick="confirmPayout('{{ $payout->id }}')">
+                                            <i class="ri-bank-card-line me-1"></i> Pay
+                                        </button>
+                                        <form id="payout-form-{{ $payout->id }}" action="{{ route('admin.payouts.process', $payout->id) }}" method="POST" style="display: none;">
                                             @csrf
-                                            <button type="submit" class="btn btn-sm btn-primary-light" title="Process Payout">
-                                                <i class="ri-bank-card-line me-1"></i> Pay
-                                            </button>
                                         </form>
                                     @else
                                         <span class="badge bg-success-transparent"><i class="ri-check-double-line me-1"></i> Paid</span>
@@ -110,5 +110,21 @@
         $(function(){
             $('#payoutsTable').DataTable({responsive:true, ordering:false, paging:false, searching:false, info:false});
         });
+
+        function confirmPayout(id) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to process this payout?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, process it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('payout-form-' + id).submit();
+                }
+            });
+        }
     </script>
 @endsection
