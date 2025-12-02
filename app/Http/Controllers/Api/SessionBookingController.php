@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\ApiBaseController;
 use App\Models\Schedule;
 use App\Models\User;
+use App\Models\Program;
 use App\Services\GoogleCalendarService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -54,84 +55,131 @@ class SessionBookingController extends ApiBaseController
     {
         try {
             $user = Auth::user();
-            $scheduleDate = $request->get('date', Carbon::now(config('app.timezone'))->toDateString());
-            
-            // Helper to build base query
-            $buildQuery = function() use ($user) {
-                $query = Schedule::with(['trainer:id,name,email,phone,profile_image', 'client:id,name,email,phone,profile_image']);
-                
-                if ($user->role === 'trainer') {
-                    $query->forTrainer($user->id);
-                } elseif ($user->role === 'client') {
-                    $query->forClient($user->id);
+            $status = $request->get('status');
+            // Default to today if no date provided
+            $startDate = $request->get('start_date', Carbon::now(config('app.timezone'))->toDateString());
+            $endDate = $request->get('end_date');
+
+            if ($user->role === 'trainer') {
+                // Trainer Flow - Keep existing logic but unify image format
+                $query = Schedule::with(['client:id,name,email,phone,profile_image']);
+                $query->forTrainer($user->id);
+
+                if ($status && in_array($status, [Schedule::STATUS_PENDING, Schedule::STATUS_CONFIRMED, Schedule::STATUS_CANCELLED])) {
+                    $query->withStatus($status);
                 }
+
+                if ($endDate) {
+                    $query->dateRange($startDate, $endDate);
+                } else {
+                    $query->whereDate('date', '>=', $startDate);
+                }
+
+                $query->orderBy('date', 'asc')->orderBy('start_time', 'asc');
+                $bookings = $query->get();
+
+                $formattedBookings = $bookings->map(function ($booking) {
+                    $client = $booking->client;
+                    $name = $client ? $client->name : 'Unknown';
+                    // Generate full asset URL for image
+                    $image = $client && $client->profile_image ? asset('storage/' . $client->profile_image) : null;
+
+                    $startTime = $booking->start_time->format('g:i A');
+                    $endTime = $booking->end_time->format('g:i A');
+
+                    return [
+                        'id' => $booking->id,
+                        'image' => $image,
+                        'title' => "{$startTime} - {$endTime} • {$name}",
+                        'subtitle' => $booking->session_type ? ucwords(str_replace('_', ' ', $booking->session_type)) : 'Training Session',
+                        'date' => $booking->date->format('Y-m-d'),
+                        'start_time' => $startTime,
+                        'end_time' => $endTime,
+                        'status' => $booking->status,
+                        'type' => 'session',
+                        'other_party_name' => $name
+                    ];
+                });
+
+                return $this->sendResponse($formattedBookings, 'Schedule retrieved successfully');
+
+            } elseif ($user->role === 'client') {
+                // Client Flow - Combine Programs and Sessions
                 
-                return $query;
-            };
+                // 1. Fetch Sessions
+                $query = Schedule::with(['trainer:id,name,email,phone,profile_image']);
+                $query->forClient($user->id);
 
-            // 1. Upcoming Programs (Next upcoming sessions)
-            $now = Carbon::now(config('app.timezone'));
-            $upcomingQuery = $buildQuery();
-            
-            // Filter for upcoming: future dates OR today with future time
-            $upcomingQuery->where(function($q) use ($now) {
-                $q->where('date', '>', $now->toDateString())
-                  ->orWhere(function($subQ) use ($now) {
-                      $subQ->where('date', '=', $now->toDateString())
-                           ->where('start_time', '>', $now->format('H:i:s'));
-                  });
-            });
-            
-            // Only show active bookings in upcoming
-            $upcomingQuery->whereIn('status', [Schedule::STATUS_PENDING, Schedule::STATUS_CONFIRMED]);
-            $upcomingQuery->orderBy('date', 'asc')->orderBy('start_time', 'asc');
-            $upcomingPrograms = $upcomingQuery->limit(3)->get();
+                if ($status && in_array($status, [Schedule::STATUS_PENDING, Schedule::STATUS_CONFIRMED, Schedule::STATUS_CANCELLED])) {
+                    $query->withStatus($status);
+                }
 
-            // 2. Session Schedule (For specific date)
-            $scheduleQuery = $buildQuery();
-            $scheduleQuery->whereDate('date', $scheduleDate);
-            
-            // Apply status filter if provided
-            if ($request->has('status') && in_array($request->get('status'), [Schedule::STATUS_PENDING, Schedule::STATUS_CONFIRMED, Schedule::STATUS_CANCELLED])) {
-                $scheduleQuery->withStatus($request->get('status'));
+                if ($endDate) {
+                    $query->dateRange($startDate, $endDate);
+                } else {
+                    $query->whereDate('date', '>=', $startDate);
+                }
+
+                $query->orderBy('date', 'asc')->orderBy('start_time', 'asc');
+                $sessions = $query->get();
+
+                // 2. Fetch Active Programs
+                // Note: Programs are ongoing, so we include them if they are active
+                $programs = Program::with(['trainer:id,name,email,phone,profile_image'])
+                    ->byClient($user->id)
+                    ->active()
+                    ->get();
+
+                // 3. Format Sessions
+                $formattedSessions = $sessions->map(function ($booking) {
+                    $trainer = $booking->trainer;
+                    $name = $trainer ? $trainer->name : 'Unknown';
+                    $image = $trainer && $trainer->profile_image ? asset('storage/' . $trainer->profile_image) : null;
+                    $startTime = $booking->start_time->format('g:i A');
+                    $endTime = $booking->end_time->format('g:i A');
+
+                    return [
+                        'id' => $booking->id,
+                        'image' => $image,
+                        'title' => "{$startTime} - {$endTime} • {$name}",
+                        'subtitle' => $booking->session_type ? ucwords(str_replace('_', ' ', $booking->session_type)) : 'Training Session',
+                        'date' => $booking->date->format('Y-m-d'),
+                        'start_time' => $startTime,
+                        'end_time' => $endTime,
+                        'status' => $booking->status,
+                        'type' => 'session',
+                        'other_party_name' => $name
+                    ];
+                });
+
+                // 4. Format Programs
+                $formattedPrograms = $programs->map(function ($program) {
+                    $trainer = $program->trainer;
+                    $name = $trainer ? $trainer->name : 'Unknown';
+                    $image = $trainer && $trainer->profile_image ? asset('storage/' . $trainer->profile_image) : null;
+
+                    return [
+                        'id' => $program->id,
+                        'image' => $image,
+                        'title' => $program->name,
+                        'subtitle' => $program->duration . ' Weeks Program',
+                        'date' => null, // Programs are ongoing
+                        'start_time' => null,
+                        'end_time' => null,
+                        'status' => 'active',
+                        'type' => 'program',
+                        'other_party_name' => $name
+                    ];
+                });
+
+                // 5. Combine (Programs first, then Sessions)
+                $combined = $formattedPrograms->merge($formattedSessions);
+
+                return $this->sendResponse($combined, 'Schedule retrieved successfully');
+
+            } else {
+                return $this->sendError('Unauthorized', ['error' => 'Invalid user role'], 403);
             }
-            
-            $scheduleQuery->orderBy('start_time', 'asc');
-            $sessionSchedule = $scheduleQuery->get();
-
-            // Transformation function
-            $transform = function($booking) use ($user) {
-                $isTrainer = $user->role === 'trainer';
-                $otherParty = $isTrainer ? $booking->client : $booking->trainer;
-                
-                $name = $otherParty ? $otherParty->name : 'Unknown';
-                $image = ($otherParty && $otherParty->profile_image) ? asset('storage/' . $otherParty->profile_image) : null;
-                
-                $startTime = $booking->start_time->format('g:i A');
-                $endTime = $booking->end_time->format('g:i A');
-                
-                // Use meeting agenda as title, fallback to session type or default
-                $title = $booking->meeting_agenda ?? 
-                         ($booking->session_type ? ucwords(str_replace('_', ' ', $booking->session_type)) : 'Training Session');
-
-                return [
-                    'id' => $booking->id,
-                    'image' => $image,
-                    'title' => $title,
-                    'start_time' => $startTime,
-                    'end_time' => $endTime,
-                    'date' => $booking->date->format('Y-m-d'),
-                    'status' => $booking->status,
-                    'other_party_name' => $name,
-                    // Keeping subtitle for additional context if needed
-                    'subtitle' => $booking->session_type ? ucwords(str_replace('_', ' ', $booking->session_type)) : 'Training Session'
-                ];
-            };
-
-            return $this->sendResponse([
-                'upcoming_programs' => $upcomingPrograms->map($transform),
-                'session_schedule' => $sessionSchedule->map($transform)
-            ], 'Schedule retrieved successfully');
 
         } catch (\Exception $e) {
             Log::error('Error retrieving schedule', [
