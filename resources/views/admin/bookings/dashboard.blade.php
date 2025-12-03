@@ -134,9 +134,9 @@
                         <a href="{{ route('admin.bookings.index', ['status' => 'pending']) }}" class="btn btn-outline-warning btn-wave text-start">
                             <i class="ri-time-line me-2"></i>Pending Approvals
                         </a>
-                        <a href="{{ route('admin.bookings.export') }}" class="btn btn-outline-success btn-wave text-start">
+                        <!-- <a href="{{ route('admin.bookings.export') }}" class="btn btn-outline-success btn-wave text-start">
                             <i class="ri-download-line me-2"></i>Export Data
-                        </a>
+                        </a> -->
                         <a href="{{ route('admin.bookings.index') }}" class="btn btn-outline-info btn-wave text-start">
                             <i class="ri-list-check me-2"></i>View All
                         </a>
@@ -176,28 +176,32 @@
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <div class="avatar avatar-xs me-2">
-                                                    @if($booking->trainer && $booking->trainer->profile_image)
-                                                        <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer" class="avatar-img rounded-circle">
-                                                    @else
-                                                        <span class="avatar-title rounded-circle bg-info text-white" style="    width: 100%;height: 100%;text-align: center;font-weight: 800;">
-                                                            {{ strtoupper(substr(optional($booking->trainer)->name ?? '?', 0, 1)) }}
-                                                        </span>
-                                                    @endif
+                                                <div class="me-2">
+                                                    <span class="avatar avatar-md bg-light border border-dashed p-1">
+                                                        @if($booking->trainer && $booking->trainer->profile_image)
+                                                            <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer">
+                                                        @else
+                                                            <div class="header-link-icon avatar bg-info-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
+                                                                {{ strtoupper(substr(optional($booking->trainer)->name ?? '?', 0, 1)) }}
+                                                            </div>
+                                                        @endif
+                                                    </span>
                                                 </div>
                                                 <span class="fw-semibold">{{ optional($booking->trainer)->name ?? 'Unknown Trainer' }}</span>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                               <div class="avatar avatar-xs me-2">
-                                                    @if($booking->client && $booking->client->profile_image)
-                                                        <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client" class="avatar-img rounded-circle">
-                                                    @else
-                                                        <span class="avatar-title rounded-circle bg-warning text-white" style="    width: 100%;height: 100%;text-align: center;font-weight: 800;">
-                                                            {{ strtoupper(substr(optional($booking->client)->name ?? '?', 0, 1)) }}
-                                                        </span>
-                                                    @endif
+                                                <div class="me-2">
+                                                    <span class="avatar avatar-md bg-light border border-dashed p-1">
+                                                        @if($booking->client && $booking->client->profile_image)
+                                                            <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client">
+                                                        @else
+                                                            <div class="header-link-icon avatar bg-warning-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
+                                                                {{ strtoupper(substr(optional($booking->client)->name ?? '?', 0, 1)) }}
+                                                            </div>
+                                                        @endif
+                                                    </span>
                                                 </div>
                                                 <span class="fw-semibold">{{ optional($booking->client)->name ?? 'Unknown Client' }}</span>
                                             </div>
@@ -257,28 +261,32 @@
                                     <tr>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                               <div class="avatar avatar-xs me-2">
-                                                    @if($booking->trainer->profile_image)
-                                                        <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer" class="avatar-img rounded-circle">
-                                                    @else
-                                                        <span class="avatar-title rounded-circle bg-info text-white" style="    width: 100%;height: 100%;text-align: center;font-weight: 800;">
-                                                            {{ strtoupper(substr($booking->trainer->name ?? '?', 0, 1)) }}
-                                                        </span>
-                                                    @endif
+                                                <div class="me-2">
+                                                    <span class="avatar avatar-md bg-light border border-dashed p-1">
+                                                        @if($booking->trainer->profile_image)
+                                                            <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer">
+                                                        @else
+                                                            <div class="header-link-icon avatar bg-info-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
+                                                                {{ strtoupper(substr($booking->trainer->name ?? '?', 0, 1)) }}
+                                                            </div>
+                                                        @endif
+                                                    </span>
                                                 </div>
                                                 <span class="fw-semibold">{{ $booking->trainer->name }}</span>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
-                                               <div class="avatar avatar-xs me-2">
-                                                    @if($booking->client->profile_image)
-                                                        <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client" class="avatar-img rounded-circle">
-                                                    @else
-                                                        <span class="avatar-title rounded-circle bg-warning text-white" style="    width: 100%;height: 100%;text-align: center;font-weight: 800;">
-                                                            {{ strtoupper(substr($booking->client->name ?? '?', 0, 1)) }}
-                                                        </span>
-                                                    @endif
+                                                <div class="me-2">
+                                                    <span class="avatar avatar-md bg-light border border-dashed p-1">
+                                                        @if($booking->client->profile_image)
+                                                            <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client">
+                                                        @else
+                                                            <div class="header-link-icon avatar bg-warning-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
+                                                                {{ strtoupper(substr($booking->client->name ?? '?', 0, 1)) }}
+                                                            </div>
+                                                        @endif
+                                                    </span>
                                                 </div>
                                                 <span class="fw-semibold">{{ $booking->client->name }}</span>
                                             </div>

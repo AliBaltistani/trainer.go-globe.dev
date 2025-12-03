@@ -78,11 +78,19 @@ class BookingController extends Controller
 
         $statuses = Schedule::getStatuses();
 
+        $stats = [
+            'total_bookings' => Schedule::count(),
+            'pending_bookings' => Schedule::where('status', 'pending')->count(),
+            'confirmed_bookings' => Schedule::where('status', 'confirmed')->count(),
+            'cancelled_bookings' => Schedule::where('status', 'cancelled')->count(),
+        ];
+
         return view('admin.bookings.index', compact(
             'bookings',
             'trainers',
             'clients',
-            'statuses'
+            'statuses',
+            'stats'
         ));
     }
 

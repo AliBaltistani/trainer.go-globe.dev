@@ -23,7 +23,15 @@ class BillingController extends Controller
             $query->where('status', $request->string('status'));
         }
         $invoices = $query->latest()->paginate(20)->appends($request->query());
-        return view('admin.billing.invoices.index', compact('invoices'));
+
+        $stats = [
+            'total_invoices' => Invoice::count(),
+            'paid_invoices' => Invoice::where('status', 'paid')->count(),
+            'total_collected' => Invoice::where('status', 'paid')->sum('total_amount'),
+            'pending_count' => Invoice::where('status', 'pending')->count(),
+        ];
+
+        return view('admin.billing.invoices.index', compact('invoices', 'stats'));
     }
 
     public function payouts(Request $request)
@@ -33,7 +41,15 @@ class BillingController extends Controller
             $query->where('payout_status', $request->string('status'));
         }
         $payouts = $query->latest()->paginate(20)->appends($request->query());
-        return view('admin.billing.payouts.index', compact('payouts'));
+
+        $stats = [
+            'total_payouts' => Payout::count(),
+            'total_paid' => Payout::where('payout_status', 'completed')->sum('amount'),
+            'pending_amount' => Payout::where('payout_status', 'processing')->sum('amount'),
+            'pending_count' => Payout::where('payout_status', 'processing')->count(),
+        ];
+
+        return view('admin.billing.payouts.index', compact('payouts', 'stats'));
     }
 
     public function transactions(Request $request)
@@ -52,7 +68,14 @@ class BillingController extends Controller
         
         $transactions = $query->latest()->paginate(20)->appends($request->query());
         
-        return view('admin.billing.transactions.index', compact('transactions'));
+        $stats = [
+            'total_transactions' => Transaction::count(),
+            'success_count' => Transaction::where('status', 'success')->count(),
+            'total_revenue' => Transaction::where('status', 'success')->sum('amount'),
+            'failed_count' => Transaction::where('status', 'failed')->count(),
+        ];
+        
+        return view('admin.billing.transactions.index', compact('transactions', 'stats'));
     }
 
     public function exportPayouts()

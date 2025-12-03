@@ -11,7 +11,14 @@ class PaymentGatewayController extends Controller
     public function index()
     {
         $gateways = PaymentGateway::orderByDesc('is_default')->orderBy('name')->get();
-        return view('admin.billing.payment-gateways.index', compact('gateways'));
+
+        $stats = [
+            'total_gateways' => PaymentGateway::count(),
+            'active_gateways' => PaymentGateway::where('enabled', true)->count(),
+            'default_gateway' => PaymentGateway::where('is_default', true)->value('name') ?? 'None',
+        ];
+
+        return view('admin.billing.payment-gateways.index', compact('gateways', 'stats'));
     }
 
     public function store(Request $request)

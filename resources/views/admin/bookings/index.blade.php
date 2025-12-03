@@ -29,6 +29,45 @@
     </div>
     <!-- Page Header Close -->
 
+    <div class="row">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Total Bookings"
+                value="{{ $stats['total_bookings'] }}"
+                icon="ri-calendar-line"
+                color="primary"
+                badgeText="All scheduled sessions"
+            />
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Pending Approval"
+                value="{{ $stats['pending_bookings'] }}"
+                icon="ri-time-line"
+                color="warning"
+                badgeText="Awaiting confirmation"
+            />
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Confirmed Bookings"
+                value="{{ $stats['confirmed_bookings'] }}"
+                icon="ri-check-double-line"
+                color="success"
+                badgeText="Successfully booked"
+            />
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Cancelled Bookings"
+                value="{{ $stats['cancelled_bookings'] }}"
+                icon="ri-close-circle-line"
+                color="danger"
+                badgeText="Cancelled sessions"
+            />
+        </div>
+    </div>
+
     <!-- Start::row-1 -->
     <div class="row">
         <div class="col-xl-12">

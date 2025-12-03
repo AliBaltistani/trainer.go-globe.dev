@@ -11,6 +11,45 @@
 </div>
 
 <div class="row">
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+        <x-widgets.stat-card-style1
+            title="Total Transactions"
+            value="{{ $stats['total_transactions'] }}"
+            icon="ri-arrow-left-right-line"
+            color="primary"
+            badgeText="All time records"
+        />
+    </div>
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+        <x-widgets.stat-card-style1
+            title="Successful"
+            value="{{ $stats['success_count'] }}"
+            icon="ri-checkbox-circle-line"
+            color="success"
+            badgeText="Completed payments"
+        />
+    </div>
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+        <x-widgets.stat-card-style1
+            title="Total Revenue"
+            value="${{ number_format($stats['total_revenue'], 2) }}"
+            icon="ri-money-dollar-circle-line"
+            color="info"
+            badgeText="Generated income"
+        />
+    </div>
+    <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+        <x-widgets.stat-card-style1
+            title="Failed"
+            value="{{ $stats['failed_count'] }}"
+            icon="ri-close-circle-line"
+            color="danger"
+            badgeText="Unsuccessful attempts"
+        />
+    </div>
+</div>
+
+<div class="row">
     <div class="col-xl-12">
         <div class="card custom-card">
             <div class="card-header justify-content-between">

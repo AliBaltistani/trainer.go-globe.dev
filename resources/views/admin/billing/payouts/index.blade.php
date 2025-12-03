@@ -20,6 +20,45 @@
         </div>
     </div>
 
+    <div class="row">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Total Payouts"
+                value="{{ $stats['total_payouts'] }}"
+                icon="ri-exchange-dollar-line"
+                color="primary"
+                badgeText="All time requests"
+            />
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Total Paid"
+                value="${{ number_format($stats['total_paid'], 2) }}"
+                icon="ri-check-double-line"
+                color="success"
+                badgeText="Successfully transferred"
+            />
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Pending Amount"
+                value="${{ number_format($stats['pending_amount'], 2) }}"
+                icon="ri-time-line"
+                color="warning"
+                badgeText="Awaiting processing"
+            />
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Pending Requests"
+                value="{{ $stats['pending_count'] }}"
+                icon="ri-file-list-line"
+                color="info"
+                badgeText="To be processed"
+            />
+        </div>
+    </div>
+
     <div class="card custom-card">
         <div class="card-header justify-content-between">
             <div class="card-title">All Payouts</div>

@@ -21,6 +21,36 @@
     </div>
 
     <div class="row">
+        <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Total Gateways"
+                value="{{ $stats['total_gateways'] }}"
+                icon="ri-bank-card-line"
+                color="primary"
+                badgeText="Configured gateways"
+            />
+        </div>
+        <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Active Gateways"
+                value="{{ $stats['active_gateways'] }}"
+                icon="ri-checkbox-circle-line"
+                color="success"
+                badgeText="Currently enabled"
+            />
+        </div>
+        <div class="col-xl-4 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Default Gateway"
+                value="{{ $stats['default_gateway'] }}"
+                icon="ri-star-line"
+                color="warning"
+                badgeText="Primary method"
+            />
+        </div>
+    </div>
+
+    <div class="row">
         <div class="col-xl-12">
             <div class="card custom-card">
                 <div class="card-header justify-content-between">

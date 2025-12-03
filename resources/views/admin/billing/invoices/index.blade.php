@@ -16,6 +16,45 @@
         <div class="ms-auto pageheader-btn"></div>
     </div>
 
+    <div class="row">
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Total Invoices"
+                value="{{ $stats['total_invoices'] }}"
+                icon="ri-file-list-3-line"
+                color="primary"
+                badgeText="All invoices"
+            />
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Paid Invoices"
+                value="{{ $stats['paid_invoices'] }}"
+                icon="ri-check-double-line"
+                color="success"
+                badgeText="Fully settled"
+            />
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Total Collected"
+                value="${{ number_format($stats['total_collected'], 2) }}"
+                icon="ri-money-dollar-circle-line"
+                color="info"
+                badgeText="Revenue collected"
+            />
+        </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Pending Invoices"
+                value="{{ $stats['pending_count'] }}"
+                icon="ri-time-line"
+                color="warning"
+                badgeText="Awaiting payment"
+            />
+        </div>
+    </div>
+
     <div class="card custom-card">
         <div class="card-header justify-content-between">
             <div class="card-title">All Invoices</div>
