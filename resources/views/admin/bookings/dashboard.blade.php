@@ -34,100 +34,47 @@
     <!-- Start::row-1 -->
     <div class="row">
         <!-- Today's Bookings -->
-        <div class="col-xxl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-top justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-primary">
-                                <i class="ti ti-calendar-event fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Today's Bookings</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['today_bookings'] }}</h4>
-                                </div>
-                                <div id="crm-total-customers"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Today's Bookings"
+                value="{{ $stats['today_bookings'] }}"
+                icon="ri-calendar-check-line"
+                color="primary"
+                badgeText="Scheduled for today"
+            />
         </div>
         
         <!-- Pending Bookings -->
-        <div class="col-xxl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-top justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-warning">
-                                <i class="ti ti-clock fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Pending Approval</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['pending_bookings'] }}</h4>
-                                </div>
-                                <div id="crm-total-revenue"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Pending Approval"
+                value="{{ $stats['pending_bookings'] }}"
+                icon="ri-time-line"
+                color="warning"
+                badgeText="Awaiting confirmation"
+            />
         </div>
         
         <!-- Confirmed Bookings -->
-        <div class="col-xxl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-top justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-success">
-                                <i class="ti ti-check fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Confirmed Bookings</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['confirmed_bookings'] }}</h4>
-                                </div>
-                                <div id="crm-conversion-ratio"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Confirmed Bookings"
+                value="{{ $stats['confirmed_bookings'] }}"
+                icon="ri-check-double-line"
+                color="success"
+                badgeText="Successfully booked"
+            />
         </div>
         
         <!-- Total Users -->
-        <div class="col-xxl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-top justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-info">
-                                <i class="ti ti-users fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Total Users</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['total_trainers'] + $stats['total_clients'] }}</h4>
-                                    <small class="text-muted">{{ $stats['total_trainers'] }} Trainers, {{ $stats['total_clients'] }} Clients</small>
-                                </div>
-                                <div id="crm-total-deals"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
+            <x-widgets.stat-card-style1
+                title="Total Users"
+                value="{{ $stats['total_trainers'] + $stats['total_clients'] }}"
+                icon="ri-group-line"
+                color="info"
+                badgeText="{{ $stats['total_trainers'] }} Trainers, {{ $stats['total_clients'] }} Clients"
+            />
         </div>
     </div>
     <!-- End::row-1 -->
@@ -179,32 +126,20 @@
                         Quick Actions
                     </div>
                 </div>
-                <div class="card-body">
-                    <div class="row g-3">
-                        <div class="col-6">
-                            <a href="{{ route('admin.bookings.google-calendar') }}" class="btn btn-primary w-100">
-                                <i class="ri-add-line me-2"></i>
-                                Create Booking
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a href="{{ route('admin.bookings.index', ['status' => 'pending']) }}" class="btn btn-warning w-100">
-                                <i class="ri-time-line me-2"></i>
-                                Pending Approvals
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a href="{{ route('admin.bookings.export') }}" class="btn btn-success w-100">
-                                <i class="ri-download-line me-2"></i>
-                                Export Data
-                            </a>
-                        </div>
-                        <div class="col-6">
-                            <a href="{{ route('admin.bookings.index') }}" class="btn btn-info w-100">
-                                <i class="ri-list-check me-2"></i>
-                                View All
-                            </a>
-                        </div>
+                <div class="card-body my-2">
+                    <div class="d-grid gap-2">
+                        <a href="{{ route('admin.bookings.google-calendar') }}" class="btn btn-outline-primary btn-wave text-start">
+                            <i class="ri-add-line me-2"></i>Create Booking
+                        </a>
+                        <a href="{{ route('admin.bookings.index', ['status' => 'pending']) }}" class="btn btn-outline-warning btn-wave text-start">
+                            <i class="ri-time-line me-2"></i>Pending Approvals
+                        </a>
+                        <a href="{{ route('admin.bookings.export') }}" class="btn btn-outline-success btn-wave text-start">
+                            <i class="ri-download-line me-2"></i>Export Data
+                        </a>
+                        <a href="{{ route('admin.bookings.index') }}" class="btn btn-outline-info btn-wave text-start">
+                            <i class="ri-list-check me-2"></i>View All
+                        </a>
                     </div>
                 </div>
             </div>
@@ -242,29 +177,29 @@
                                         <td>
                                             <div class="d-flex align-items-center">
                                                 <div class="avatar avatar-xs me-2">
-                                                    @if($booking->trainer->profile_image)
+                                                    @if($booking->trainer && $booking->trainer->profile_image)
                                                         <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer" class="avatar-img rounded-circle">
                                                     @else
                                                         <span class="avatar-title rounded-circle bg-info text-white" style="    width: 100%;height: 100%;text-align: center;font-weight: 800;">
-                                                            {{ strtoupper(substr($booking->trainer->name ?? '?', 0, 1)) }}
+                                                            {{ strtoupper(substr(optional($booking->trainer)->name ?? '?', 0, 1)) }}
                                                         </span>
                                                     @endif
                                                 </div>
-                                                <span class="fw-semibold">{{ $booking->trainer->name }}</span>
+                                                <span class="fw-semibold">{{ optional($booking->trainer)->name ?? 'Unknown Trainer' }}</span>
                                             </div>
                                         </td>
                                         <td>
                                             <div class="d-flex align-items-center">
                                                <div class="avatar avatar-xs me-2">
-                                                    @if($booking->client->profile_image)
+                                                    @if($booking->client && $booking->client->profile_image)
                                                         <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client" class="avatar-img rounded-circle">
                                                     @else
                                                         <span class="avatar-title rounded-circle bg-warning text-white" style="    width: 100%;height: 100%;text-align: center;font-weight: 800;">
-                                                            {{ strtoupper(substr($booking->client->name ?? '?', 0, 1)) }}
+                                                            {{ strtoupper(substr(optional($booking->client)->name ?? '?', 0, 1)) }}
                                                         </span>
                                                     @endif
                                                 </div>
-                                                <span class="fw-semibold">{{ $booking->client->name }}</span>
+                                                <span class="fw-semibold">{{ optional($booking->client)->name ?? 'Unknown Client' }}</span>
                                             </div>
                                         </td>
                                         <td>

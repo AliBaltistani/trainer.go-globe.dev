@@ -523,84 +523,40 @@ function showAlert(type, message) {
 <!-- Statistics Cards -->
 <div class="row">
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card dashboard-main-card overflow-hidden primary">
-            <div class="card-body">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="flex-fill">
-                        <span class="fs-13 fw-medium">Total Users</span>
-                        <h4 class="fw-semibold my-2 lh-1">{{ $stats['total_users'] }}</h4>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="fs-12 d-block text-muted">Registered users</span>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="avatar avatar-md bg-primary-transparent svg-primary">
-                            <i class="ri-user-line fs-24"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Users"
+            value="{{ $stats['total_users'] }}"
+            icon="ri-user-line"
+            color="primary"
+            badgeText="Registered users"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card dashboard-main-card overflow-hidden success">
-            <div class="card-body">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="flex-fill">
-                        <span class="fs-13 fw-medium">Total Trainers</span>
-                        <h4 class="fw-semibold my-2 lh-1">{{ $stats['total_trainers'] }}</h4>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="fs-12 d-block text-muted">Active trainers</span>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="avatar avatar-md bg-success-transparent svg-success">
-                            <i class="ri-user-star-line fs-24"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Trainers"
+            value="{{ $stats['total_trainers'] }}"
+            icon="ri-user-star-line"
+            color="success"
+            badgeText="Active trainers"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card dashboard-main-card overflow-hidden info">
-            <div class="card-body">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="flex-fill">
-                        <span class="fs-13 fw-medium">Total Clients</span>
-                        <h4 class="fw-semibold my-2 lh-1">{{ $stats['total_clients'] }}</h4>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="fs-12 d-block text-muted">Active clients</span>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="avatar avatar-md bg-info-transparent svg-info">
-                            <i class="ri-user-heart-line fs-24"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Clients"
+            value="{{ $stats['total_clients'] }}"
+            icon="ri-user-heart-line"
+            color="info"
+            badgeText="Active clients"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card dashboard-main-card overflow-hidden warning">
-            <div class="card-body">
-                <div class="d-flex align-items-start gap-3">
-                    <div class="flex-fill">
-                        <span class="fs-13 fw-medium">Active Users</span>
-                        <h4 class="fw-semibold my-2 lh-1">{{ $stats['active_users'] }}</h4>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="fs-12 d-block text-muted">Users currently active</span>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="avatar avatar-md bg-warning-transparent svg-warning">
-                            <i class="ri-user-follow-line fs-24"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Active Users"
+            value="{{ $stats['active_users'] }}"
+            icon="ri-user-follow-line"
+            color="warning"
+            badgeText="Users currently active"
+        />
     </div>
 </div>
 

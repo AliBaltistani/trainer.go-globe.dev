@@ -1,4 +1,4 @@
-﻿@extends('layouts.master')
+@extends('layouts.master')
 
 @section('styles')
     <!-- Apex Charts CSS -->
@@ -32,98 +32,62 @@
     <div class="row">
         <!-- Today's Bookings -->
         <div class="col-xxl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-top justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-primary">
-                                <i class="ti ti-calendar-event fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Today's Bookings</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['today_bookings'] }}</h4>
-                                </div>
-                                <div id="crm-total-customers"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style2
+                title="Today's Bookings"
+                value="{{ $stats['today_bookings'] }}"
+                color="primary"
+                chartId="crm-total-customers"
+                subtitle=""
+            >
+                <x-slot:icon>
+                    <i class="ti ti-calendar-event fs-16"></i>
+                </x-slot:icon>
+            </x-widgets.stat-card-style2>
         </div>
         
         <!-- Pending Bookings -->
         <div class="col-xxl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-top justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-warning">
-                                <i class="ti ti-clock fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Pending Approval</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['pending_bookings'] }}</h4>
-                                </div>
-                                <div id="crm-total-revenue"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style2
+                title="Pending Approval"
+                value="{{ $stats['pending_bookings'] }}"
+                color="warning"
+                chartId="crm-total-revenue"
+                subtitle=""
+            >
+                <x-slot:icon>
+                    <i class="ti ti-clock fs-16"></i>
+                </x-slot:icon>
+            </x-widgets.stat-card-style2>
         </div>
         
         <!-- Confirmed Bookings -->
         <div class="col-xxl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-top justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-success">
-                                <i class="ti ti-check fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Confirmed Bookings</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['confirmed_bookings'] }}</h4>
-                                </div>
-                                <div id="crm-conversion-ratio"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style2
+                title="Confirmed Bookings"
+                value="{{ $stats['confirmed_bookings'] }}"
+                color="success"
+                chartId="crm-conversion-ratio"
+                subtitle=""
+            >
+                <x-slot:icon>
+                    <i class="ti ti-check fs-16"></i>
+                </x-slot:icon>
+            </x-widgets.stat-card-style2>
         </div>
         
         <!-- Total Clients -->
         <div class="col-xxl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-top justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-info">
-                                <i class="ti ti-users fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Total Clients</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['total_clients'] }}</h4>
-                                </div>
-                                <div id="crm-total-deals"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style2
+                title="Total Clients"
+                value="{{ $stats['total_clients'] }}"
+                color="info"
+                chartId="crm-total-deals"
+                subtitle=""
+            >
+                <x-slot:icon>
+                    <i class="ti ti-users fs-16"></i>
+                </x-slot:icon>
+            </x-widgets.stat-card-style2>
         </div>
     </div>
     <!-- End::row-1 -->

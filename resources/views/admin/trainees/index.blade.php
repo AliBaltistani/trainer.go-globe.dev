@@ -258,80 +258,36 @@ function showAlert(type, message) {
 <!-- Statistics Cards -->
 <div class="row">
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <div class="mb-2">
-                            <span class="d-block fs-12 text-muted mb-1">Total Trainees</span>
-                            <h4 class="fw-semibold mb-0">{{ $stats['total_trainees'] }}</h4>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="avatar avatar-md bg-primary-transparent">
-                            <i class="ri-user-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Trainees"
+            value="{{ $stats['total_trainees'] }}"
+            icon="ri-user-line"
+            color="primary"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <div class="mb-2">
-                            <span class="d-block fs-12 text-muted mb-1">Active Trainees</span>
-                            <h4 class="fw-semibold mb-0">{{ $stats['active_trainees'] }}</h4>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="avatar avatar-md bg-success-transparent">
-                            <i class="ri-user-check-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Active Trainees"
+            value="{{ $stats['active_trainees'] }}"
+            icon="ri-user-check-line"
+            color="success"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <div class="mb-2">
-                            <span class="d-block fs-12 text-muted mb-1">Inactive Trainees</span>
-                            <h4 class="fw-semibold mb-0">{{ $stats['inactive_trainees'] }}</h4>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="avatar avatar-md bg-danger-transparent">
-                            <i class="ri-user-unfollow-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Inactive Trainees"
+            value="{{ $stats['inactive_trainees'] }}"
+            icon="ri-user-unfollow-line"
+            color="danger"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <div class="mb-2">
-                            <span class="d-block fs-12 text-muted mb-1">With Goals</span>
-                            <h4 class="fw-semibold mb-0">{{ $stats['trainees_with_goals'] }}</h4>
-                        </div>
-                    </div>
-                    <div>
-                        <span class="avatar avatar-md bg-info-transparent">
-                            <i class="ri-target-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="With Goals"
+            value="{{ $stats['trainees_with_goals'] }}"
+            icon="ri-target-line"
+            color="info"
+        />
     </div>
 </div>
 

@@ -22,83 +22,43 @@
     <!-- Statistics Cards -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Programs
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-programs">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Total Programs"
+                value="0"
+                icon="ri-file-list-line"
+                color="primary"
+                valueId="total-programs"
+            />
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Active Programs
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="active-programs">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Active Programs"
+                value="0"
+                icon="ri-checkbox-circle-line"
+                color="success"
+                valueId="active-programs"
+            />
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Assigned Programs
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="assigned-programs">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Assigned Programs"
+                value="0"
+                icon="ri-user-follow-line"
+                color="info"
+                valueId="assigned-programs"
+            />
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Unassigned Programs
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="unassigned-programs">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-times fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Unassigned Programs"
+                value="0"
+                icon="ri-user-unfollow-line"
+                color="warning"
+                valueId="unassigned-programs"
+            />
         </div>
     </div>
 

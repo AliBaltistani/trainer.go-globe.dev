@@ -46,75 +46,39 @@
 <!-- Statistics Cards -->
 <div class="row mb-4">
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $testimonials->total() }}</h3>
-                        <span class="d-block text-muted">Total Reviews</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-primary-transparent">
-                            <i class="ri-chat-3-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Reviews"
+            value="{{ $testimonials->total() }}"
+            icon="ri-chat-3-line"
+            color="primary"
+        />
     </div>
     
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ number_format($testimonials->avg('rate') ?: 0, 1) }}</h3>
-                        <span class="d-block text-muted">Average Rating</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-warning-transparent">
-                            <i class="ri-star-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Average Rating"
+            value="{{ number_format($testimonials->avg('rate') ?: 0, 1) }}"
+            icon="ri-star-line"
+            color="warning"
+        />
     </div>
     
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $testimonials->sum('likes') }}</h3>
-                        <span class="d-block text-muted">Total Likes</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-success-transparent">
-                            <i class="ri-thumb-up-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Likes"
+            value="{{ $testimonials->sum('likes') }}"
+            icon="ri-thumb-up-line"
+            color="success"
+        />
     </div>
     
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $testimonials->sum('dislikes') }}</h3>
-                        <span class="d-block text-muted">Total Dislikes</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-danger-transparent">
-                            <i class="ri-thumb-down-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Dislikes"
+            value="{{ $testimonials->sum('dislikes') }}"
+            icon="ri-thumb-down-line"
+            color="danger"
+        />
     </div>
 </div>
 

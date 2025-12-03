@@ -74,88 +74,36 @@
     <!-- Statistics Cards -->
     <div class="row">
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-warning">
-                                <i class="ti ti-users fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Total Trainers</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['total_trainers'] }}</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Total Trainers"
+                value="{{ $stats['total_trainers'] }}"
+                icon="ti ti-users"
+                color="warning"
+            />
         </div>
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-success">
-                                <i class="ti ti-check fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Complete Setup</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['complete_setup'] }}</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Complete Setup"
+                value="{{ $stats['complete_setup'] }}"
+                icon="ti ti-check"
+                color="success"
+            />
         </div>
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-info">
-                                <i class="ti ti-clock fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">Partial Setup</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['partial_setup'] }}</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Partial Setup"
+                value="{{ $stats['partial_setup'] }}"
+                icon="ti ti-clock"
+                color="info"
+            />
         </div>
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                        <div>
-                            <span class="avatar avatar-md avatar-rounded bg-danger">
-                                <i class="ti ti-x-circle fs-16"></i>
-                            </span>
-                        </div>
-                        <div class="flex-fill ms-3">
-                            <div class="d-flex align-items-center justify-content-between flex-wrap">
-                                <div>
-                                    <p class="text-muted mb-0">No Setup</p>
-                                    <h4 class="fw-semibold mt-1">{{ $stats['no_setup'] }}</h4>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="No Setup"
+                value="{{ $stats['no_setup'] }}"
+                icon="ti ti-x-circle"
+                color="danger"
+            />
         </div>
     </div>
 
@@ -419,9 +367,9 @@
                                     <td>
                                         <div class="d-flex justify-content-end">
                                             <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-sm btn-success" onclick="window.location.href='{{ route('admin.bookings.scheduling-menu') }}?trainer_id={{ $trainer->id }}'" title="View Details">
+                                                <!-- <button type="button" class="btn btn-sm btn-success" onclick="window.location.href='{{ route('admin.bookings.scheduling-menu') }}?trainer_id={{ $trainer->id }}'" title="View Details">
                                                     <i class="ri-eye-line"></i>
-                                                </button>
+                                                </button> -->
                                                 <!-- <button type="button" class="btn btn-sm btn-info" onclick="sendReminder('{{ $trainer->id }}')" title="Send Setup Reminder">
                                                     <i class="ri-mail-line"></i>
                                                 </button> -->

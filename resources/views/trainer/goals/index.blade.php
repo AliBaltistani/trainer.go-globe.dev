@@ -32,88 +32,36 @@
 <!-- Statistics Cards -->
 <div class="row">
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-primary">
-                            <i class="ti ti-target fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Total Goals</p>
-                                <h4 class="fw-semibold mt-1">{{ $stats['total_goals'] }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Goals"
+            value="{{ $stats['total_goals'] }}"
+            icon="ti ti-target"
+            color="primary"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-success">
-                            <i class="ti ti-check-circle fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Active Goals</p>
-                                <h4 class="fw-semibold mt-1">{{ $stats['active_goals'] }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Active Goals"
+            value="{{ $stats['active_goals'] }}"
+            icon="ti ti-check-circle"
+            color="success"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-warning">
-                            <i class="ti ti-pause-circle fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Inactive Goals</p>
-                                <h4 class="fw-semibold mt-1">{{ $stats['inactive_goals'] }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Inactive Goals"
+            value="{{ $stats['inactive_goals'] }}"
+            icon="ti ti-pause-circle"
+            color="warning"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-info">
-                            <i class="ti ti-users fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Goals with Users</p>
-                                <h4 class="fw-semibold mt-1">{{ $stats['goals_with_users'] }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Goals with Users"
+            value="{{ $stats['goals_with_users'] }}"
+            icon="ti ti-users"
+            color="info"
+        />
     </div>
 </div>
 

@@ -17,31 +17,31 @@
 
     <div class="row">
         <div class="col-xl-4">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <h6 class="fw-semibold mb-2">Total Revenue</h6>
-                    <h3 class="fw-bold">{{ number_format($totals['revenue'] ?? 0, 2) }}</h3>
-                    <p class="text-muted mb-0">Sum of paid invoices</p>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Total Revenue"
+                value="{{ number_format($totals['revenue'] ?? 0, 2) }}"
+                icon="ri-money-dollar-circle-line"
+                color="primary"
+                badgeText="Sum of paid invoices"
+            />
         </div>
         <div class="col-xl-4">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <h6 class="fw-semibold mb-2">Pending Payouts</h6>
-                    <h3 class="fw-bold">{{ number_format($totals['pending_payouts'] ?? 0, 2) }}</h3>
-                    <p class="text-muted mb-0">Awaiting completion</p>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Pending Payouts"
+                value="{{ number_format($totals['pending_payouts'] ?? 0, 2) }}"
+                icon="ri-time-line"
+                color="warning"
+                badgeText="Awaiting completion"
+            />
         </div>
         <div class="col-xl-4">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <h6 class="fw-semibold mb-2">Fees Collected</h6>
-                    <h3 class="fw-bold">{{ number_format($totals['fees_collected'] ?? 0, 2) }}</h3>
-                    <p class="text-muted mb-0">Application fees (Stripe)</p>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Fees Collected"
+                value="{{ number_format($totals['fees_collected'] ?? 0, 2) }}"
+                icon="ri-hand-coin-line"
+                color="info"
+                badgeText="Application fees (Stripe)"
+            />
         </div>
     </div>
 @endsection

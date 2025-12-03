@@ -32,88 +32,40 @@
 <!-- Statistics Cards -->
 <div class="row">
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-primary">
-                            <i class="ti ti-barbell fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Total Workouts</p>
-                                <h4 class="fw-semibold mt-1" id="totalWorkouts">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Workouts"
+            value="0"
+            icon="ti ti-barbell"
+            color="primary"
+            valueId="totalWorkouts"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-success">
-                            <i class="ti ti-check-circle fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Active Workouts</p>
-                                <h4 class="fw-semibold mt-1" id="activeWorkouts">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Active Workouts"
+            value="0"
+            icon="ti ti-check-circle"
+            color="success"
+            valueId="activeWorkouts"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-warning">
-                            <i class="ti ti-video fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Total Videos</p>
-                                <h4 class="fw-semibold mt-1" id="totalVideos">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Videos"
+            value="0"
+            icon="ti ti-video"
+            color="warning"
+            valueId="totalVideos"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-info">
-                            <i class="ti ti-currency-dollar fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Paid Workouts</p>
-                                <h4 class="fw-semibold mt-1" id="paidWorkouts">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Paid Workouts"
+            value="0"
+            icon="ti ti-currency-dollar"
+            color="info"
+            valueId="paidWorkouts"
+        />
     </div>
 </div>
 

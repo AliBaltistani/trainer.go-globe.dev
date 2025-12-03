@@ -32,88 +32,36 @@
 <!-- Statistics Cards -->
 <div class="row">
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-primary">
-                            <i class="ti ti-clipboard-list fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Total Plans</p>
-                                <h4 class="fw-semibold mt-1">{{ $stats['total_plans'] }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Plans"
+            value="{{ $stats['total_plans'] }}"
+            icon="ti ti-clipboard-list"
+            color="primary"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-success">
-                            <i class="ti ti-check-circle fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Active Plans</p>
-                                <h4 class="fw-semibold mt-1">{{ $stats['active_plans'] }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Active Plans"
+            value="{{ $stats['active_plans'] }}"
+            icon="ti ti-check-circle"
+            color="success"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-warning">
-                            <i class="ti ti-world fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Global Plans</p>
-                                <h4 class="fw-semibold mt-1">{{ $stats['global_plans'] }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Global Plans"
+            value="{{ $stats['global_plans'] }}"
+            icon="ti ti-world"
+            color="warning"
+        />
     </div>
     <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between">
-                    <div>
-                        <span class="avatar avatar-md avatar-rounded bg-info">
-                            <i class="ti ti-users fs-16"></i>
-                        </span>
-                    </div>
-                    <div class="flex-fill ms-3">
-                        <div class="d-flex align-items-center justify-content-between flex-wrap">
-                            <div>
-                                <p class="text-muted mb-0">Assigned Plans</p>
-                                <h4 class="fw-semibold mt-1">{{ $stats['plans_with_clients'] }}</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Assigned Plans"
+            value="{{ $stats['plans_with_clients'] }}"
+            icon="ti ti-users"
+            color="info"
+        />
     </div>
 </div>
 

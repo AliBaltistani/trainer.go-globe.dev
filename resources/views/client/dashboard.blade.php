@@ -50,75 +50,39 @@
 <!-- Progress Statistics -->
 <div class="row">
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['total_goals'] }}</h3>
-                        <span class="d-block text-muted">Total Goals</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-primary-transparent">
-                            <i class="ri-target-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Goals"
+            value="{{ $stats['total_goals'] }}"
+            icon="ri-target-line"
+            color="primary"
+        />
     </div>
     
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['completed_goals'] }}</h3>
-                        <span class="d-block text-muted">Completed Goals</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-success-transparent">
-                            <i class="ri-checkbox-circle-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Completed Goals"
+            value="{{ $stats['completed_goals'] }}"
+            icon="ri-checkbox-circle-line"
+            color="success"
+        />
     </div>
     
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['active_goals'] }}</h3>
-                        <span class="d-block text-muted">Active Goals</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-info-transparent">
-                            <i class="ri-play-circle-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Active Goals"
+            value="{{ $stats['active_goals'] }}"
+            icon="ri-play-circle-line"
+            color="info"
+        />
     </div>
     
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['total_testimonials'] }}</h3>
-                        <span class="d-block text-muted">Reviews Written</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-warning-transparent">
-                            <i class="ri-chat-3-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Reviews Written"
+            value="{{ $stats['total_testimonials'] }}"
+            icon="ri-chat-3-line"
+            color="warning"
+        />
     </div>
 </div>
 

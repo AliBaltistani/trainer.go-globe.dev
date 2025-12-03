@@ -55,75 +55,39 @@
 <!-- Performance Statistics -->
 <div class="row">
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['total_certifications'] }}</h3>
-                        <span class="d-block text-muted">Certifications</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-primary-transparent">
-                            <i class="ri-award-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Certifications"
+            value="{{ $stats['total_certifications'] }}"
+            icon="ri-award-line"
+            color="primary"
+        />
     </div>
     
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['total_testimonials'] }}</h3>
-                        <span class="d-block text-muted">Client Reviews</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-success-transparent">
-                            <i class="ri-chat-3-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Client Reviews"
+            value="{{ $stats['total_testimonials'] }}"
+            icon="ri-chat-3-line"
+            color="success"
+        />
     </div>
     
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ number_format($stats['average_rating'], 1) }}</h3>
-                        <span class="d-block text-muted">Average Rating</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-warning-transparent">
-                            <i class="ri-star-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Average Rating"
+            value="{{ number_format($stats['average_rating'], 1) }}"
+            icon="ri-star-line"
+            color="warning"
+        />
     </div>
     
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['total_likes'] }}</h3>
-                        <span class="d-block text-muted">Total Likes</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-info-transparent">
-                            <i class="ri-thumb-up-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Likes"
+            value="{{ $stats['total_likes'] }}"
+            icon="ri-thumb-up-line"
+            color="info"
+        />
     </div>
 </div>
 

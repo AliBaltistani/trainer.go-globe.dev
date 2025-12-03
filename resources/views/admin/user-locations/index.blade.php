@@ -31,72 +31,36 @@
 <!-- Statistics Cards -->
 <div class="row">
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['total'] ?? 0 }}</h3>
-                        <span class="d-block text-muted">Total Locations</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-primary-transparent">
-                            <i class="ri-map-pin-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Locations"
+            value="{{ $stats['total'] ?? 0 }}"
+            icon="ri-map-pin-line"
+            color="primary"
+        />
     </div>
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['complete'] ?? 0 }}</h3>
-                        <span class="d-block text-muted">Complete Addresses</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-success-transparent">
-                            <i class="ri-check-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Complete Addresses"
+            value="{{ $stats['complete'] ?? 0 }}"
+            icon="ri-check-line"
+            color="success"
+        />
     </div>
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['countries'] ?? 0 }}</h3>
-                        <span class="d-block text-muted">Countries</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-info-transparent">
-                            <i class="ri-global-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Countries"
+            value="{{ $stats['countries'] ?? 0 }}"
+            icon="ri-global-line"
+            color="info"
+        />
     </div>
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['cities'] ?? 0 }}</h3>
-                        <span class="d-block text-muted">Cities</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-warning-transparent">
-                            <i class="ri-building-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Cities"
+            value="{{ $stats['cities'] ?? 0 }}"
+            icon="ri-building-line"
+            color="warning"
+        />
     </div>
 </div>
 

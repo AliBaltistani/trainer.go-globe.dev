@@ -17,68 +17,40 @@
 
     <div class="row">
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar avatar-md bg-primary-transparent me-2">
-                            <i class="ri-wallet-3-line fs-20"></i>
-                        </div>
-                        <div class="flex-fill">
-                            <h6 class="fw-semibold mb-1">Total Revenue</h6>
-                            <h3 class="fw-bold mb-0">{{ number_format($totals['revenue'] ?? 0, 2) }}</h3>
-                            <p class="text-muted mb-0 fs-12">Sum of successful transactions</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Total Revenue"
+                value="{{ number_format($totals['revenue'] ?? 0, 2) }}"
+                icon="ri-wallet-3-line"
+                color="primary"
+                badgeText="Sum of successful transactions"
+            />
         </div>
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar avatar-md bg-success-transparent me-2">
-                            <i class="ri-exchange-dollar-line fs-20"></i>
-                        </div>
-                        <div class="flex-fill">
-                            <h6 class="fw-semibold mb-1">Trainer Payouts</h6>
-                            <h3 class="fw-bold mb-0">{{ number_format($totals['trainer_payouts'] ?? 0, 2) }}</h3>
-                            <p class="text-muted mb-0 fs-12">Total paid to trainers</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Trainer Payouts"
+                value="{{ number_format($totals['trainer_payouts'] ?? 0, 2) }}"
+                icon="ri-exchange-dollar-line"
+                color="success"
+                badgeText="Total paid to trainers"
+            />
         </div>
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar avatar-md bg-warning-transparent me-2">
-                            <i class="ri-time-line fs-20"></i>
-                        </div>
-                        <div class="flex-fill">
-                            <h6 class="fw-semibold mb-1">Pending Payouts</h6>
-                            <h3 class="fw-bold mb-0">{{ number_format($totals['pending_payouts'] ?? 0, 2) }}</h3>
-                            <p class="text-muted mb-0 fs-12">Awaiting completion</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Pending Payouts"
+                value="{{ number_format($totals['pending_payouts'] ?? 0, 2) }}"
+                icon="ri-time-line"
+                color="warning"
+                badgeText="Awaiting completion"
+            />
         </div>
         <div class="col-xl-3 col-lg-6 col-md-6 col-sm-12">
-            <div class="card custom-card">
-                <div class="card-body">
-                    <div class="d-flex align-items-center">
-                        <div class="avatar avatar-md bg-info-transparent me-2">
-                            <i class="ri-percent-line fs-20"></i>
-                        </div>
-                        <div class="flex-fill">
-                            <h6 class="fw-semibold mb-1">Fees Collected</h6>
-                            <h3 class="fw-bold mb-0">{{ number_format($totals['fees_collected'] ?? 0, 2) }}</h3>
-                            <p class="text-muted mb-0 fs-12">Application fees</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Fees Collected"
+                value="{{ number_format($totals['fees_collected'] ?? 0, 2) }}"
+                icon="ri-percent-line"
+                color="info"
+                badgeText="Application fees"
+            />
         </div>
     </div>
 

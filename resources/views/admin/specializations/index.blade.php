@@ -31,72 +31,36 @@
 <!-- Statistics Cards -->
 <div class="row">
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['total'] }}</h3>
-                        <span class="d-block text-muted">Total Specializations</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-primary-transparent">
-                            <i class="ri-award-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Total Specializations"
+            value="{{ $stats['total'] }}"
+            icon="ri-award-line"
+            color="primary"
+        />
     </div>
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['active'] }}</h3>
-                        <span class="d-block text-muted">Active Specializations</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-success-transparent">
-                            <i class="ri-check-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Active Specializations"
+            value="{{ $stats['active'] }}"
+            icon="ri-check-line"
+            color="success"
+        />
     </div>
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['inactive'] }}</h3>
-                        <span class="d-block text-muted">Inactive Specializations</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-warning-transparent">
-                            <i class="ri-close-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="Inactive Specializations"
+            value="{{ $stats['inactive'] }}"
+            icon="ri-close-line"
+            color="warning"
+        />
     </div>
     <div class="col-xxl-3 col-xl-6 col-lg-6 col-md-6 col-sm-12">
-        <div class="card custom-card">
-            <div class="card-body">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div>
-                        <h3 class="fw-semibold mb-1">{{ $stats['with_trainers'] }}</h3>
-                        <span class="d-block text-muted">With Trainers</span>
-                    </div>
-                    <div class="ms-2">
-                        <span class="avatar avatar-md avatar-rounded bg-info-transparent">
-                            <i class="ri-user-star-line fs-18"></i>
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <x-widgets.stat-card-style1
+            title="With Trainers"
+            value="{{ $stats['with_trainers'] }}"
+            icon="ri-user-star-line"
+            color="info"
+        />
     </div>
 </div>
 
