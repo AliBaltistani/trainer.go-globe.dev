@@ -92,8 +92,6 @@
     </div>
 </div>
 
-<!-- Include SortableJS for drag and drop functionality -->
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

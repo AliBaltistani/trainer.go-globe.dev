@@ -29,9 +29,28 @@
          <script src="{{asset('build/assets/libs/@simonwep/pickr/pickr.es5.min.js')}}"></script>
 
          <!-- Date & Time Picker JS -->
-         <script src="{{asset('build/assets/libs/flatpickr/flatpickr.min.js')}}"></script>
+        <script src="{{asset('build/assets/libs/flatpickr/flatpickr.min.js')}}"></script>
 
-         <!-- Sweet Alert -->
-         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-         
-         @yield('scripts')
+        <!-- Select2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+        <!-- Sweet Alert -->
+        <script src="{{asset('build/assets/libs/sweetalert2/sweetalert2.min.js')}}"></script>
+
+        <!-- DataTables JS -->
+        <script src="https://cdn.datatables.net/1.13.11/js/jquery.dataTables.min.js"></script>
+        <script src="{{asset('build/assets/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js')}}"></script>
+        <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+        <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
+        <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
+        <!-- Sortable JS -->
+        <script src="{{asset('build/assets/libs/sortablejs/Sortable.min.js')}}"></script>
+        
+        @yield('scripts')

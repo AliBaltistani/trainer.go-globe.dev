@@ -1,10 +1,7 @@
 @extends('layouts.master')
 
 @section('styles')
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+ 
 @endsection
 
 @section('content')
@@ -65,77 +62,70 @@
 </div>
 
 <!-- User Locations Table -->
-<div class="row">
-    <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    User Locations List
-                </div>
-                <div class="d-flex">
-                    <!-- Country Filter -->
-                    <div class="me-3">
-                        <select class="form-select" id="countryFilter">
-                            <option value="">All Countries</option>
-                            @foreach($countries as $country)
-                                <option value="{{ $country }}">{{ $country }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <!-- User Role Filter -->
-                    <div class="me-3">
-                        <select class="form-select" id="roleFilter">
-                            <option value="">All Roles</option>
-                            <option value="admin">Admin</option>
-                            <option value="trainer">Trainer</option>
-                            <option value="client">Client</option>
-                        </select>
-                    </div>
-                    <!-- Export Buttons -->
-                    <div class="btn-group" role="group">
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="exportExcel">
-                            <i class="ri-file-excel-line me-1"></i>Excel
-                        </button>
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="exportPdf">
-                            <i class="ri-file-pdf-line me-1"></i>PDF
-                        </button>
-                    </div>
-                </div>
+<x-tables.card title="User Locations List">
+    <x-slot:tools>
+        <div class="d-flex">
+            <!-- Country Filter -->
+            <div class="me-3">
+                <select class="form-select form-select-sm" id="countryFilter">
+                    <option value="">All Countries</option>
+                    @foreach($countries as $country)
+                        <option value="{{ $country }}">{{ $country }}</option>
+                    @endforeach
+                </select>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="userLocationsTable" class="table table-bordered text-nowrap w-100">
-                        <thead>
-                            <tr>
-                                <th><input type="checkbox" id="selectAll"></th>
-                                <th>ID</th>
-                                <th>User</th>
-                                <th>Role</th>
-                                <th>Country</th>
-                                <th>State</th>
-                                <th>City</th>
-                                <th>Address</th>
-                                <th>Zipcode</th>
-                                <th>Created At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be loaded via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Bulk Actions -->
-                <div class="mt-3" id="bulkActions" style="display: none;">
-                    <button type="button" class="btn btn-danger btn-sm" id="bulkDelete">
-                        <i class="ri-delete-bin-line me-1"></i>Delete Selected
-                    </button>
-                </div>
+            <!-- User Role Filter -->
+            <div class="me-3">
+                <select class="form-select form-select-sm" id="roleFilter">
+                    <option value="">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="trainer">Trainer</option>
+                    <option value="client">Client</option>
+                </select>
+            </div>
+            <!-- Export Buttons -->
+            <div class="btn-group" role="group">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="exportExcel">
+                    <i class="ri-file-excel-line me-1"></i>Excel
+                </button>
+                <button type="button" class="btn btn-outline-primary btn-sm" id="exportPdf">
+                    <i class="ri-file-pdf-line me-1"></i>PDF
+                </button>
             </div>
         </div>
+    </x-slot:tools>
+
+    <x-tables.table 
+        id="userLocationsTable"
+        :bordered="true"
+    >
+        <x-slot:thead>
+            <tr>
+                <th><input type="checkbox" id="selectAll"></th>
+                <th>ID</th>
+                <th>User</th>
+                <th>Role</th>
+                <th>Country</th>
+                <th>State</th>
+                <th>City</th>
+                <th>Address</th>
+                <th>Zipcode</th>
+                <th>Created At</th>
+                <th>Actions</th>
+            </tr>
+        </x-slot:thead>
+        <tbody>
+            <!-- Data will be loaded via AJAX -->
+        </tbody>
+    </x-tables.table>
+    
+    <!-- Bulk Actions -->
+    <div class="mt-3" id="bulkActions" style="display: none;">
+        <button type="button" class="btn btn-danger btn-sm" id="bulkDelete">
+            <i class="ri-delete-bin-line me-1"></i>Delete Selected
+        </button>
     </div>
-</div>
+</x-tables.card>
 
 <!-- Success/Error Messages -->
 @if(session('success'))
@@ -155,19 +145,6 @@
 @endsection
 
 @section('scripts')
-<!-- DataTables JS -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-
 <script>
 $(document).ready(function() {
     // Initialize DataTable
@@ -241,14 +218,14 @@ $(document).ready(function() {
                 orderable: false,
                 searchable: false,
                 render: function(data, type, row) {
-                    return '<div class="btn-group" role="group">' +
-                           '<a href="/admin/user-locations/' + row.id + '" class="btn btn-sm btn-info" title="View">' +
+                    return '<div class="hstack gap-2 fs-15 justify-content-end">' +
+                           '<a href="/admin/user-locations/' + row.id + '" class="btn btn-icon btn-sm btn-info-transparent rounded-pill" title="View">' +
                            '<i class="ri-eye-line"></i>' +
                            '</a>' +
-                           '<a href="/admin/user-locations/' + row.id + '/edit" class="btn btn-sm btn-warning" title="Edit">' +
+                           '<a href="/admin/user-locations/' + row.id + '/edit" class="btn btn-icon btn-sm btn-primary-transparent rounded-pill" title="Edit">' +
                            '<i class="ri-edit-line"></i>' +
                            '</a>' +
-                           '<button type="button" class="btn btn-sm btn-danger delete-btn" data-id="' + row.id + '" title="Delete">' +
+                           '<button type="button" class="btn btn-icon btn-sm btn-danger-transparent rounded-pill delete-btn" data-id="' + row.id + '" title="Delete">' +
                            '<i class="ri-delete-bin-line"></i>' +
                            '</button>' +
                            '</div>';

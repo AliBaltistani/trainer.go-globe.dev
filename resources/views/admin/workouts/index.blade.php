@@ -1,10 +1,7 @@
 @extends('layouts.master')
 
 @section('styles')
-<!-- DataTables CSS from CDN -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+ 
 @endsection
 
 @section('content')
@@ -72,61 +69,17 @@
 <!-- Main Content -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    Workouts List
-                </div>
-                <!-- <div class="d-flex">
-                    <div class="me-3">
-                        <input class="form-control form-control-sm" type="text" placeholder="Search workouts..." id="searchInput">
-                    </div>
-                    <div class="dropdown">
-                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="ri-filter-3-line me-1"></i> Filters
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><h6 class="dropdown-header">Filter by Status</h6></li>
-                            <li><a class="dropdown-item filter-status" href="#" data-status="">All Status</a></li>
-                            <li><a class="dropdown-item filter-status" href="#" data-status="active">Active</a></li>
-                            <li><a class="dropdown-item filter-status" href="#" data-status="inactive">Inactive</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><h6 class="dropdown-header">Filter by Price</h6></li>
-                            <li><a class="dropdown-item filter-price" href="#" data-price="">All Workouts</a></li>
-                            <li><a class="dropdown-item filter-price" href="#" data-price="free">Free Workouts</a></li>
-                            <li><a class="dropdown-item filter-price" href="#" data-price="paid">Paid Workouts</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><h6 class="dropdown-header">Filter by Videos</h6></li>
-                            <li><a class="dropdown-item filter-videos" href="#" data-videos="">All Workouts</a></li>
-                            <li><a class="dropdown-item filter-videos" href="#" data-videos="with">With Videos</a></li>
-                            <li><a class="dropdown-item filter-videos" href="#" data-videos="without">Without Videos</a></li>
-                        </ul>
-                    </div>
-                </div> -->
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="workoutsTable" class="table table-bordered text-nowrap w-100">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Workout Name</th>
-                                <th>Trainer</th>
-                                <th>Duration</th>
-                                <th>Videos</th>
-                                <th>Price</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be loaded via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <x-tables.card title="Workouts List">
+            <x-tables.table 
+                id="workoutsTable"
+                :headers="['ID', 'Workout Name', 'Trainer', 'Duration', 'Videos', 'Price', 'Status', 'Created', 'Actions']"
+                :bordered="true"
+            >
+                <tbody>
+                    <!-- Data will be loaded via AJAX -->
+                </tbody>
+            </x-tables.table>
+        </x-tables.card>
     </div>
 </div>
 
@@ -149,17 +102,6 @@
 @endsection
 
 @section('scripts')
-<!-- DataTables JS from CDN -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-
-<!-- Sweet Alert -->
-<script src="{{asset('build/assets/libs/sweetalert2/sweetalert2.min.js')}}"></script>
-
 <script>
 $(document).ready(function() {
     console.log('jQuery loaded:', typeof $ !== 'undefined');

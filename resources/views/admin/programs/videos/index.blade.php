@@ -2,44 +2,24 @@
 
 @section('content')
 <div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-0 text-gray-800">
-                <i class="fas fa-video me-2" style="color: rgb(255, 106, 0);"></i>Program Videos
-            </h1>
-            <p class="mb-0 text-muted">Manage videos for "{{ $program->name }}"</p>
-        </div>
-        <div>
-            <a href="{{ route('program-builder.show', $program->id) }}" class="btn btn-secondary me-2">
-                <i class="fas fa-arrow-left me-2"></i>Back to Program Builder
-            </a>
-            <a href="{{ route('program-videos.create', $program->id) }}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Add Video
-            </a>
-        </div>
-    </div>
-
-    <!-- Videos List -->
-    @if($videos->count() > 0)
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Videos ({{ $videos->count() }})</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;">Order</th>
-                            <th>Title</th>
-                            <th style="width: 120px;">Type</th>
-                            <th style="width: 100px;">Duration</th>
-                            <th style="width: 80px;">Preview</th>
-                            <th style="width: 120px;">Created</th>
-                            <th style="width: 150px;">Actions</th>
-                        </tr>
-                    </thead>
+    <x-tables.card title="Program Videos" :icon="'ri-video-line'" :iconColor="'text-primary'">
+        <x-slot:tools>
+            <div class="d-flex gap-2">
+                 <a href="{{ route('program-builder.show', $program->id) }}" class="btn btn-sm btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Program Builder
+                </a>
+                <a href="{{ route('program-videos.create', $program->id) }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus me-2"></i>Add Video
+                </a>
+            </div>
+        </x-slot:tools>
+        
+        <div class="card-body p-0">
+            @if($videos->count() > 0)
+                <x-tables.table 
+                    :headers="['Order', 'Title', 'Type', 'Duration', 'Preview', 'Created', 'Actions']"
+                    :bordered="true"
+                >
                     <tbody>
                         @foreach($videos as $video)
                         <tr>
@@ -84,52 +64,45 @@
                             </td>
                             <td>{{ $video->created_at->format('d/m/Y') }}</td>
                             <td>
-                                <div class="btn-group btn-group-sm" role="group">
-                                    <a href="{{ route('program-videos.edit', [$program->id, $video->id]) }}" class="btn btn-outline-primary" title="Edit">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <form method="POST" action="{{ route('program-videos.destroy', [$program->id, $video->id]) }}" class="d-inline" id="delete-form-{{ $video->id }}">
+                                <x-tables.actions 
+                                    edit="{{ route('program-videos.edit', [$program->id, $video->id]) }}"
+                                    delete="confirmDelete('delete-form-{{ $video->id }}')"
+                                >
+                                    <form method="POST" action="{{ route('program-videos.destroy', [$program->id, $video->id]) }}" class="d-none" id="delete-form-{{ $video->id }}">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="button" class="btn btn-outline-danger" title="Delete" onclick="confirmDelete('delete-form-{{ $video->id }}')">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
                                     </form>
-                                </div>
+                                </x-tables.actions>
                             </td>
                         </tr>
                         @endforeach
                     </tbody>
-                </table>
-            </div>
+                </x-tables.table>
 
-            @if($videos->count() > 1)
-            <div class="mt-3 border-top pt-3">
-                <a href="{{ route('program-videos.reorder-form', $program->id) }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrows-alt me-2"></i>Reorder Videos
-                </a>
-            </div>
+                @if($videos->count() > 1)
+                <div class="mt-3 p-3 border-top">
+                    <a href="{{ route('program-videos.reorder-form', $program->id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrows-alt me-2"></i>Reorder Videos
+                    </a>
+                </div>
+                @endif
+            @else
+                <div class="text-center py-5">
+                    <i class="fas fa-video display-4 text-muted"></i>
+                    <h5 class="mt-3 text-muted">No Videos Added</h5>
+                    <p class="text-muted mb-3">This program doesn't have any videos yet.</p>
+                    <a href="{{ route('program-videos.create', $program->id) }}" class="btn btn-primary">
+                        <i class="fas fa-plus me-2"></i>Add First Video
+                    </a>
+                </div>
             @endif
         </div>
-    </div>
-    @else
-    <div class="card shadow">
-        <div class="card-body text-center py-5">
-            <i class="fas fa-video display-4 text-muted"></i>
-            <h5 class="mt-3 text-muted">No Videos Added</h5>
-            <p class="text-muted mb-3">This program doesn't have any videos yet.</p>
-            <a href="{{ route('program-videos.create', $program->id) }}" class="btn btn-primary">
-                <i class="fas fa-plus me-2"></i>Add First Video
-            </a>
-        </div>
-    </div>
-    @endif
+    </x-tables.card>
 </div>
 @endsection
 
 @section('scripts')
-    <!-- Sweet Alert -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
         function confirmDelete(formId) {
             Swal.fire({

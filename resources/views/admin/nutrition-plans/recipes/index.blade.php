@@ -1,9 +1,6 @@
 @extends('layouts.master')
 
 @section('styles')
-<!-- DataTables CSS from CDN -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 <style>
 .recipe-card {
     border: 1px solid #dee2e6;
@@ -83,60 +80,62 @@
 <!-- Recipes Management -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    Recipes ({{ $plan->recipes->count() }})
-                </div>
-                <div class="d-flex gap-2">
+        <x-tables.card title="Recipes ({{ $plan->recipes->count() }})">
+            <x-slot:tools>
+                <!-- <div class="d-flex gap-2">
                     <button class="btn btn-light btn-sm" onclick="toggleView()">
                         <i class="ri-layout-grid-line me-1" id="viewToggleIcon"></i> <span id="viewToggleText">List View</span>
                     </button>
-                </div>
-            </div>
-            <div class="card-body">
+                </div> -->
+            </x-slot:tools>
+            
+            <div class="card-body p-0">
                 @if($plan->recipes->count() > 0)
-                    <div class="row" id="recipesContainer">
-                        @foreach($plan->recipes as $recipe)
-                            <div class="col-lg-6 col-xl-4 recipe-item">
-                                <div class="recipe-card">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="fw-semibold mb-0">{{ $recipe->title }}</h6>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.nutrition-plans.recipes.show', [$plan->id, $recipe->id]) }}" class="btn btn-sm btn-info btn-wave" title="View Details">
-                                                <i class="ri-eye-line"></i>
-                                            </a>
-                                            <a href="{{ route('admin.nutrition-plans.recipes.edit', [$plan->id, $recipe->id]) }}" class="btn btn-sm btn-success btn-wave" title="Edit Recipe">
-                                                <i class="ri-edit-2-line"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-danger btn-wave" onclick="deleteRecipe('{{ $recipe->id }}')" title="Delete Recipe">
-                                                <i class="ri-delete-bin-5-line"></i>
-                                            </button>
+                    <x-tables.table 
+                        :headers="['Recipe', 'Created', 'Order', 'Actions']"
+                        :bordered="true"
+                        id="recipesTable"
+                    >
+                        <tbody>
+                            @foreach($plan->recipes as $recipe)
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if($recipe->image_url)
+                                                <img src="{{ $recipe->image_url }}" alt="{{ $recipe->title }}" class="avatar avatar-lg rounded me-2">
+                                            @else
+                                                <div class="avatar avatar-lg bg-light rounded me-2 d-flex align-items-center justify-content-center">
+                                                    <i class="ri-restaurant-line text-muted"></i>
+                                                </div>
+                                            @endif
+                                            <div>
+                                                <h6 class="mb-0 fw-semibold">{{ $recipe->title }}</h6>
+                                                @if($recipe->description)
+                                                    <small class="text-muted">{{ Str::limit($recipe->short_description, 50) }}</small>
+                                                @endif
+                                            </div>
                                         </div>
-                                    </div>
-                                    
-                                    @if($recipe->image_url)
-                                        <div class="mb-2">
-                                            <img src="{{ $recipe->image_url }}" alt="{{ $recipe->title }}" class="recipe-image">
-                                        </div>
-                                    @endif
-                                    
-                                    @if($recipe->description)
-                                        <p class="text-muted small mb-2">{{ $recipe->short_description }}</p>
-                                    @endif
-                                    
-                                    <div class="d-flex justify-content-between align-items-center">
+                                    </td>
+                                    <td>
                                         <div class="small text-muted">
                                             <i class="ri-calendar-line me-1"></i> {{ $recipe->formatted_date }}
                                         </div>
-                                        <div class="small text-muted">
-                                            Order: {{ $recipe->sort_order }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
+                                    </td>
+                                    <td>
+                                        {{ $recipe->sort_order }}
+                                    </td>
+                                    <td>
+                                        <x-tables.actions 
+                                            view="{{ route('admin.nutrition-plans.recipes.show', [$plan->id, $recipe->id]) }}"
+                                            edit="{{ route('admin.nutrition-plans.recipes.edit', [$plan->id, $recipe->id]) }}"
+                                            delete="deleteRecipe('{{ $recipe->id }}')"
+                                        >
+                                        </x-tables.actions>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </x-tables.table>
                 @else
                     <div class="text-center py-5">
                         <i class="ri-book-open-line fs-48 text-muted mb-3"></i>
@@ -148,7 +147,7 @@
                     </div>
                 @endif
             </div>
-        </div>
+        </x-tables.card>
     </div>
 </div>
 
@@ -191,9 +190,6 @@
 @endsection
 
 @section('scripts')
-<!-- Sweet Alert -->
-<script src="{{asset('build/assets/libs/sweetalert2/sweetalert2.min.js')}}"></script>
-
 <script>
 let isGridView = true;
 

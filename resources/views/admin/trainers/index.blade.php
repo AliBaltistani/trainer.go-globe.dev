@@ -1,10 +1,7 @@
 @extends('layouts.master')
 
 @section('styles')
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+ 
 @endsection
 
 @section('content')
@@ -67,11 +64,8 @@
 <!-- Trainers Table -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    Trainers Management
-                </div>
+        <x-tables.card title="Trainers Management">
+            <x-slot:tools>
                 <div class="d-flex gap-2">
                     <!-- Status Filter -->
                     <select id="statusFilter" class="form-select form-select-sm" style="width: auto;">
@@ -87,8 +81,8 @@
                         <option value="expert">Expert (8+ years)</option>
                     </select>
                 </div>
-            </div>
-            
+            </x-slot:tools>
+
             <!-- Display Success/Error Messages -->
             @if (session('success') || session('error'))
                 <div class="card-body pb-0">
@@ -107,30 +101,18 @@
                 </div>
             @endif
 
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="trainersTable" class="table table-bordered text-nowrap w-100 table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Designation</th>
-                                <th>Experience</th>
-                                <th>Status</th>
-                                <th>Subscribers</th>
-                                <!-- <th>Certifications</th> -->
-                                <!-- <th>Rating</th> -->
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be loaded via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            <x-tables.table 
+                id="trainersTable"
+                :headers="['Name', 'Email', 'Phone', 'Designation', 'Experience', 'Status', 'Subscribers', 'Actions']"
+                :bordered="true"
+                :striped="true"
+                :hover="true"
+            >
+                <tbody>
+                    <!-- Data will be loaded via AJAX -->
+                </tbody>
+            </x-tables.table>
+        </x-tables.card>
     </div>
 </div>
 
@@ -343,14 +325,6 @@
 @endsection
 
 @section('scripts')
-<!-- DataTables JS -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-
 <script>
 $(document).ready(function() {
     // Initialize DataTable

@@ -402,40 +402,29 @@
                                 @if($workoutExercise->exerciseSets->count() > 0)
                                     <div class="sets-section">
                                         <h6 class="mb-2">Sets Details:</h6>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-bordered">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Set</th>
-                                                        <th>Reps</th>
-                                                        <th>Weight (lbs)</th>
-                                                        <th>Duration (s)</th>
-                                                        <th>Rest (s)</th>
-                                                        <th>Notes</th>
-                                                        <th>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($workoutExercise->exerciseSets as $set)
-                                                        <tr>
-                                                            <td>{{ $set->set_number }}</td>
-                                                            <td>{{ $set->reps ?? '-' }}</td>
-                                                            <td>{{ $set->weight ?? '-' }}</td>
-                                                            <td>{{ $set->duration ?? '-' }}</td>
-                                                            <td>{{ $set->rest_time ?? '-' }}</td>
-                                                            <td>{{ $set->notes ?? '-' }}</td>
-                                                            <td>
-                                                                @if($set->is_completed)
-                                                                    <span class="badge bg-success-transparent">Completed</span>
-                                                                @else
-                                                                    <span class="badge bg-warning-transparent">Pending</span>
-                                                                @endif
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                        <x-tables.table 
+                                            :headers="['Set', 'Reps', 'Weight (lbs)', 'Duration (s)', 'Rest (s)', 'Notes', 'Status']"
+                                            :bordered="true"
+                                            class="table-sm"
+                                        >
+                                            @foreach($workoutExercise->exerciseSets as $set)
+                                                <tr>
+                                                    <td>{{ $set->set_number }}</td>
+                                                    <td>{{ $set->reps ?? '-' }}</td>
+                                                    <td>{{ $set->weight ?? '-' }}</td>
+                                                    <td>{{ $set->duration ?? '-' }}</td>
+                                                    <td>{{ $set->rest_time ?? '-' }}</td>
+                                                    <td>{{ $set->notes ?? '-' }}</td>
+                                                    <td>
+                                                        @if($set->is_completed)
+                                                            <span class="badge bg-success-transparent">Completed</span>
+                                                        @else
+                                                            <span class="badge bg-warning-transparent">Pending</span>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </x-tables.table>
                                     </div>
                                 @endif
                                 

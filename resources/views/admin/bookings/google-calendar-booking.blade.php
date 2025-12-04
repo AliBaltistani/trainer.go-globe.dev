@@ -1,13 +1,12 @@
 @extends('layouts.master')
 
 @section('styles')
-    <!-- Select2 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-    <!-- Flatpickr CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    
     <style>
+        .booking-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
         .google-calendar-card {
             border: 2px solid #4285f4;
             border-radius: 12px;
@@ -564,11 +563,6 @@
 @endsection
 
 @section('scripts')
-    <!-- Select2 JS -->
-        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <!-- Flatpickr JS -->
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-    
     <script>
         $(document).ready(function() {
             // Initialize Select2

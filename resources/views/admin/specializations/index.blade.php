@@ -1,12 +1,5 @@
 @extends('layouts.master')
 
-@section('styles')
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-@endsection
-
 @section('content')
 <!-- Page Header -->
 <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
@@ -67,15 +60,12 @@
 <!-- Specializations Table -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    Specializations List
-                </div>
+        <x-tables.card title="Specializations List">
+            <x-slot:tools>
                 <div class="d-flex">
                     <!-- Status Filter -->
                     <div class="me-3">
-                        <select class="form-select" id="statusFilter">
+                        <select class="form-select form-select-sm" id="statusFilter">
                             <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
                             <option value="active" {{ $status == 'active' ? 'selected' : '' }}>Active</option>
                             <option value="inactive" {{ $status == 'inactive' ? 'selected' : '' }}>Inactive</option>
@@ -91,28 +81,18 @@
                         </button>
                     </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="specializationsTable" class="table table-bordered text-nowrap w-100">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Name</th>
-                                <th>Description</th>
-                                <th>Status</th>
-                                <th>Trainers Count</th>
-                                <th>Created At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be loaded via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            </x-slot:tools>
+
+            <x-tables.table 
+                id="specializationsTable"
+                :headers="['ID', 'Name', 'Description', 'Status', 'Trainers Count', 'Created At', 'Actions']"
+                :bordered="true"
+            >
+                <tbody>
+                    <!-- Data will be loaded via AJAX -->
+                </tbody>
+            </x-tables.table>
+        </x-tables.card>
     </div>
 </div>
 
@@ -134,18 +114,7 @@
 @endsection
 
 @section('scripts')
-<!-- DataTables JS -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
+
 
 <script>
 $(document).ready(function() {

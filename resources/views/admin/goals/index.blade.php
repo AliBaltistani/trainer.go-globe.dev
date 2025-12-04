@@ -1,12 +1,5 @@
 @extends('layouts.master')
 
-@section('styles')
-<!-- DataTables CSS from CDN -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-@endsection
-
 @section('content')
 <!-- Page Header -->
 <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
@@ -68,70 +61,45 @@
 <!-- Main Content -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    Goals List
-                </div>
-                <!-- <div class="d-flex">
+        <x-tables.card title="Goals List">
+            <x-slot:tools>
+                <div class="d-flex">
                     <div class="me-3">
-                        <input class="form-control form-control-sm" type="text" placeholder="Search goals..." id="searchInput">
+                        <select class="form-select form-select-sm" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="1">Active</option>
+                            <option value="0">Inactive</option>
+                        </select>
                     </div>
-                    <div class="dropdown">
+                    <div class="dropdown me-3">
                         <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                             <i class="ri-filter-3-line me-1"></i> Filters
                         </button>
                         <ul class="dropdown-menu">
-                            <li><h6 class="dropdown-header">Filter by Status</h6></li>
-                            <li><a class="dropdown-item filter-status" href="#" data-status="">All Status</a></li>
-                            <li><a class="dropdown-item filter-status" href="#" data-status="1">Active</a></li>
-                            <li><a class="dropdown-item filter-status" href="#" data-status="0">Inactive</a></li>
-                            <li><hr class="dropdown-divider"></li>
                             <li><h6 class="dropdown-header">Filter by User</h6></li>
                             <li><a class="dropdown-item filter-user" href="#" data-user="">All Users</a></li>
                             <li><a class="dropdown-item filter-user" href="#" data-user="assigned">With Users</a></li>
                             <li><a class="dropdown-item filter-user" href="#" data-user="unassigned">Unassigned</a></li>
                         </ul>
                     </div>
-                </div> -->
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="goalsTable" class="table table-bordered text-nowrap w-100">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Goal Name</th>
-                                <th>User</th>
-                                <th>Status</th>
-                                <th>Created Date</th>
-                                <th>Updated Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be loaded via AJAX -->
-                        </tbody>
-                    </table>
                 </div>
-            </div>
-        </div>
+            </x-slot:tools>
+            
+            <x-tables.table 
+                id="goalsTable"
+                :headers="['ID', 'Goal Name', 'User', 'Status', 'Created Date', 'Updated Date', 'Actions']"
+                :bordered="true"
+            >
+                <tbody>
+                    <!-- Data will be loaded via AJAX -->
+                </tbody>
+            </x-tables.table>
+        </x-tables.card>
     </div>
 </div>
 @endsection
 
 @section('scripts')
-<!-- DataTables JS from CDN -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-
-<!-- Sweet Alert -->
-<!-- Script is already included in master layout -->
-
 <script>
 $(document).ready(function() {
     console.log('jQuery loaded:', typeof $ !== 'undefined');

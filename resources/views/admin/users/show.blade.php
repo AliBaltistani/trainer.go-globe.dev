@@ -51,7 +51,7 @@
                                     <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-primary btn-sm">
                                         <i class="ri-edit-line me-1"></i>Edit User
                                     </a>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleUserStatus({{ $user->id }})">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleUserStatus('{{ $user->id }}')">
                                         @if($user->email_verified_at)
                                             <i class="ri-user-unfollow-line me-1"></i>Deactivate
                                         @else
@@ -427,7 +427,7 @@
 
 @section('scripts')
 <!-- Sweet Alert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 // Toggle user status function
 function toggleUserStatus(userId) {

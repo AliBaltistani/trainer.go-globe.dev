@@ -151,172 +151,138 @@
     <div class="row">
         <!-- Recent Bookings -->
         <div class="col-xxl-6 col-xl-12">
-            <div class="card custom-card">
-                <div class="card-header justify-content-between">
-                    <div class="card-title">
-                        Recent Bookings
-                    </div>
+            <x-tables.card title="Recent Bookings">
+                <x-slot:tools>
                     <a href="{{ route('admin.bookings.index') }}" class="btn btn-sm btn-primary">
                         View All
                     </a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover text-nowrap">
-                            <thead>
-                                <tr>
-                                    <th>Trainer</th>
-                                    <th>Client</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($recentBookings as $booking)
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-2">
-                                                    <span class="avatar avatar-md bg-light border border-dashed p-1">
-                                                        @if($booking->trainer && $booking->trainer->profile_image)
-                                                            <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer">
-                                                        @else
-                                                            <div class="header-link-icon avatar bg-info-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
-                                                                {{ strtoupper(substr(optional($booking->trainer)->name ?? '?', 0, 1)) }}
-                                                            </div>
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                                <span class="fw-semibold">{{ optional($booking->trainer)->name ?? 'Unknown Trainer' }}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-2">
-                                                    <span class="avatar avatar-md bg-light border border-dashed p-1">
-                                                        @if($booking->client && $booking->client->profile_image)
-                                                            <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client">
-                                                        @else
-                                                            <div class="header-link-icon avatar bg-warning-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
-                                                                {{ strtoupper(substr(optional($booking->client)->name ?? '?', 0, 1)) }}
-                                                            </div>
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                                <span class="fw-semibold">{{ optional($booking->client)->name ?? 'Unknown Client' }}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="fw-semibold">{{ $booking->date->format('M d') }}</span>
-                                            <br><small class="text-muted">{{ $booking->start_time->format('h:i A') }}</small>
-                                        </td>
-                                        <td>
-                                            @if($booking->status == 'pending')
-                                                <span class="badge bg-warning-transparent">Pending</span>
-                                            @elseif($booking->status == 'confirmed')
-                                                <span class="badge bg-success-transparent">Confirmed</span>
+                </x-slot:tools>
+                <x-tables.table :headers="['Trainer', 'Client', 'Date', 'Status']" :hover="true">
+                    @forelse($recentBookings as $booking)
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        <span class="avatar avatar-md bg-light border border-dashed p-1">
+                                            @if($booking->trainer && $booking->trainer->profile_image)
+                                                <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer">
                                             @else
-                                                <span class="badge bg-danger-transparent">Cancelled</span>
+                                                <div class="header-link-icon avatar bg-info-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
+                                                    {{ strtoupper(substr(optional($booking->trainer)->name ?? '?', 0, 1)) }}
+                                                </div>
                                             @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center py-3">
-                                            <span class="text-muted">No recent bookings</span>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                                        </span>
+                                    </div>
+                                    <span class="fw-semibold">{{ optional($booking->trainer)->name ?? 'Unknown Trainer' }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        <span class="avatar avatar-md bg-light border border-dashed p-1">
+                                            @if($booking->client && $booking->client->profile_image)
+                                                <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client">
+                                            @else
+                                                <div class="header-link-icon avatar bg-warning-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
+                                                    {{ strtoupper(substr(optional($booking->client)->name ?? '?', 0, 1)) }}
+                                                </div>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <span class="fw-semibold">{{ optional($booking->client)->name ?? 'Unknown Client' }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold">{{ $booking->date->format('M d') }}</span>
+                                <br><small class="text-muted">{{ $booking->start_time->format('h:i A') }}</small>
+                            </td>
+                            <td>
+                                @if($booking->status == 'pending')
+                                    <span class="badge bg-warning-transparent">Pending</span>
+                                @elseif($booking->status == 'confirmed')
+                                    <span class="badge bg-success-transparent">Confirmed</span>
+                                @else
+                                    <span class="badge bg-danger-transparent">Cancelled</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-3">
+                                <span class="text-muted">No recent bookings</span>
+                            </td>
+                        </tr>
+                    @endforelse
+                </x-tables.table>
+            </x-tables.card>
         </div>
         
         <!-- Upcoming Bookings -->
         <div class="col-xxl-6 col-xl-12">
-            <div class="card custom-card">
-                <div class="card-header justify-content-between">
-                    <div class="card-title">
-                        Upcoming Bookings
-                    </div>
+            <x-tables.card title="Upcoming Bookings">
+                <x-slot:tools>
                     <a href="{{ route('admin.bookings.index', ['date_from' => now()->toDateString()]) }}" class="btn btn-sm btn-primary">
                         View All
                     </a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover text-nowrap">
-                            <thead>
-                                <tr>
-                                    <th>Trainer</th>
-                                    <th>Client</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($upcomingBookings as $booking)
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-2">
-                                                    <span class="avatar avatar-md bg-light border border-dashed p-1">
-                                                        @if($booking->trainer->profile_image)
-                                                            <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer">
-                                                        @else
-                                                            <div class="header-link-icon avatar bg-info-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
-                                                                {{ strtoupper(substr($booking->trainer->name ?? '?', 0, 1)) }}
-                                                            </div>
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                                <span class="fw-semibold">{{ $booking->trainer->name }}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="me-2">
-                                                    <span class="avatar avatar-md bg-light border border-dashed p-1">
-                                                        @if($booking->client->profile_image)
-                                                            <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client">
-                                                        @else
-                                                            <div class="header-link-icon avatar bg-warning-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
-                                                                {{ strtoupper(substr($booking->client->name ?? '?', 0, 1)) }}
-                                                            </div>
-                                                        @endif
-                                                    </span>
-                                                </div>
-                                                <span class="fw-semibold">{{ $booking->client->name }}</span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="fw-semibold">{{ $booking->date->format('M d') }}</span>
-                                            <br><small class="text-muted">{{ $booking->start_time->format('h:i A') }}</small>
-                                        </td>
-                                        <td>
-                                            @if($booking->status == 'pending')
-                                                <span class="badge bg-warning-transparent">Pending</span>
-                                            @elseif($booking->status == 'confirmed')
-                                                <span class="badge bg-success-transparent">Confirmed</span>
+                </x-slot:tools>
+                <x-tables.table :headers="['Trainer', 'Client', 'Date', 'Status']" :hover="true">
+                    @forelse($upcomingBookings as $booking)
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        <span class="avatar avatar-md bg-light border border-dashed p-1">
+                                            @if($booking->trainer->profile_image)
+                                                <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer">
                                             @else
-                                                <span class="badge bg-danger-transparent">Cancelled</span>
+                                                <div class="header-link-icon avatar bg-info-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
+                                                    {{ strtoupper(substr($booking->trainer->name ?? '?', 0, 1)) }}
+                                                </div>
                                             @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="text-center py-3">
-                                            <span class="text-muted">No upcoming bookings</span>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                                        </span>
+                                    </div>
+                                    <span class="fw-semibold">{{ $booking->trainer->name }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="me-2">
+                                        <span class="avatar avatar-md bg-light border border-dashed p-1">
+                                            @if($booking->client->profile_image)
+                                                <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client">
+                                            @else
+                                                <div class="header-link-icon avatar bg-warning-transparent avatar-rounded w-100 h-100 d-flex align-items-center justify-content-center">
+                                                    {{ strtoupper(substr($booking->client->name ?? '?', 0, 1)) }}
+                                                </div>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <span class="fw-semibold">{{ $booking->client->name }}</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold">{{ $booking->date->format('M d') }}</span>
+                                <br><small class="text-muted">{{ $booking->start_time->format('h:i A') }}</small>
+                            </td>
+                            <td>
+                                @if($booking->status == 'pending')
+                                    <span class="badge bg-warning-transparent">Pending</span>
+                                @elseif($booking->status == 'confirmed')
+                                    <span class="badge bg-success-transparent">Confirmed</span>
+                                @else
+                                    <span class="badge bg-danger-transparent">Cancelled</span>
+                                @endif
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center py-3">
+                                <span class="text-muted">No upcoming bookings</span>
+                            </td>
+                        </tr>
+                    @endforelse
+                </x-tables.table>
+            </x-tables.card>
         </div>
     </div>
     <!-- End::row-3 -->

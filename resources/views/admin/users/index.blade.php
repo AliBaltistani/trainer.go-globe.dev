@@ -1,21 +1,10 @@
 @extends('layouts.master')
 
 @section('styles')
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+ 
 @endsection
 
 @section('scripts')
-<!-- DataTables JS -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-
 <script>
 $(document).ready(function() {
     // Initialize DataTable
@@ -563,31 +552,26 @@ function showAlert(type, message) {
 <!-- Users Table -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    Users Management
-                </div>
-                <div class="d-flex gap-2">
-                    <!-- Role Filter -->
-                    <select id="roleFilter" class="form-select form-select-sm" style="width: auto;">
-                        <option value="all">All Roles</option>
-                        <option value="admin">Admin</option>
-                        <option value="trainer">Trainer</option>
-                        <option value="client">Client</option>
-                    </select>
-                    <!-- Status Filter -->
-                    <select id="statusFilter" class="form-select form-select-sm" style="width: auto;">
-                        <option value="all">All Status</option>
-                        <option value="active">Active</option>
-                        <option value="inactive">Inactive</option>
-                    </select>
-                </div>
-            </div>
-            
+        <x-tables.card title="Users Management">
+            <x-slot:tools>
+                <!-- Role Filter -->
+                <select id="roleFilter" class="form-select form-select-sm" style="width: auto;">
+                    <option value="all">All Roles</option>
+                    <option value="admin">Admin</option>
+                    <option value="trainer">Trainer</option>
+                    <option value="client">Client</option>
+                </select>
+                <!-- Status Filter -->
+                <select id="statusFilter" class="form-select form-select-sm" style="width: auto;">
+                    <option value="all">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+            </x-slot:tools>
+
             <!-- Display Success/Error Messages -->
             @if (session('success') || session('error'))
-                <div class="card-body pb-0">
+                <div class="pb-3">
                     @if(session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
                             <strong>Success!</strong> {{ session('success') }}
@@ -603,28 +587,11 @@ function showAlert(type, message) {
                 </div>
             @endif
 
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="usersTable" class="table table-bordered text-nowrap w-100">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Profile</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Role</th>
-                                <th>Status</th>
-                                <th>Created At</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be loaded via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            <x-tables.table 
+                id="usersTable"
+                :headers="['ID', 'Profile', 'Email', 'Phone', 'Role', 'Status', 'Created At', 'Actions']"
+            />
+        </x-tables.card>
     </div>
 </div>
 

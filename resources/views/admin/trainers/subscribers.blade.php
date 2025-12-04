@@ -2,17 +2,8 @@
 
 @section('content')
 <div class="container">
-    <h1>Subscribers for {{ $trainer->name }}</h1>
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Client</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Subscribed At</th>
-            </tr>
-        </thead>
-        <tbody>
+    <x-tables.card title="Subscribers for {{ $trainer->name }}">
+        <x-tables.table :headers="['Client', 'Email', 'Phone', 'Subscribed At']" :striped="true">
             @foreach ($subscriptions as $sub)
                 <tr>
                     <td>{{ optional($sub->client)->name }}</td>
@@ -21,8 +12,10 @@
                     <td>{{ optional($sub->subscribed_at)->format('d/m/Y H:i') }}</td>
                 </tr>
             @endforeach
-        </tbody>
-    </table>
-    {{ $subscriptions->links() }}
+        </x-tables.table>
+        <div class="mt-3">
+            {{ $subscriptions->links() }}
+        </div>
+    </x-tables.card>
 </div>
 @endsection

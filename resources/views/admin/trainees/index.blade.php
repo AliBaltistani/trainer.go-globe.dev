@@ -1,23 +1,12 @@
 @extends('layouts.master')
 
 @section('styles')
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
+ 
 @endsection
 
 @section('scripts')
-<!-- DataTables JS -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-
-<script>
-$(document).ready(function() {
+    <script>
+        $(document).ready(function() {
     // Initialize DataTable
     let traineesTable = $('#traineesTable').DataTable({
         processing: true,
@@ -294,50 +283,29 @@ function showAlert(type, message) {
 <!-- Main Content -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    Trainees List
+        <x-tables.card title="Trainees List">
+            <x-slot:tools>
+                <div>
+                    <select class="form-select" id="statusFilter">
+                        <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
+                        <option value="active" {{ $status == 'active' ? 'selected' : '' }}>Active</option>
+                        <option value="inactive" {{ $status == 'inactive' ? 'selected' : '' }}>Inactive</option>
+                    </select>
                 </div>
-                <div class="d-flex flex-wrap gap-2">
-                    <div>
-                        <select class="form-select" id="statusFilter">
-                            <option value="all" {{ $status == 'all' ? 'selected' : '' }}>All Status</option>
-                            <option value="active" {{ $status == 'active' ? 'selected' : '' }}>Active</option>
-                            <option value="inactive" {{ $status == 'inactive' ? 'selected' : '' }}>Inactive</option>
-                        </select>
-                    </div>
-                    <div>
-                        <button class="btn btn-outline-light btn-wave" id="refreshBtn">
-                            <i class="ri-refresh-line"></i>
-                        </button>
-                    </div>
+                <div>
+                    <button class="btn btn-outline-light btn-wave" id="refreshBtn">
+                        <i class="ri-refresh-line"></i>
+                    </button>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="traineesTable" class="table table-bordered text-nowrap w-100 table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Avatar</th>
-                                <th>Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Goals</th>
-                                <th>Reviews</th>
-                                <th>Status</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be loaded via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            </x-slot:tools>
+
+            <x-tables.table 
+                id="traineesTable" 
+                :headers="['ID', 'Avatar', 'Name', 'Email', 'Phone', 'Goals', 'Reviews', 'Status', 'Created', 'Actions']"
+                :striped="true"
+                :hover="true"
+            />
+        </x-tables.card>
     </div>
 </div>
 @endsection

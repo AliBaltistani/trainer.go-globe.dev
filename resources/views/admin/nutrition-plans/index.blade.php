@@ -1,12 +1,5 @@
 @extends('layouts.master')
 
-@section('styles')
-<!-- DataTables CSS from CDN -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-@endsection
-
 @section('content')
 <!-- Page Header -->
 <div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
@@ -68,11 +61,8 @@
 <!-- Main Content -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    Nutrition Plans List
-                </div>
+        <x-tables.card title="Nutrition Plans List">
+            <x-slot:tools>
                 <div class="d-flex">
                     <div class="me-3">
                         <input class="form-control form-control-sm" type="text" placeholder="Search plans..." id="searchInput">
@@ -95,49 +85,23 @@
                         </ul>
                     </div>
                 </div>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table id="nutritionPlansTable" class="table table-bordered text-nowrap w-100">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Plan Name</th>
-                                <th>Trainer</th>
-                                <th>Client</th>
-                                <th>Goal Type</th>
-                                <th>Meals</th>
-                                <th>Duration</th>
-                                <th>Status</th>
-                                <th>Featured</th>
-                                <th>Restrictions</th>
-                                <th>Created</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be loaded via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+            </x-slot:tools>
+
+            <x-tables.table 
+                id="nutritionPlansTable"
+                :headers="['ID', 'Plan Name', 'Trainer', 'Client', 'Goal Type', 'Meals', 'Duration', 'Status', 'Featured', 'Restrictions', 'Created', 'Actions']"
+                :bordered="true"
+            >
+                <tbody>
+                    <!-- Data will be loaded via AJAX -->
+                </tbody>
+            </x-tables.table>
+        </x-tables.card>
     </div>
 </div>
 @endsection
 
 @section('scripts')
-<!-- DataTables JS from CDN -->
-<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
-<script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-<script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-
-<!-- Sweet Alert -->
-<!-- <script src="{{asset('build/assets/libs/sweetalert2/sweetalert2.min.js')}}"></script> -->
-
 <script>
 $(document).ready(function() {
     console.log('jQuery loaded:', typeof $ !== 'undefined');

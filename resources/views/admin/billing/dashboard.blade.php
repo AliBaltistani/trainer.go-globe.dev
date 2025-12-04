@@ -55,81 +55,57 @@
     </div>
 
     <div class="row">
+        <!-- Recent Activity -->
         <div class="col-xl-12">
-            <div class="card custom-card">
-                <div class="card-header justify-content-between">
-                    <div class="card-title">
-                        Recent Transactions
-                    </div>
-                    <a href="{{ route('admin.transactions.index') }}" class="btn btn-sm btn-primary-light">View All</a>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table text-nowrap table-bordered">
-                            <thead>
-                                <tr>
-                                    <th scope="col">User</th>
-                                    <th scope="col">Type</th>
-                                    <th scope="col">Description</th>
-                                    <th scope="col">Amount</th>
-                                    <th scope="col">Status</th>
-                                    <th scope="col">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($recentActivity as $activity)
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="avatar avatar-sm me-2">
-                                                    @if(isset($activity['user']) && $activity['user']->profile_image)
-                                                        <img src="{{ asset('storage/' . $activity['user']->profile_image) }}" alt="img" class="rounded-circle">
-                                                    @else
-                                                        <span class="avatar-initial rounded-circle bg-primary-transparent">{{ substr($activity['user']->name ?? 'U', 0, 1) }}</span>
-                                                    @endif
-                                                </div>
-                                                <div>
-                                                    <div class="fw-semibold">{{ $activity['user']->name ?? 'Unknown' }}</div>
-                                                    <span class="text-muted fs-12">{{ ucfirst($activity['user']->role ?? '') }}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @if($activity['type'] == 'payment')
-                                                <span class="badge bg-success-transparent">Incoming Payment</span>
-                                            @else
-                                                <span class="badge bg-warning-transparent">Trainer Payout</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ $activity['description'] }}</td>
-                                        <td>
-                                            <span class="fw-semibold {{ $activity['type'] == 'payment' ? 'text-success' : 'text-danger' }}">
-                                                {{ $activity['type'] == 'payment' ? '+' : '-' }} {{ number_format($activity['amount'], 2) }} {{ $activity['currency'] }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            @if($activity['status'] == 'success' || $activity['status'] == 'paid')
-                                                <span class="badge bg-success-transparent">Completed</span>
-                                            @elseif($activity['status'] == 'pending')
-                                                <span class="badge bg-warning-transparent">Pending</span>
-                                            @elseif($activity['status'] == 'failed')
-                                                <span class="badge bg-danger-transparent">Failed</span>
-                                            @else
-                                                <span class="badge bg-secondary-transparent">{{ ucfirst($activity['status']) }}</span>
-                                            @endif
-                                        </td>
-                                        <td>{{ \Carbon\Carbon::parse($activity['date'])->format('d M Y, h:i A') }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center">No recent activity found</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <x-tables.card title="Recent Activity">
+                <x-slot:tools>
+                    <a href="{{ route('admin.transactions.index') }}" class="btn btn-sm btn-primary">
+                        View All
+                    </a>
+                </x-slot:tools>
+                <x-tables.table :headers="['ID', 'Type', 'Description', 'Amount', 'Status', 'Date']" :hover="true">
+                    @forelse($recentActivity as $activity)
+                        <tr>
+                            <td>
+                                <a href="#" class="fw-semibold text-primary">
+                                    #{{ $activity['id'] }}
+                                </a>
+                            </td>
+                            <td>
+                                @if($activity['type'] == 'payment')
+                                    <span class="badge bg-success-transparent">Payment</span>
+                                @elseif($activity['type'] == 'refund')
+                                    <span class="badge bg-info-transparent">Refund</span>
+                                @else
+                                    <span class="badge bg-warning-transparent">Trainer Payout</span>
+                                @endif
+                            </td>
+                            <td>{{ $activity['description'] }}</td>
+                            <td>
+                                <span class="fw-semibold {{ $activity['type'] == 'payment' ? 'text-success' : 'text-danger' }}">
+                                    {{ $activity['type'] == 'payment' ? '+' : '-' }} {{ number_format($activity['amount'], 2) }} {{ $activity['currency'] }}
+                                </span>
+                            </td>
+                            <td>
+                                @if($activity['status'] == 'success' || $activity['status'] == 'paid')
+                                    <span class="badge bg-success-transparent">Completed</span>
+                                @elseif($activity['status'] == 'pending')
+                                    <span class="badge bg-warning-transparent">Pending</span>
+                                @elseif($activity['status'] == 'failed')
+                                    <span class="badge bg-danger-transparent">Failed</span>
+                                @else
+                                    <span class="badge bg-secondary-transparent">{{ ucfirst($activity['status']) }}</span>
+                                @endif
+                            </td>
+                            <td>{{ \Carbon\Carbon::parse($activity['date'])->format('d M Y, h:i A') }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center">No recent activity found</td>
+                        </tr>
+                    @endforelse
+                </x-tables.table>
+            </x-tables.card>
         </div>
     </div>
 @endsection

@@ -1,9 +1,6 @@
 @extends('layouts.master')
 
 @section('styles')
-<!-- DataTables CSS from CDN -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
-<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 <style>
 .meal-card {
     border: 1px solid #dee2e6;
@@ -86,93 +83,79 @@
 <!-- Meals Management -->
 <div class="row">
     <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    Meals ({{ $plan->meals->count() }})
+        <x-tables.card title="Meals ({{ $plan->meals->count() }})">
+            <x-slot:tools>
+                <div class="dropdown">
+                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="ri-filter-3-line me-1"></i> Filter by Type
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item filter-meal-type" href="#" data-type="">All Types</a></li>
+                        <li><a class="dropdown-item filter-meal-type" href="#" data-type="breakfast">Breakfast</a></li>
+                        <li><a class="dropdown-item filter-meal-type" href="#" data-type="lunch">Lunch</a></li>
+                        <li><a class="dropdown-item filter-meal-type" href="#" data-type="dinner">Dinner</a></li>
+                        <li><a class="dropdown-item filter-meal-type" href="#" data-type="snack">Snack</a></li>
+                        <li><a class="dropdown-item filter-meal-type" href="#" data-type="pre_workout">Pre-Workout</a></li>
+                        <li><a class="dropdown-item filter-meal-type" href="#" data-type="post_workout">Post-Workout</a></li>
+                    </ul>
                 </div>
-                <div class="d-flex gap-2">
-                    <div class="dropdown">
-                        <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="ri-filter-3-line me-1"></i> Filter by Type
-                        </button>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item filter-meal-type" href="#" data-type="">All Types</a></li>
-                            <li><a class="dropdown-item filter-meal-type" href="#" data-type="breakfast">Breakfast</a></li>
-                            <li><a class="dropdown-item filter-meal-type" href="#" data-type="lunch">Lunch</a></li>
-                            <li><a class="dropdown-item filter-meal-type" href="#" data-type="dinner">Dinner</a></li>
-                            <li><a class="dropdown-item filter-meal-type" href="#" data-type="snack">Snack</a></li>
-                            <li><a class="dropdown-item filter-meal-type" href="#" data-type="pre_workout">Pre-Workout</a></li>
-                            <li><a class="dropdown-item filter-meal-type" href="#" data-type="post_workout">Post-Workout</a></li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
+            </x-slot:tools>
+
+            <div class="card-body p-0">
                 @if($plan->meals->count() > 0)
-                    <div class="row" id="mealsContainer">
-                        @foreach($plan->meals as $meal)
-                            <div class="col-lg-6 col-xl-4 meal-item" data-meal-type="{{ $meal->meal_type }}">
-                                <div class="meal-card">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="fw-semibold mb-0">{{ $meal->title }}</h6>
-                                        <span class="badge meal-type-badge bg-{{ $meal->meal_type === 'breakfast' ? 'warning' : ($meal->meal_type === 'lunch' ? 'success' : ($meal->meal_type === 'dinner' ? 'primary' : 'info')) }}-transparent">
+                    <x-tables.table 
+                        :headers="['Meal', 'Type', 'Calories', 'Macros', 'Prep Time', 'Actions']"
+                        :bordered="true"
+                        id="mealsTable"
+                    >
+                        <tbody>
+                            @foreach($plan->meals as $meal)
+                                <tr class="meal-item" data-meal-type="{{ $meal->meal_type }}">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if($meal->image_url)
+                                                <img src="{{ asset('storage/' . $meal->image_url) }}" alt="{{ $meal->title }}" class="avatar avatar-lg rounded me-2">
+                                            @else
+                                                <div class="avatar avatar-lg bg-light rounded me-2 d-flex align-items-center justify-content-center">
+                                                    <i class="ri-restaurant-line text-muted"></i>
+                                                </div>
+                                            @endif
+                                            <div>
+                                                <h6 class="mb-0 fw-semibold">{{ $meal->title }}</h6>
+                                                @if($meal->description)
+                                                    <small class="text-muted">{{ Str::limit($meal->description, 50) }}</small>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ $meal->meal_type === 'breakfast' ? 'warning' : ($meal->meal_type === 'lunch' ? 'success' : ($meal->meal_type === 'dinner' ? 'primary' : 'info')) }}-transparent">
                                             {{ ucfirst(str_replace('_', ' ', $meal->meal_type)) }}
                                         </span>
-                                    </div>
-                                    
-                                    @if($meal->description)
-                                        <p class="text-muted small mb-2">{{ Str::limit($meal->description, 80) }}</p>
-                                    @endif
-                                    
-                                    @if($meal->image_url)
-                                        <div class="mb-2">
-                                            <img src="{{ asset('storage/' . $meal->image_url) }}" alt="{{ $meal->title }}" class="img-fluid rounded" style="height: 120px; width: 100%; object-fit: cover;">
-                                        </div>
-                                    @endif
-                                    
-                                    <div class="macro-info mb-2">
-                                        <div class="row text-center">
-                                            <div class="col-3">
-                                                <small class="d-block fw-semibold">{{ $meal->calories_per_serving ?? 0 }}</small>
-                                                <small class="text-muted">Cal</small>
-                                            </div>
-                                            <div class="col-3">
-                                                <small class="d-block fw-semibold">{{ $meal->protein_per_serving ?? 0 }}oz</small>
-                                                <small class="text-muted">Protein</small>
-                                            </div>
-                                            <div class="col-3">
-                                                <small class="d-block fw-semibold">{{ $meal->carbs_per_serving ?? 0 }}oz</small>
-                                                <small class="text-muted">Carbs</small>
-                                            </div>
-                                            <div class="col-3">
-                                                <small class="d-block fw-semibold">{{ $meal->fats_per_serving ?? 0 }}oz</small>
-                                                <small class="text-muted">Fats</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="small text-muted">
-                                            <i class="ri-time-line me-1"></i> {{ ($meal->prep_time ?? 0) + ($meal->cook_time ?? 0) }} min
-                                            <span class="ms-2"><i class="ri-restaurant-line me-1"></i> {{ $meal->servings }} serving{{ $meal->servings > 1 ? 's' : '' }}</span>
-                                        </div>
-                                        <div class="btn-group" role="group">
-                                            <a href="{{ route('admin.nutrition-plans.meals.show', [$plan->id, $meal->id]) }}" class="btn btn-sm btn-info btn-wave" title="View Details">
-                                                <i class="ri-eye-line"></i>
-                                            </a>
-                                            <a href="{{ route('admin.nutrition-plans.meals.edit', [$plan->id, $meal->id]) }}" class="btn btn-sm btn-success btn-wave" title="Edit Meal">
-                                                <i class="ri-edit-2-line"></i>
-                                            </a>
-                                            <button type="button" class="btn btn-sm btn-danger btn-wave" onclick="deleteMeal('{{ $meal->id }}')" title="Delete Meal">
-                                                <i class="ri-delete-bin-5-line"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
+                                    </td>
+                                    <td>{{ $meal->calories_per_serving ?? 0 }} Cal</td>
+                                    <td>
+                                        <small class="d-block text-muted">P: {{ $meal->protein_per_serving ?? 0 }}g</small>
+                                        <small class="d-block text-muted">C: {{ $meal->carbs_per_serving ?? 0 }}g</small>
+                                        <small class="d-block text-muted">F: {{ $meal->fats_per_serving ?? 0 }}g</small>
+                                    </td>
+                                    <td>
+                                        {{ ($meal->prep_time ?? 0) + ($meal->cook_time ?? 0) }} min
+                                        <br>
+                                        <small class="text-muted">{{ $meal->servings }} serving{{ $meal->servings > 1 ? 's' : '' }}</small>
+                                    </td>
+                                    <td>
+                                        <x-tables.actions 
+                                            view="{{ route('admin.nutrition-plans.meals.show', [$plan->id, $meal->id]) }}"
+                                            edit="{{ route('admin.nutrition-plans.meals.edit', [$plan->id, $meal->id]) }}"
+                                            delete="deleteMeal('{{ $meal->id }}')"
+                                        >
+                                        </x-tables.actions>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </x-tables.table>
                 @else
                     <div class="text-center py-5">
                         <i class="ri-restaurant-line fs-48 text-muted mb-3"></i>
@@ -184,7 +167,7 @@
                     </div>
                 @endif
             </div>
-        </div>
+        </x-tables.card>
     </div>
 </div>
 

@@ -71,11 +71,8 @@
     <!-- Start::row-1 -->
     <div class="row">
         <div class="col-xl-12">
-            <div class="card custom-card">
-                <div class="card-header justify-content-between">
-                    <div class="card-title">
-                        All Bookings
-                    </div>
+            <x-tables.card title="All Bookings">
+                <x-slot:tools>
                     <div class="d-flex">
                         <div class="me-3">
                             <a href="{{ route('admin.bookings.export', request()->query()) }}" class="btn btn-success btn-sm">
@@ -92,222 +89,212 @@
                             </ul>
                         </div>
                     </div>
+                </x-slot:tools>
+
+                <!-- Filters -->
+                <div class="row mb-4">
+                    <div class="col-xl-12">
+                        <form method="GET" action="{{ route('admin.bookings.index') }}" class="row g-3">
+                            <div class="col-md-2">
+                                <label class="form-label">Status</label>
+                                <select name="status" class="form-select">
+                                    <option value="">All Status</option>
+                                    @foreach($statuses as $key => $status)
+                                        <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>{{ $status }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Trainer</label>
+                                <select name="trainer_id" class="form-select">
+                                    <option value="">All Trainers</option>
+                                    @foreach($trainers as $trainer)
+                                        <option value="{{ $trainer->id }}" {{ request('trainer_id') == $trainer->id ? 'selected' : '' }}>{{ $trainer->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Client</label>
+                                <select name="client_id" class="form-select">
+                                    <option value="">All Clients</option>
+                                    @foreach($clients as $client)
+                                        <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Date From</label>
+                                <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Date To</label>
+                                <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">&nbsp;</label>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Filter</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <!-- Filters -->
-                    <div class="row mb-4">
-                        <div class="col-xl-12">
-                            <form method="GET" action="{{ route('admin.bookings.index') }}" class="row g-3">
-                                <div class="col-md-2">
-                                    <label class="form-label">Status</label>
-                                    <select name="status" class="form-select">
-                                        <option value="">All Status</option>
-                                        @foreach($statuses as $key => $status)
-                                            <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>{{ $status }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Trainer</label>
-                                    <select name="trainer_id" class="form-select">
-                                        <option value="">All Trainers</option>
-                                        @foreach($trainers as $trainer)
-                                            <option value="{{ $trainer->id }}" {{ request('trainer_id') == $trainer->id ? 'selected' : '' }}>{{ $trainer->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Client</label>
-                                    <select name="client_id" class="form-select">
-                                        <option value="">All Clients</option>
-                                        @foreach($clients as $client)
-                                            <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Date From</label>
-                                    <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">Date To</label>
-                                    <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="form-label">&nbsp;</label>
-                                    <div class="d-grid">
-                                        <button type="submit" class="btn btn-primary">Filter</button>
+
+                <!-- Bookings Table -->
+                <x-tables.table id="bookingsTable">
+                    <x-slot:thead>
+                        <tr>
+                            <th>
+                                <input class="form-check-input" type="checkbox" id="checkAll">
+                            </th>
+                            <th>ID</th>
+                            <th>Trainer</th>
+                            <th>Client</th>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th>Google Calendar</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </x-slot:thead>
+                    @forelse($bookings as $booking)
+                        <tr>
+                            <td>
+                                <input class="form-check-input booking-checkbox" type="checkbox" value="{{ $booking->id }}">
+                            </td>
+                            <td>{{ $booking->id }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    @if($booking->trainer)
+                                    <div class="avatar avatar-sm me-2">
+                                        @if($booking->trainer->profile_image)
+                                            <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer" class="avatar-img rounded-circle">
+                                        @else
+                                            <div class="avatar-img rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px;">
+                                                {{ strtoupper(substr($booking->trainer->name, 0, 1)) }}
+                                            </div>
+                                        @endif
                                     </div>
+                                    <div>
+                                        <span class="fw-semibold">{{ $booking->trainer->name }}</span>
+                                        <br><small class="text-muted">{{ $booking->trainer->email }}</small>
+                                    </div>
+                                    @else
+                                    <span class="text-danger">Trainer Deleted</span>
+                                    @endif
                                 </div>
-                            </form>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    @if($booking->client)
+                                    <div class="avatar avatar-sm me-2">
+                                        @if($booking->client->profile_image)
+                                            <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client" class="avatar-img rounded-circle">
+                                        @else
+                                            <div class="avatar-img rounded-circle bg-success d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px;">
+                                                {{ strtoupper(substr($booking->client->name, 0, 1)) }}
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <div>
+                                        <span class="fw-semibold">{{ $booking->client->name }}</span>
+                                        <br><small class="text-muted">{{ $booking->client->email }}</small>
+                                    </div>
+                                    @else
+                                    <span class="text-danger">Client Deleted</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td>
+                                <span class="fw-semibold">{{ $booking->date->format('M d, Y') }}</span>
+                                <br><small class="text-muted">{{ $booking->date->format('l') }}</small>
+                            </td>
+                            <td>
+                                <span class="fw-semibold">{{ $booking->start_time->format('h:i A') }}</span>
+                                <br><small class="text-muted">to {{ $booking->end_time->format('h:i A') }}</small>
+                            </td>
+                            <td>
+                                @if($booking->status == 'pending')
+                                    <span class="badge bg-warning-transparent">Pending</span>
+                                @elseif($booking->status == 'confirmed')
+                                    <span class="badge bg-success-transparent">Confirmed</span>
+                                @else
+                                    <span class="badge bg-danger-transparent">Cancelled</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($booking->google_event_id)
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-google-line text-primary me-1"></i>
+                                        <span class="badge bg-success-transparent">Synced</span>
+                                    </div>
+                                    @if($booking->meet_link)
+                                        <small class="text-muted d-block">
+                                            <i class="ri-video-line me-1"></i>Meet Ready
+                                        </small>
+                                    @endif
+                                @else
+                                    <div class="d-flex align-items-center">
+                                        <i class="ri-calendar-line text-muted me-1"></i>
+                                        <span class="badge bg-secondary-transparent">Not Synced</span>
+                                    </div>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="fw-semibold">{{ $booking->created_at->format('M d, Y') }}</span>
+                                <br><small class="text-muted">{{ $booking->created_at->format('h:i A') }}</small>
+                            </td>
+                            <td>
+                                <x-tables.actions 
+                                    :view="route('admin.bookings.show', $booking->id)"
+                                    :edit="route('admin.bookings.google-calendar.edit', $booking->id)"
+                                    :delete="'deleteBooking(\''.$booking->id.'\')'"
+                                >
+                                    @if($booking->google_event_id)
+                                        <button class="btn btn-icon btn-sm btn-success-transparent rounded-pill" onclick="syncToGoogleCalendar('{{ $booking->id }}')" title="Sync to Google Calendar">
+                                            <i class="ri-refresh-line"></i>
+                                        </button>
+                                        @if($booking->meet_link)
+                                            <a href="{{ $booking->meet_link }}" target="_blank" class="btn btn-icon btn-sm btn-warning-transparent rounded-pill" title="Join Google Meet">
+                                                <i class="ri-video-line"></i>
+                                            </a>
+                                        @endif
+                                    @else
+                                        <button class="btn btn-icon btn-sm btn-secondary-transparent rounded-pill" onclick="createGoogleCalendarEvent('{{ $booking->id }}')" title="Create Google Calendar Event">
+                                            <i class="ri-google-line"></i>
+                                        </button>
+                                    @endif
+                                </x-tables.actions>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="10" class="text-center py-4">
+                                <div class="d-flex flex-column align-items-center">
+                                    <i class="ri-calendar-line fs-1 text-muted mb-2"></i>
+                                    <h6 class="fw-semibold mb-1">No Bookings Found</h6>
+                                    <p class="text-muted mb-0">There are no bookings matching your criteria.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </x-tables.table>
+
+                <!-- Pagination -->
+                @if($bookings->hasPages())
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div>
+                            <p class="text-muted mb-0">
+                                Showing {{ $bookings->firstItem() }} to {{ $bookings->lastItem() }} of {{ $bookings->total() }} results
+                            </p>
+                        </div>
+                        <div>
+                            {{ $bookings->appends(request()->query())->links() }}
                         </div>
                     </div>
-
-                    <!-- Bookings Table -->
-                    <div class="table-responsive">
-                        <table class="table table-bordered text-nowrap w-100" id="bookingsTable">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <input class="form-check-input" type="checkbox" id="checkAll">
-                                    </th>
-                                    <th>ID</th>
-                                    <th>Trainer</th>
-                                    <th>Client</th>
-                                    <th>Date</th>
-                                    <th>Time</th>
-                                    <th>Status</th>
-                                    <th>Google Calendar</th>
-                                    <th>Created</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($bookings as $booking)
-                                    <tr>
-                                        <td>
-                                            <input class="form-check-input booking-checkbox" type="checkbox" value="{{ $booking->id }}">
-                                        </td>
-                                        <td>{{ $booking->id }}</td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                @if($booking->trainer)
-                                                <div class="avatar avatar-sm me-2">
-                                                    @if($booking->trainer->profile_image)
-                                                        <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer" class="avatar-img rounded-circle">
-                                                    @else
-                                                        <div class="avatar-img rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px;">
-                                                            {{ strtoupper(substr($booking->trainer->name, 0, 1)) }}
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                                <div>
-                                                    <span class="fw-semibold">{{ $booking->trainer->name }}</span>
-                                                    <br><small class="text-muted">{{ $booking->trainer->email }}</small>
-                                                </div>
-                                                @else
-                                                <span class="text-danger">Trainer Deleted</span>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                @if($booking->client)
-                                                <div class="avatar avatar-sm me-2">
-                                                    @if($booking->client->profile_image)
-                                                        <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client" class="avatar-img rounded-circle">
-                                                    @else
-                                                        <div class="avatar-img rounded-circle bg-success d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px;">
-                                                            {{ strtoupper(substr($booking->client->name, 0, 1)) }}
-                                                        </div>
-                                                    @endif
-                                                </div>
-                                                <div>
-                                                    <span class="fw-semibold">{{ $booking->client->name }}</span>
-                                                    <br><small class="text-muted">{{ $booking->client->email }}</small>
-                                                </div>
-                                                @else
-                                                <span class="text-danger">Client Deleted</span>
-                                                @endif
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="fw-semibold">{{ $booking->date->format('M d, Y') }}</span>
-                                            <br><small class="text-muted">{{ $booking->date->format('l') }}</small>
-                                        </td>
-                                        <td>
-                                            <span class="fw-semibold">{{ $booking->start_time->format('h:i A') }}</span>
-                                            <br><small class="text-muted">to {{ $booking->end_time->format('h:i A') }}</small>
-                                        </td>
-                                        <td>
-                                            @if($booking->status == 'pending')
-                                                <span class="badge bg-warning-transparent">Pending</span>
-                                            @elseif($booking->status == 'confirmed')
-                                                <span class="badge bg-success-transparent">Confirmed</span>
-                                            @else
-                                                <span class="badge bg-danger-transparent">Cancelled</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            @if($booking->google_event_id)
-                                                <div class="d-flex align-items-center">
-                                                    <i class="ri-google-line text-primary me-1"></i>
-                                                    <span class="badge bg-success-transparent">Synced</span>
-                                                </div>
-                                                @if($booking->meet_link)
-                                                    <small class="text-muted d-block">
-                                                        <i class="ri-video-line me-1"></i>Meet Ready
-                                                    </small>
-                                                @endif
-                                            @else
-                                                <div class="d-flex align-items-center">
-                                                    <i class="ri-calendar-line text-muted me-1"></i>
-                                                    <span class="badge bg-secondary-transparent">Not Synced</span>
-                                                </div>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <span class="fw-semibold">{{ $booking->created_at->format('M d, Y') }}</span>
-                                            <br><small class="text-muted">{{ $booking->created_at->format('h:i A') }}</small>
-                                        </td>
-                                        <td>
-                                            <div class="hstack gap-2 fs-15">
-                                                <a href="{{ route('admin.bookings.show', $booking->id) }}" class="btn btn-icon btn-sm btn-info-transparent rounded-pill" title="View Details">
-                                                    <i class="ri-eye-line"></i>
-                                                </a>
-                                                <a href="{{ route('admin.bookings.google-calendar.edit', $booking->id) }}" class="btn btn-icon btn-sm btn-primary-transparent rounded-pill" title="Edit Booking">
-                                                    <i class="ri-edit-line"></i>
-                                                </a>
-                                                @if($booking->google_event_id)
-                                                    <button class="btn btn-icon btn-sm btn-success-transparent rounded-pill" onclick="syncToGoogleCalendar('{{ $booking->id }}')" title="Sync to Google Calendar">
-                                                        <i class="ri-refresh-line"></i>
-                                                    </button>
-                                                    @if($booking->meet_link)
-                                                        <a href="{{ $booking->meet_link }}" target="_blank" class="btn btn-icon btn-sm btn-warning-transparent rounded-pill" title="Join Google Meet">
-                                                            <i class="ri-video-line"></i>
-                                                        </a>
-                                                    @endif
-                                                @else
-                                                    <button class="btn btn-icon btn-sm btn-secondary-transparent rounded-pill" onclick="createGoogleCalendarEvent('{{ $booking->id }}')" title="Create Google Calendar Event">
-                                                        <i class="ri-google-line"></i>
-                                                    </button>
-                                                @endif
-                                                <button class="btn btn-icon btn-sm btn-danger-transparent rounded-pill" onclick="deleteBooking('{{ $booking->id }}')" title="Delete Booking">
-                                                    <i class="ri-delete-bin-line"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="10" class="text-center py-4">
-                                            <div class="d-flex flex-column align-items-center">
-                                                <i class="ri-calendar-line fs-1 text-muted mb-2"></i>
-                                                <h6 class="fw-semibold mb-1">No Bookings Found</h6>
-                                                <p class="text-muted mb-0">There are no bookings matching your criteria.</p>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Pagination -->
-                    @if($bookings->hasPages())
-                        <div class="d-flex justify-content-between align-items-center mt-4">
-                            <div>
-                                <p class="text-muted mb-0">
-                                    Showing {{ $bookings->firstItem() }} to {{ $bookings->lastItem() }} of {{ $bookings->total() }} results
-                                </p>
-                            </div>
-                            <div>
-                                {{ $bookings->appends(request()->query())->links() }}
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </div>
+                @endif
+            </x-tables.card>
         </div>
     </div>
     <!-- End::row-1 -->

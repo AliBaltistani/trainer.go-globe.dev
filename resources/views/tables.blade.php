@@ -34,44 +34,32 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table text-nowrap">
-                        <thead>
-                            <tr>
-                                <th scope="col">Name</th>
-                                <th scope="col">Created On</th>
-                                <th scope="col">Number</th>
-                                <th scope="col">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th scope="row">Mark</th>
-                                <td>21,Dec 2021</td>
-                                <td>+1234-12340</td>
-                                <td><span class="badge bg-outline-primary">Completed</span></td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Monika</th>
-                                <td>29,April 2024</td>
-                                <td>+1523-12459</td>
-                                <td><span class="badge bg-outline-warning">Failed</span></td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Madina</th>
-                                <td>30,Nov 2024</td>
-                                <td>+1982-16234</td>
-                                <td><span class="badge bg-outline-success">Successful</span></td>
-                            </tr>
-                            <tr>
-                                <th scope="row">Bhamako</th>
-                                <td>18,Mar 2024</td>
-                                <td>+1526-10729</td>
-                                <td><span class="badge bg-outline-secondary">Pending</span></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <x-tables.table :headers="['Name', 'Created On', 'Number', 'Status']" :bordered="false">
+                    <tr>
+                        <th scope="row">Mark</th>
+                        <td>21,Dec 2021</td>
+                        <td>+1234-12340</td>
+                        <td><span class="badge bg-outline-primary">Completed</span></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Monika</th>
+                        <td>29,April 2024</td>
+                        <td>+1523-12459</td>
+                        <td><span class="badge bg-outline-warning">Failed</span></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Madina</th>
+                        <td>30,Nov 2024</td>
+                        <td>+1982-16234</td>
+                        <td><span class="badge bg-outline-success">Successful</span></td>
+                    </tr>
+                    <tr>
+                        <th scope="row">Bhamako</th>
+                        <td>18,Mar 2024</td>
+                        <td>+1526-10729</td>
+                        <td><span class="badge bg-outline-secondary">Pending</span></td>
+                    </tr>
+                </x-tables.table>
             </div>
             <div class="card-footer d-none border-top-0">
                 <!-- Prism Code -->
@@ -128,96 +116,64 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table text-nowrap table-bordered">
-                        <thead>
-                            <tr>
-                                <th scope="col">User</th>
-                                <th scope="col">Status</th>
-                                <th scope="col">Email</th>
-                                <th scope="col">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th scope="row">
-                                    <div class="d-flex align-items-center">
-                                        <span class="avatar avatar-xs me-2 online avatar-rounded">
-                                            <img src="{{asset('build/assets/images/faces/13.jpg')}}" alt="img">
-                                        </span>Sukuro Kim
-                                    </div>
-                                </th>
-                                <td><span class="badge bg-success-transparent">Active</span></td>
-                                <td>kimosukuro@gmail.com</td>
-                                <td>
-                                    <div class="hstack gap-2 flex-wrap">
-                                        <a href="javascript:void(0);" class="text-info fs-14 lh-1"><i
-                                                class="ri-edit-line"></i></a>
-                                        <a href="javascript:void(0);" class="text-danger fs-14 lh-1"><i
-                                                class="ri-delete-bin-5-line"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row">
-                                    <div class="d-flex align-items-center">
-                                        <span class="avatar avatar-xs me-2 offline avatar-rounded">
-                                            <img src="{{asset('build/assets/images/faces/6.jpg')}}" alt="img">
-                                        </span>Hasimna
-                                    </div>
-                                </th>
-                                <td><span class="badge bg-light text-dark">Inactive</span></td>
-                                <td>hasimna2132@gmail.com</td>
-                                <td>
-                                    <div class="hstack gap-2 flex-wrap">
-                                        <a href="javascript:void(0);" class="text-info fs-14 lh-1"><i
-                                                class="ri-edit-line"></i></a>
-                                        <a href="javascript:void(0);" class="text-danger fs-14 lh-1"><i
-                                                class="ri-delete-bin-5-line"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row">
-                                    <div class="d-flex align-items-center">
-                                        <span class="avatar avatar-xs me-2 online avatar-rounded">
-                                            <img src="{{asset('build/assets/images/faces/15.jpg')}}" alt="img">
-                                        </span>Azimo Khan
-                                    </div>
-                                </th>
-                                <td><span class="badge bg-success-transparent">Active</span></td>
-                                <td>azimokhan421@gmail.com</td>
-                                <td>
-                                    <div class="hstack gap-2 flex-wrap">
-                                        <a href="javascript:void(0);" class="text-info fs-14 lh-1"><i
-                                                class="ri-edit-line"></i></a>
-                                        <a href="javascript:void(0);" class="text-danger fs-14 lh-1"><i
-                                                class="ri-delete-bin-5-line"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th scope="row">
-                                    <div class="d-flex align-items-center">
-                                        <span class="avatar avatar-xs me-2 online avatar-rounded">
-                                            <img src="{{asset('build/assets/images/faces/5.jpg')}}" alt="img">
-                                        </span>Samantha Julia
-                                    </div>
-                                </th>
-                                <td><span class="badge bg-success-transparent">Active</span></td>
-                                <td>julianasams143@gmail.com</td>
-                                <td>
-                                    <div class="hstack gap-2 flex-wrap">
-                                        <a href="javascript:void(0);" class="text-info fs-14 lh-1"><i
-                                                class="ri-edit-line"></i></a>
-                                        <a href="javascript:void(0);" class="text-danger fs-14 lh-1"><i
-                                                class="ri-delete-bin-5-line"></i></a>
-                                    </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                <x-tables.table :headers="['User', 'Status', 'Email', 'Action']">
+                    <tr>
+                        <th scope="row">
+                            <div class="d-flex align-items-center">
+                                <span class="avatar avatar-xs me-2 online avatar-rounded">
+                                    <img src="{{asset('build/assets/images/faces/13.jpg')}}" alt="img">
+                                </span>Sukuro Kim
+                            </div>
+                        </th>
+                        <td><span class="badge bg-success-transparent">Active</span></td>
+                        <td>kimosukuro@gmail.com</td>
+                        <td>
+                            <x-tables.actions view="javascript:void(0);" delete="javascript:void(0);" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <div class="d-flex align-items-center">
+                                <span class="avatar avatar-xs me-2 offline avatar-rounded">
+                                    <img src="{{asset('build/assets/images/faces/6.jpg')}}" alt="img">
+                                </span>Hasimna
+                            </div>
+                        </th>
+                        <td><span class="badge bg-light text-dark">Inactive</span></td>
+                        <td>hasimna2132@gmail.com</td>
+                        <td>
+                            <x-tables.actions view="javascript:void(0);" delete="javascript:void(0);" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <div class="d-flex align-items-center">
+                                <span class="avatar avatar-xs me-2 online avatar-rounded">
+                                    <img src="{{asset('build/assets/images/faces/15.jpg')}}" alt="img">
+                                </span>Azimo Khan
+                            </div>
+                        </th>
+                        <td><span class="badge bg-success-transparent">Active</span></td>
+                        <td>azimokhan421@gmail.com</td>
+                        <td>
+                            <x-tables.actions view="javascript:void(0);" delete="javascript:void(0);" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <th scope="row">
+                            <div class="d-flex align-items-center">
+                                <span class="avatar avatar-xs me-2 online avatar-rounded">
+                                    <img src="{{asset('build/assets/images/faces/5.jpg')}}" alt="img">
+                                </span>Samantha Julia
+                            </div>
+                        </th>
+                        <td><span class="badge bg-success-transparent">Active</span></td>
+                        <td>julianasams143@gmail.com</td>
+                        <td>
+                            <x-tables.actions view="javascript:void(0);" delete="javascript:void(0);" />
+                        </td>
+                    </tr>
+                </x-tables.table>
             </div>
             <div class="card-footer d-none border-top-0">
                 <!-- Prism Code -->

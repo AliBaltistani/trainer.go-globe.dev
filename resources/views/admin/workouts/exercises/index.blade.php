@@ -3,90 +3,71 @@
 @section('content')
 <div class="row">
     <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header justify-content-between">
-                <div class="card-title">
-                    Exercises for "{{ $workout->name }}"
-                </div>
-                <div class="prism-toggle">
-                    <a href="{{ route('workouts.show', $workout->id) }}" class="btn btn-sm btn-primary-light me-2">
+        <x-tables.card title='Exercises for "{{ $workout->name }}"'>
+            <x-slot:tools>
+                <div class="d-flex gap-2">
+                    <a href="{{ route('workouts.show', $workout->id) }}" class="btn btn-sm btn-primary-light">
                         <i class="ri-arrow-left-line"></i> Back to Workout
                     </a>
                     <a href="{{ route('workout-exercises.create', $workout->id) }}" class="btn btn-sm btn-primary">
                         <i class="ri-add-line"></i> Add Exercise
                     </a>
                 </div>
-            </div>
-            <div class="card-body">
+            </x-slot:tools>
+
+            <div class="card-body p-0">
                 @if($exercises->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-bordered text-nowrap">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Order</th>
-                                    <th>Exercise</th>
-                                    <th>Sets</th>
-                                    <th>Reps</th>
-                                    <th>Weight (lbs)</th>
-                                    <th>Duration</th>
-                                    <th>Rest</th>
-                                    <th>Tempo</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
+                    <x-tables.table 
+                        id="exercisesTable"
+                        :headers="['Order', 'Exercise', 'Sets', 'Reps', 'Weight (lbs)', 'Duration', 'Rest', 'Tempo', 'Status', 'Actions']"
+                        :bordered="true"
+                    >
+                        <tbody>
+                            @foreach($exercises as $exercise)
+                                <tr data-id="{{ $exercise->id }}">
+                                    <td>
+                                        <span class="badge bg-primary-transparent">{{ $exercise->order }}</span>
+                                        <i class="ri-drag-move-2-line ms-2 text-muted" style="cursor: move;"></i>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold">{{ $exercise->exercise->name ?? 'Exercise #' . $exercise->id }}</div>
+                                        @if($exercise->notes)
+                                            <small class="text-muted">{{ Str::limit($exercise->notes, 50) }}</small>
+                                        @endif
+                                    </td>
+                                    <td>{{ $exercise->sets ?? '-' }}</td>
+                                    <td>{{ $exercise->reps ?? '-' }}</td>
+                                    <td>{{ $exercise->formatted_weight ?? '-' }}</td>
+                                    <td>{{ $exercise->duration ? $exercise->duration . 's' : '-' }}</td>
+                                    <td>{{ $exercise->rest_interval ? $exercise->rest_interval . 's' : '-' }}</td>
+                                    <td>{{ $exercise->tempo ?? '-' }}</td>
+                                    <td>
+                                        @if($exercise->is_active)
+                                            <span class="badge bg-success-transparent">Active</span>
+                                        @else
+                                            <span class="badge bg-light text-dark">Inactive</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <x-tables.actions 
+                                            view="{{ route('workout-exercises.show', [$workout->id, $exercise->id]) }}"
+                                            edit="{{ route('workout-exercises.edit', [$workout->id, $exercise->id]) }}"
+                                            delete="confirmDelete('delete-form-{{ $exercise->id }}')"
+                                        >
+                                            <form action="{{ route('workout-exercises.destroy', [$workout->id, $exercise->id]) }}" method="POST" class="d-none" id="delete-form-{{ $exercise->id }}">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
+                                        </x-tables.actions>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody id="sortable-exercises">
-                                @foreach($exercises as $exercise)
-                                    <tr data-id="{{ $exercise->id }}">
-                                        <td>
-                                            <span class="badge bg-primary-transparent">{{ $exercise->order }}</span>
-                                            <i class="ri-drag-move-2-line ms-2 text-muted" style="cursor: move;"></i>
-                                        </td>
-                                        <td>
-                                            <div class="fw-bold">{{ $exercise->exercise->name ?? 'Exercise #' . $exercise->id }}</div>
-                                            @if($exercise->notes)
-                                                <small class="text-muted">{{ Str::limit($exercise->notes, 50) }}</small>
-                                            @endif
-                                        </td>
-                                        <td>{{ $exercise->sets ?? '-' }}</td>
-                                        <td>{{ $exercise->reps ?? '-' }}</td>
-                                        <td>{{ $exercise->formatted_weight ?? '-' }}</td>
-                                        <td>{{ $exercise->duration ? $exercise->duration . 's' : '-' }}</td>
-                                        <td>{{ $exercise->rest_interval ? $exercise->rest_interval . 's' : '-' }}</td>
-                                        <td>{{ $exercise->tempo ?? '-' }}</td>
-                                        <td>
-                                            @if($exercise->is_active)
-                                                <span class="badge bg-success-transparent">Active</span>
-                                            @else
-                                                <span class="badge bg-light text-dark">Inactive</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <div class="btn-group" role="group">
-                                                <a href="{{ route('workout-exercises.show', [$workout->id, $exercise->id]) }}" class="btn btn-sm btn-info" title="View">
-                                                    <i class="ri-eye-line"></i>
-                                                </a>
-                                                <a href="{{ route('workout-exercises.edit', [$workout->id, $exercise->id]) }}" class="btn btn-sm btn-success" title="Edit">
-                                                    <i class="ri-edit-2-line"></i>
-                                                </a>
-                                                <form action="{{ route('workout-exercises.destroy', [$workout->id, $exercise->id]) }}" method="POST" class="d-inline" id="delete-form-{{ $exercise->id }}">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="button" class="btn btn-sm btn-danger" title="Delete" onclick="confirmDelete('delete-form-{{ $exercise->id }}')">
-                                                        <i class="ri-delete-bin-5-line"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                            @endforeach
+                        </tbody>
+                    </x-tables.table>
                     
                     <!-- Pagination -->
                     @if($exercises->hasPages())
-                        <div class="d-flex justify-content-center mt-4">
+                        <div class="d-flex justify-content-center mt-4 pb-3">
                             {{ $exercises->links() }}
                         </div>
                     @endif
@@ -101,7 +82,7 @@
                     </div>
                 @endif
             </div>
-        </div>
+        </x-tables.card>
     </div>
 </div>
 
@@ -146,11 +127,10 @@
 @endsection
 
 @section('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize sortable for exercise reordering
-    const sortableElement = document.getElementById('sortable-exercises');
+    const sortableElement = document.querySelector('#exercisesTable tbody');
     if (sortableElement) {
         const sortable = Sortable.create(sortableElement, {
             handle: '.ri-drag-move-2-line',

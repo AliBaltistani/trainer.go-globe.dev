@@ -59,9 +59,8 @@
         </div>
     </div>
 
-    <div class="card custom-card">
-        <div class="card-header justify-content-between">
-            <div class="card-title">All Payouts</div>
+    <x-tables.card title="All Payouts">
+        <x-slot:tools>
             <form method="GET" class="d-flex">
                 <select name="status" class="form-select form-select-sm me-2" style="max-width:180px">
                     <option value="">All Status</option>
@@ -71,83 +70,71 @@
                 </select>
                 <button class="btn btn-sm btn-primary">Filter</button>
             </form>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered text-nowrap w-100" id="payoutsTable">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Trainer</th>
-                            <th>Amount</th>
-                            <th>Currency</th>
-                            <th>Fee</th>
-                            <th>Status</th>
-                            <th>Scheduled</th>
-                            <th>Created</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($payouts as $payout)
-                            <tr>
-                                <td>{{ $payout->id }}</td>
-                                <td class="fw-semibold">{{ $payout->trainer->name ?? '#' }}</td>
-                                <td>{{ number_format($payout->amount,2) }}</td>
-                                <td>{{ strtoupper($payout->currency) }}</td>
-                                <td>{{ number_format($payout->fee_amount,2) }}</td>
-                                <td>
-                                    @if($payout->payout_status==='processing')
-                                        <span class="badge bg-warning-transparent">Processing</span>
-                                    @elseif($payout->payout_status==='completed')
-                                        <span class="badge bg-success-transparent">Completed</span>
-                                    @else
-                                        <span class="badge bg-danger-transparent">Failed</span>
-                                    @endif
-                                </td>
-                                <td>{{ $payout->scheduled_at ? $payout->scheduled_at->format('M d, Y H:i') : '—' }}</td>
-                                <td>{{ $payout->created_at->format('M d, Y') }}</td>
-                                <td>
-                                    @if($payout->payout_status !== 'completed')
-                                        <button type="button" class="btn btn-sm btn-primary-light" title="Process Payout" onclick="confirmPayout('{{ $payout->id }}')">
-                                            <i class="ri-bank-card-line me-1"></i> Pay
-                                        </button>
-                                        <form id="payout-form-{{ $payout->id }}" action="{{ route('admin.payouts.process', $payout->id) }}" method="POST" style="display: none;">
-                                            @csrf
-                                        </form>
-                                    @else
-                                        <span class="badge bg-success-transparent"><i class="ri-check-double-line me-1"></i> Paid</span>
-                                    @endif
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="9" class="text-center py-4">
-                                    <div class="d-flex flex-column align-items-center">
-                                        <i class="ri-exchange-dollar-line fs-1 text-muted mb-2"></i>
-                                        <h6 class="fw-semibold mb-1">No Payouts Found</h6>
-                                        <p class="text-muted mb-0">No records match your filter.</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+        </x-slot:tools>
+
+        <x-tables.table 
+            id="payoutsTable" 
+            :headers="['ID', 'Trainer', 'Amount', 'Currency', 'Fee', 'Status', 'Scheduled', 'Created', 'Action']"
+        >
+            @forelse($payouts as $payout)
+                <tr>
+                    <td>{{ $payout->id }}</td>
+                    <td class="fw-semibold">{{ $payout->trainer->name ?? '#' }}</td>
+                    <td>{{ number_format($payout->amount,2) }}</td>
+                    <td>{{ strtoupper($payout->currency) }}</td>
+                    <td>{{ number_format($payout->fee_amount,2) }}</td>
+                    <td>
+                        @if($payout->payout_status==='processing')
+                            <span class="badge bg-warning-transparent">Processing</span>
+                        @elseif($payout->payout_status==='completed')
+                            <span class="badge bg-success-transparent">Completed</span>
+                        @else
+                            <span class="badge bg-danger-transparent">Failed</span>
+                        @endif
+                    </td>
+                    <td>{{ $payout->scheduled_at ? $payout->scheduled_at->format('M d, Y H:i') : '—' }}</td>
+                    <td>{{ $payout->created_at->format('M d, Y') }}</td>
+                    <td>
+                        @if($payout->payout_status !== 'completed')
+                            <button type="button" class="btn btn-sm btn-primary-light" title="Process Payout" onclick="confirmPayout('{{ $payout->id }}')">
+                                <i class="ri-bank-card-line me-1"></i> Pay
+                            </button>
+                            <form id="payout-form-{{ $payout->id }}" action="{{ route('admin.payouts.process', $payout->id) }}" method="POST" style="display: none;">
+                                @csrf
+                            </form>
+                        @else
+                            <span class="badge bg-success-transparent"><i class="ri-check-double-line me-1"></i> Paid</span>
+                        @endif
+                    </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="9" class="text-center py-4">
+                        <div class="d-flex flex-column align-items-center">
+                            <i class="ri-exchange-dollar-line fs-1 text-muted mb-2"></i>
+                            <h6 class="fw-semibold mb-1">No Payouts Found</h6>
+                            <p class="text-muted mb-0">No records match your filter.</p>
+                        </div>
+                    </td>
+                </tr>
+            @endforelse
+        </x-tables.table>
+
+        @if($payouts->hasPages())
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <p class="text-muted mb-0">Showing {{ $payouts->firstItem() }} to {{ $payouts->lastItem() }} of {{ $payouts->total() }} results</p>
+                {{ $payouts->links() }}
             </div>
-            @if($payouts->hasPages())
-                <div class="d-flex justify-content-between align-items-center mt-4">
-                    <p class="text-muted mb-0">Showing {{ $payouts->firstItem() }} to {{ $payouts->lastItem() }} of {{ $payouts->total() }} results</p>
-                    {{ $payouts->links() }}
-                </div>
-            @endif
-        </div>
-    </div>
+        @endif
+    </x-tables.card>
 @endsection
 
 @section('scripts')
     <script>
         $(function(){
+            @if($payouts->count() > 0)
             $('#payoutsTable').DataTable({responsive:true, ordering:false, paging:false, searching:false, info:false});
+            @endif
         });
 
         function confirmPayout(id) {

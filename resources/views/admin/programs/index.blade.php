@@ -1,11 +1,5 @@
 @extends('layouts.master')
 
-@section('styles')
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
-@endsection
-
 @section('content')
 <div class="container-fluid">
     <!-- Page Header -->
@@ -63,48 +57,23 @@
     </div>
 
     <!-- Main Content -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Programs List</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="programsTable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Program Name</th>
-                            <th>Trainer</th>
-                            <th>Client</th>
-                            <th>Duration</th>
-                            <th>Weeks</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Data will be loaded via AJAX -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <x-tables.card title="Programs List">
+        <x-tables.table 
+            id="programsTable"
+            :headers="['ID', 'Program Name', 'Trainer', 'Client', 'Duration', 'Weeks', 'Status', 'Created', 'Actions']"
+            :bordered="true"
+            width="100%" 
+            cellspacing="0"
+        >
+            <tbody>
+                <!-- Data will be loaded via AJAX -->
+            </tbody>
+        </x-tables.table>
+    </x-tables.card>
 </div>
 @endsection
 
 @section('scripts')
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
-    
-    <!-- Sweet Alert -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-
     <script>
         $(document).ready(function() {
             // Initialize DataTable
