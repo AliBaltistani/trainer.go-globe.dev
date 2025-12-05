@@ -38,7 +38,7 @@
                 <table class="table table-bordered text-nowrap w-100" id="payoutsTable">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Sr.#</th>
                             <th>Trainer</th>
                             <th>Amount</th>
                             <th>Currency</th>

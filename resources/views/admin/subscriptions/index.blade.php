@@ -4,7 +4,7 @@
 <div class="container">
     <x-tables.card title="All Subscriptions">
         <x-tables.table 
-            :headers="['ID', 'Client', 'Trainer', 'Status', 'Subscribed At', 'Unsubscribed At', 'Actions']"
+            :headers="['Sr.#', 'Client', 'Trainer', 'Status', 'Subscribed At', 'Unsubscribed At', 'Actions']"
             :bordered="true"
         >
             <tbody>

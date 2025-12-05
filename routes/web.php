@@ -502,6 +502,7 @@ Route::middleware('auth')->group(function () {
 
         Route::prefix('invoices')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\BillingController::class, 'invoices'])->name('admin.invoices.index');
+            Route::get('/{id}', [\App\Http\Controllers\Admin\BillingController::class, 'showInvoice'])->name('admin.invoices.show');
         });
 
         Route::prefix('transactions')->group(function () {

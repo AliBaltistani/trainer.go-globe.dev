@@ -100,7 +100,7 @@
                     <table id="goalsTable" class="table table-bordered text-nowrap w-100">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Sr.#</th>
                                 <th>Goal Name</th>
                                 <th>User</th>
                                 <th>Status</th>
@@ -159,7 +159,7 @@ $(document).ready(function() {
                 }
             },
             columns: [
-                { data: 'id', name: 'id', width: '5%' },
+                { data: 'id', name: 'id', width: '5%', orderable: false },
                 { 
                     data: 'name', 
                     name: 'name',

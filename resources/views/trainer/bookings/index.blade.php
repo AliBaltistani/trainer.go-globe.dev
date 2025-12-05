@@ -1,4 +1,4 @@
-﻿@extends('layouts.master')
+@extends('layouts.master')
 
 
 @section('content')
@@ -85,7 +85,7 @@
                         <table class="table table-bordered text-nowrap w-100" id="bookingsTable">
                             <thead>
                                 <tr>
-                                    <th>ID</th>
+                                    <th>Sr.#</th>
                                     <th>Trainer</th>
                                     <th>Client</th>
                                     <th>Date</th>

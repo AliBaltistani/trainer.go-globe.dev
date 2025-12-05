@@ -19,7 +19,7 @@
             }
         },
         columns: [
-            { data: 'id', name: 'id', width: '5%' },
+            { data: 'id', name: 'id', width: '5%', orderable: false },
             { 
                 data: 'profile_image', 
                 name: 'profile_image', 
@@ -301,7 +301,7 @@ function showAlert(type, message) {
 
             <x-tables.table 
                 id="traineesTable" 
-                :headers="['ID', 'Avatar', 'Name', 'Email', 'Phone', 'Goals', 'Reviews', 'Status', 'Created', 'Actions']"
+                :headers="['Sr.#', 'Avatar', 'Name', 'Email', 'Phone', 'Goals', 'Reviews', 'Status', 'Created', 'Actions']"
                 :striped="true"
                 :hover="true"
             />

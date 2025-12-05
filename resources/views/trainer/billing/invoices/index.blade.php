@@ -38,7 +38,7 @@
                 <table class="table table-bordered text-nowrap w-100" id="invoicesTable">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Sr.#</th>
                             <th>Trainer</th>
                             <th>Client</th>
                             <th>Total</th>

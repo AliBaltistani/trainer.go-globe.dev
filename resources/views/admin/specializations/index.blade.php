@@ -85,7 +85,7 @@
 
             <x-tables.table 
                 id="specializationsTable"
-                :headers="['ID', 'Name', 'Description', 'Status', 'Trainers Count', 'Created At', 'Actions']"
+                :headers="['Sr.#', 'Name', 'Description', 'Status', 'Trainers Count', 'Created At', 'Actions']"
                 :bordered="true"
             >
                 <tbody>
@@ -130,7 +130,7 @@ $(document).ready(function() {
             }
         },
         columns: [
-            { data: 'id', name: 'id' },
+            { data: 'id', name: 'id', orderable: false },
             { data: 'name', name: 'name' },
             { data: 'description', name: 'description', orderable: false },
             { data: 'status', name: 'status', orderable: false },

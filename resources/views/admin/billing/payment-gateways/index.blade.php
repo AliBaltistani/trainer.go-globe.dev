@@ -62,112 +62,52 @@
 
                 <x-tables.table 
                     id="gatewaysTable" 
-                    :headers="['ID', 'Name', 'Type', 'Status', 'Default', 'Actions']"
+                    :headers="['Sr.#', 'Name', 'Type', 'Status', 'Default', 'Actions']"
                 >
-                    @forelse($gateways as $gateway)
-                        <tr>
-                            <td>{{ $gateway->id }}</td>
-                            <td class="fw-semibold">{{ $gateway->name }}</td>
-                            <td>
-                                @if($gateway->type === 'stripe')
-                                    <span class="badge bg-primary-transparent">Stripe</span>
-                                @else
-                                    <span class="badge bg-info-transparent">PayPal</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($gateway->enabled)
-                                    <span class="badge bg-success-transparent">Enabled</span>
-                                @else
-                                    <span class="badge bg-warning-transparent">Disabled</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($gateway->is_default)
-                                    <span class="badge bg-success">Default</span>
-                                @else
-                                    <span class="badge bg-secondary-transparent">—</span>
-                                @endif
-                            </td>
-                            <td>
-                                <div class="hstack gap-2 fs-15">
-                                    <form action="{{ route('admin.payment-gateways.enable', $gateway->id) }}" method="POST">
-                                        @csrf
-                                        <button class="btn btn-icon btn-sm {{ $gateway->enabled ? 'btn-warning-transparent' : 'btn-success-transparent' }} rounded-pill" title="Toggle Enable">
-                                            <i class="{{ $gateway->enabled ? 'ri-pause-line' : 'ri-play-line' }}"></i>
-                                        </button>
-                                        <input type="hidden" name="enabled" value="{{ $gateway->enabled ? 0 : 1 }}">
-                                    </form>
-                                    <form action="{{ route('admin.payment-gateways.set-default', $gateway->id) }}" method="POST">
-                                        @csrf
-                                        <button class="btn btn-icon btn-sm btn-primary-transparent rounded-pill" title="Set Default">
-                                            <i class="ri-star-line"></i>
-                                        </button>
-                                    </form>
-                                    <button class="btn btn-icon btn-sm btn-info-transparent rounded-pill" data-bs-toggle="modal" data-bs-target="#editModal-{{ $gateway->id }}" title="Edit">
-                                        <i class="ri-edit-line"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-
-                        <!-- Modal moved outside of tr but inside tbody - ideally should be outside table -->
-                        <!-- Note: Modals inside tables are technically invalid HTML but commonly used in this legacy pattern -->
-                        <div class="modal fade" id="editModal-{{ $gateway->id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h6 class="modal-title">Edit Gateway</h6>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <form method="POST" action="{{ route('admin.payment-gateways.update', $gateway->id) }}">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="modal-body">
-                                            <div class="mb-3">
-                                                <label class="form-label">Name</label>
-                                                <input type="text" class="form-control" name="name" value="{{ $gateway->name }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Public Key</label>
-                                                <input type="text" class="form-control" name="public_key" value="{{ $gateway->public_key }}">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Secret Key</label>
-                                                <input type="text" class="form-control" name="secret_key" value="{{ $gateway->secret_key }}">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label">Webhook Secret</label>
-                                                <input type="text" class="form-control" name="webhook_secret" value="{{ $gateway->webhook_secret }}">
-                                            </div>
-                                            @if($gateway->type === 'stripe')
-                                            <div class="mb-3">
-                                                <label class="form-label">Stripe Connect Client ID</label>
-                                                <input type="text" class="form-control" name="connect_client_id" value="{{ $gateway->connect_client_id }}">
-                                            </div>
-                                            @endif
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                            <button type="submit" class="btn btn-primary">Update</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    @empty
-                        <tr>
-                            <td colspan="6" class="text-center py-4">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="ri-bank-card-line fs-1 text-muted mb-2"></i>
-                                    <h6 class="fw-semibold mb-1">No Gateways Found</h6>
-                                    <p class="text-muted mb-0">Add a payment gateway to begin.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
                 </x-tables.table>
             </x-tables.card>
+        </div>
+    </div>
+
+    <!-- Edit Gateway Modal -->
+    <div class="modal fade" id="editGatewayModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h6 class="modal-title">Edit Gateway</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editGatewayForm" method="POST" action="">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" name="name" id="edit_name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Public Key</label>
+                            <input type="text" class="form-control" name="public_key" id="edit_public_key">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Secret Key</label>
+                            <input type="text" class="form-control" name="secret_key" id="edit_secret_key">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Webhook Secret</label>
+                            <input type="text" class="form-control" name="webhook_secret" id="edit_webhook_secret">
+                        </div>
+                        <div class="mb-3" id="edit_stripe_connect_div" style="display: none;">
+                            <label class="form-label">Stripe Connect Client ID</label>
+                            <input type="text" class="form-control" name="connect_client_id" id="edit_connect_client_id">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Update</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -222,14 +162,52 @@
 
 @section('scripts')
     <script>
-        $(document).ready(function() {
-            $('#gatewaysTable').DataTable({
-                responsive: true,
-                ordering: false,
-                paging: false,
-                searching: false,
-                info: false
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof jQuery === 'undefined') return;
+            var $ = jQuery;
+
+            $(document).ready(function() {
+                $('#gatewaysTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    ajax: "{{ route('admin.payment-gateways.index') }}",
+                    columns: [
+                        { data: 'id', name: 'id', orderable: false },
+                        { data: 'name', name: 'name' },
+                        { data: 'type', name: 'type' },
+                        { data: 'status', name: 'status', orderable: false, searchable: false },
+                        { data: 'default', name: 'default', orderable: false, searchable: false },
+                        { data: 'actions', name: 'actions', orderable: false, searchable: false }
+                    ],
+                    language: {
+                        processing: '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>'
+                    }
+                });
             });
         });
+
+        function editGateway(data) {
+            // Populate form
+            $('#edit_name').val(data.name);
+            $('#edit_public_key').val(data.public_key);
+            $('#edit_secret_key').val(data.secret_key);
+            $('#edit_webhook_secret').val(data.webhook_secret);
+            $('#edit_connect_client_id').val(data.connect_client_id);
+            
+            if (data.type === 'stripe') {
+                $('#edit_stripe_connect_div').show();
+            } else {
+                $('#edit_stripe_connect_div').hide();
+            }
+
+            // Set action URL
+            let url = "{{ route('admin.payment-gateways.update', 'GATEWAY_ID') }}";
+            url = url.replace('GATEWAY_ID', data.id);
+            $('#editGatewayForm').attr('action', url);
+
+            // Show modal
+            new bootstrap.Modal(document.getElementById('editGatewayModal')).show();
+        }
     </script>
 @endsection

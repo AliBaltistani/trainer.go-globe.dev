@@ -72,7 +72,7 @@
         <x-tables.card title="Workouts List">
             <x-tables.table 
                 id="workoutsTable"
-                :headers="['ID', 'Workout Name', 'Trainer', 'Duration', 'Videos', 'Price', 'Status', 'Created', 'Actions']"
+                :headers="['Sr.#', 'Workout Name', 'Trainer', 'Duration', 'Videos', 'Price', 'Status', 'Created', 'Actions']"
                 :bordered="true"
             >
                 <tbody>
@@ -140,7 +140,7 @@ $(document).ready(function() {
                 }
             ],
             columns: [
-                { data: 'id', name: 'id', width: '5%' },
+                { data: 'id', name: 'id', width: '5%', orderable: false },
                 { 
                     data: 'name', 
                     name: 'name',

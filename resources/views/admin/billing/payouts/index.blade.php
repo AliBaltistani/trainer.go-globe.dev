@@ -61,80 +61,59 @@
 
     <x-tables.card title="All Payouts">
         <x-slot:tools>
-            <form method="GET" class="d-flex">
+            <div class="d-flex">
                 <select name="status" class="form-select form-select-sm me-2" style="max-width:180px">
                     <option value="">All Status</option>
                     @foreach(['processing','completed','failed'] as $st)
                         <option value="{{ $st }}" {{ request('status')===$st?'selected':'' }}>{{ ucfirst($st) }}</option>
                     @endforeach
                 </select>
-                <button class="btn btn-sm btn-primary">Filter</button>
-            </form>
+            </div>
         </x-slot:tools>
 
         <x-tables.table 
             id="payoutsTable" 
-            :headers="['ID', 'Trainer', 'Amount', 'Currency', 'Fee', 'Status', 'Scheduled', 'Created', 'Action']"
+            :headers="['Sr.#', 'Trainer', 'Amount', 'Currency', 'Fee', 'Status', 'Scheduled', 'Created', 'Action']"
         >
-            @forelse($payouts as $payout)
-                <tr>
-                    <td>{{ $payout->id }}</td>
-                    <td class="fw-semibold">{{ $payout->trainer->name ?? '#' }}</td>
-                    <td>{{ number_format($payout->amount,2) }}</td>
-                    <td>{{ strtoupper($payout->currency) }}</td>
-                    <td>{{ number_format($payout->fee_amount,2) }}</td>
-                    <td>
-                        @if($payout->payout_status==='processing')
-                            <span class="badge bg-warning-transparent">Processing</span>
-                        @elseif($payout->payout_status==='completed')
-                            <span class="badge bg-success-transparent">Completed</span>
-                        @else
-                            <span class="badge bg-danger-transparent">Failed</span>
-                        @endif
-                    </td>
-                    <td>{{ $payout->scheduled_at ? $payout->scheduled_at->format('M d, Y H:i') : '—' }}</td>
-                    <td>{{ $payout->created_at->format('M d, Y') }}</td>
-                    <td>
-                        @if($payout->payout_status !== 'completed')
-                            <button type="button" class="btn btn-sm btn-primary-light" title="Process Payout" onclick="confirmPayout('{{ $payout->id }}')">
-                                <i class="ri-bank-card-line me-1"></i> Pay
-                            </button>
-                            <form id="payout-form-{{ $payout->id }}" action="{{ route('admin.payouts.process', $payout->id) }}" method="POST" style="display: none;">
-                                @csrf
-                            </form>
-                        @else
-                            <span class="badge bg-success-transparent"><i class="ri-check-double-line me-1"></i> Paid</span>
-                        @endif
-                    </td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="9" class="text-center py-4">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="ri-exchange-dollar-line fs-1 text-muted mb-2"></i>
-                            <h6 class="fw-semibold mb-1">No Payouts Found</h6>
-                            <p class="text-muted mb-0">No records match your filter.</p>
-                        </div>
-                    </td>
-                </tr>
-            @endforelse
         </x-tables.table>
-
-        @if($payouts->hasPages())
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <p class="text-muted mb-0">Showing {{ $payouts->firstItem() }} to {{ $payouts->lastItem() }} of {{ $payouts->total() }} results</p>
-                {{ $payouts->links() }}
-            </div>
-        @endif
     </x-tables.card>
 @endsection
 
 @section('scripts')
     <script>
-        $(function(){
-            @if($payouts->count() > 0)
-            $('#payoutsTable').DataTable({responsive:true, ordering:false, paging:false, searching:false, info:false});
-            @endif
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof jQuery === 'undefined') return;
+            var $ = jQuery;
+
+            $(function(){
+                var table = $('#payoutsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    ajax: {
+                        url: "{{ route('admin.payouts.index') }}",
+                        data: function (d) {
+                            d.status = $('select[name="status"]').val();
+                        }
+                    },
+                    columns: [
+                        { data: 'id', name: 'id', orderable: false },
+                        { data: 'trainer', name: 'trainer' },
+                        { data: 'amount', name: 'amount' },
+                        { data: 'currency', name: 'currency' },
+                        { data: 'fee', name: 'fee_amount', searchable: false },
+                        { data: 'status', name: 'payout_status' },
+                        { data: 'scheduled', name: 'scheduled_at', searchable: false },
+                        { data: 'created_at', name: 'created_at' },
+                        { data: 'actions', name: 'actions', orderable: false, searchable: false }
+                    ],
+                    order: [[0, 'desc']]
+                });
+
+                $('select[name="status"]').change(function(){
+                    table.draw();
+                });
+            });
         });
 
         function confirmPayout(id) {

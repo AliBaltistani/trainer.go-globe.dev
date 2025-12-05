@@ -75,18 +75,9 @@
                 <x-slot:tools>
                     <div class="d-flex">
                         <div class="me-3">
-                            <a href="{{ route('admin.bookings.export', request()->query()) }}" class="btn btn-success btn-sm">
+                            <a href="javascript:void(0);" onclick="exportBookings()" class="btn btn-success btn-sm">
                                 <i class="ri-download-line me-1"></i> Export
                             </a>
-                        </div>
-                        <div class="dropdown">
-                            <a href="javascript:void(0);" class="btn btn-light btn-sm" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="ri-more-2-fill"></i>
-                            </a>
-                            <ul class="dropdown-menu" role="menu">
-                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="bulkAction('confirmed')">Bulk Confirm</a></li>
-                                <li><a class="dropdown-item" href="javascript:void(0);" onclick="bulkAction('cancelled')">Bulk Cancel</a></li>
-                            </ul>
                         </div>
                     </div>
                 </x-slot:tools>
@@ -94,10 +85,10 @@
                 <!-- Filters -->
                 <div class="row mb-4">
                     <div class="col-xl-12">
-                        <form method="GET" action="{{ route('admin.bookings.index') }}" class="row g-3">
+                        <form id="filterForm" class="row g-3" onsubmit="event.preventDefault(); $('#bookingsTable').DataTable().ajax.reload();">
                             <div class="col-md-2">
                                 <label class="form-label">Status</label>
-                                <select name="status" class="form-select">
+                                <select name="status" id="status" class="form-select">
                                     <option value="">All Status</option>
                                     @foreach($statuses as $key => $status)
                                         <option value="{{ $key }}" {{ request('status') == $key ? 'selected' : '' }}>{{ $status }}</option>
@@ -106,7 +97,7 @@
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Trainer</label>
-                                <select name="trainer_id" class="form-select">
+                                <select name="trainer_id" id="trainer_id" class="form-select">
                                     <option value="">All Trainers</option>
                                     @foreach($trainers as $trainer)
                                         <option value="{{ $trainer->id }}" {{ request('trainer_id') == $trainer->id ? 'selected' : '' }}>{{ $trainer->name }}</option>
@@ -115,7 +106,7 @@
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Client</label>
-                                <select name="client_id" class="form-select">
+                                <select name="client_id" id="client_id" class="form-select">
                                     <option value="">All Clients</option>
                                     @foreach($clients as $client)
                                         <option value="{{ $client->id }}" {{ request('client_id') == $client->id ? 'selected' : '' }}>{{ $client->name }}</option>
@@ -124,11 +115,11 @@
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Date From</label>
-                                <input type="date" name="date_from" class="form-control" value="{{ request('date_from') }}">
+                                <input type="date" name="date_from" id="date_from" class="form-control" value="{{ request('date_from') }}">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">Date To</label>
-                                <input type="date" name="date_to" class="form-control" value="{{ request('date_to') }}">
+                                <input type="date" name="date_to" id="date_to" class="form-control" value="{{ request('date_to') }}">
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label">&nbsp;</label>
@@ -141,159 +132,17 @@
                 </div>
 
                 <!-- Bookings Table -->
-                <x-tables.table id="bookingsTable">
-                    <x-slot:thead>
-                        <tr>
-                            <th>
-                                <input class="form-check-input" type="checkbox" id="checkAll">
-                            </th>
-                            <th>ID</th>
-                            <th>Trainer</th>
-                            <th>Client</th>
-                            <th>Date</th>
-                            <th>Time</th>
-                            <th>Status</th>
-                            <th>Google Calendar</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </x-slot:thead>
-                    @forelse($bookings as $booking)
-                        <tr>
-                            <td>
-                                <input class="form-check-input booking-checkbox" type="checkbox" value="{{ $booking->id }}">
-                            </td>
-                            <td>{{ $booking->id }}</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    @if($booking->trainer)
-                                    <div class="avatar avatar-sm me-2">
-                                        @if($booking->trainer->profile_image)
-                                            <img src="{{ asset('storage/' . $booking->trainer->profile_image) }}" alt="trainer" class="avatar-img rounded-circle">
-                                        @else
-                                            <div class="avatar-img rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px;">
-                                                {{ strtoupper(substr($booking->trainer->name, 0, 1)) }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div>
-                                        <span class="fw-semibold">{{ $booking->trainer->name }}</span>
-                                        <br><small class="text-muted">{{ $booking->trainer->email }}</small>
-                                    </div>
-                                    @else
-                                    <span class="text-danger">Trainer Deleted</span>
-                                    @endif
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    @if($booking->client)
-                                    <div class="avatar avatar-sm me-2">
-                                        @if($booking->client->profile_image)
-                                            <img src="{{ asset('storage/' . $booking->client->profile_image) }}" alt="client" class="avatar-img rounded-circle">
-                                        @else
-                                            <div class="avatar-img rounded-circle bg-success d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px;">
-                                                {{ strtoupper(substr($booking->client->name, 0, 1)) }}
-                                            </div>
-                                        @endif
-                                    </div>
-                                    <div>
-                                        <span class="fw-semibold">{{ $booking->client->name }}</span>
-                                        <br><small class="text-muted">{{ $booking->client->email }}</small>
-                                    </div>
-                                    @else
-                                    <span class="text-danger">Client Deleted</span>
-                                    @endif
-                                </div>
-                            </td>
-                            <td>
-                                <span class="fw-semibold">{{ $booking->date->format('M d, Y') }}</span>
-                                <br><small class="text-muted">{{ $booking->date->format('l') }}</small>
-                            </td>
-                            <td>
-                                <span class="fw-semibold">{{ $booking->start_time->format('h:i A') }}</span>
-                                <br><small class="text-muted">to {{ $booking->end_time->format('h:i A') }}</small>
-                            </td>
-                            <td>
-                                @if($booking->status == 'pending')
-                                    <span class="badge bg-warning-transparent">Pending</span>
-                                @elseif($booking->status == 'confirmed')
-                                    <span class="badge bg-success-transparent">Confirmed</span>
-                                @else
-                                    <span class="badge bg-danger-transparent">Cancelled</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($booking->google_event_id)
-                                    <div class="d-flex align-items-center">
-                                        <i class="ri-google-line text-primary me-1"></i>
-                                        <span class="badge bg-success-transparent">Synced</span>
-                                    </div>
-                                    @if($booking->meet_link)
-                                        <small class="text-muted d-block">
-                                            <i class="ri-video-line me-1"></i>Meet Ready
-                                        </small>
-                                    @endif
-                                @else
-                                    <div class="d-flex align-items-center">
-                                        <i class="ri-calendar-line text-muted me-1"></i>
-                                        <span class="badge bg-secondary-transparent">Not Synced</span>
-                                    </div>
-                                @endif
-                            </td>
-                            <td>
-                                <span class="fw-semibold">{{ $booking->created_at->format('M d, Y') }}</span>
-                                <br><small class="text-muted">{{ $booking->created_at->format('h:i A') }}</small>
-                            </td>
-                            <td>
-                                <x-tables.actions 
-                                    :view="route('admin.bookings.show', $booking->id)"
-                                    :edit="route('admin.bookings.google-calendar.edit', $booking->id)"
-                                    :delete="'deleteBooking(\''.$booking->id.'\')'"
-                                >
-                                    @if($booking->google_event_id)
-                                        <button class="btn btn-icon btn-sm btn-success-transparent rounded-pill" onclick="syncToGoogleCalendar('{{ $booking->id }}')" title="Sync to Google Calendar">
-                                            <i class="ri-refresh-line"></i>
-                                        </button>
-                                        @if($booking->meet_link)
-                                            <a href="{{ $booking->meet_link }}" target="_blank" class="btn btn-icon btn-sm btn-warning-transparent rounded-pill" title="Join Google Meet">
-                                                <i class="ri-video-line"></i>
-                                            </a>
-                                        @endif
-                                    @else
-                                        <button class="btn btn-icon btn-sm btn-secondary-transparent rounded-pill" onclick="createGoogleCalendarEvent('{{ $booking->id }}')" title="Create Google Calendar Event">
-                                            <i class="ri-google-line"></i>
-                                        </button>
-                                    @endif
-                                </x-tables.actions>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="text-center py-4">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="ri-calendar-line fs-1 text-muted mb-2"></i>
-                                    <h6 class="fw-semibold mb-1">No Bookings Found</h6>
-                                    <p class="text-muted mb-0">There are no bookings matching your criteria.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
+                <x-tables.table 
+                    id="bookingsTable"
+                    :headers="['Sr.#', 'Trainer', 'Client', 'Date', 'Time', 'Status', 'Google Calendar', 'Created', 'Actions']"
+                    :bordered="true"
+                    width="100%" 
+                    cellspacing="0"
+                >
+                    <tbody>
+                        <!-- Data will be loaded via AJAX -->
+                    </tbody>
                 </x-tables.table>
-
-                <!-- Pagination -->
-                @if($bookings->hasPages())
-                    <div class="d-flex justify-content-between align-items-center mt-4">
-                        <div>
-                            <p class="text-muted mb-0">
-                                Showing {{ $bookings->firstItem() }} to {{ $bookings->lastItem() }} of {{ $bookings->total() }} results
-                            </p>
-                        </div>
-                        <div>
-                            {{ $bookings->appends(request()->query())->links() }}
-                        </div>
-                    </div>
-                @endif
             </x-tables.card>
         </div>
     </div>
@@ -301,31 +150,101 @@
 @endsection
 
 @section('scripts')
-
     <script>
-        $(document).ready(function() {
-            // Initialize DataTable
-            $('#bookingsTable').DataTable({
-                responsive: true,
-                ordering: false,
-                paging: false,
-                searching: false,
-                info: false
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof jQuery === 'undefined') {
+                console.error('jQuery is not loaded!');
+                return;
+            }
+            var $ = jQuery;
+            
+            $(document).ready(function() {
+                // Initialize DataTable
+                var table = $('#bookingsTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    ajax: {
+                        url: "{{ route('admin.bookings.index') }}",
+                        type: "GET",
+                        data: function(d) {
+                            d.status = $('#status').val();
+                            d.trainer_id = $('#trainer_id').val();
+                            d.client_id = $('#client_id').val();
+                            d.date_from = $('#date_from').val();
+                            d.date_to = $('#date_to').val();
+                        }
+                    },
+                    columns: [
+                        { data: 'id', name: 'id', orderable: false },
+                        { data: 'trainer', name: 'trainer' },
+                        { data: 'client', name: 'client' },
+                        { data: 'date', name: 'date' },
+                        { data: 'time', name: 'start_time' },
+                        { data: 'status', name: 'status' },
+                        { data: 'google_calendar', name: 'google_calendar', orderable: false, searchable: false },
+                        { data: 'created_at', name: 'created_at' },
+                        { data: 'actions', name: 'actions', orderable: false, searchable: false }
+                    ],
+                    order: [[3, 'desc'], [4, 'desc']], // Order by Date then Time
+                    pageLength: 25,
+                    language: {
+                        processing: '<div class="spinner-border text-primary" role="status"><span class="sr-only">Loading...</span></div>'
+                    }
+                });
             });
 
-            // Check all functionality
-            $('#checkAll').change(function() {
-                $('.booking-checkbox').prop('checked', $(this).prop('checked'));
-            });
+            window.exportBookings = function() {
+                var params = {
+                    status: $('#status').val(),
+                    trainer_id: $('#trainer_id').val(),
+                    client_id: $('#client_id').val(),
+                    date_from: $('#date_from').val(),
+                    date_to: $('#date_to').val()
+                };
+                var queryString = $.param(params);
+                window.location.href = "{{ route('admin.bookings.export') }}?" + queryString;
+            }
+        });
 
-            $('.booking-checkbox').change(function() {
-                if ($('.booking-checkbox:checked').length === $('.booking-checkbox').length) {
-                    $('#checkAll').prop('checked', true);
-                } else {
-                    $('#checkAll').prop('checked', false);
+        function updateStatus(id, status) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "You want to change the booking status to " + status + "?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: status === 'confirmed' ? '#28a745' : '#ffc107',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Yes, ' + status + ' it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '/admin/bookings/' + id, // Using update route
+                        type: 'PUT',
+                        data: {
+                            status: status,
+                            _token: $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            Swal.fire(
+                                'Updated!',
+                                'Booking status has been updated.',
+                                'success'
+                            );
+                            $('#bookingsTable').DataTable().ajax.reload();
+                            // Ideally reload stats here too
+                        },
+                        error: function(xhr) {
+                            Swal.fire(
+                                'Error!',
+                                'Failed to update booking status.',
+                                'error'
+                            );
+                        }
+                    });
                 }
             });
-        });
+        }
 
         function deleteBooking(id) {
             Swal.fire({
@@ -347,62 +266,25 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
-                        url: '/admin/bookings/google-calendar/' + id,
-                        type: 'POST',
-                        data: {
-                            _method: 'DELETE',
-                            _token: '{{ csrf_token() }}'
+                        url: '/admin/bookings/' + id,
+                        type: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                         },
                         success: function(response) {
-                            Swal.fire('Deleted!', 'Booking has been deleted.', 'success')
-                            .then(() => location.reload());
+                            Swal.fire(
+                                'Deleted!',
+                                'Booking has been deleted.',
+                                'success'
+                            );
+                            $('#bookingsTable').DataTable().ajax.reload();
                         },
                         error: function() {
-                            Swal.fire('Error!', 'Failed to delete booking.', 'error');
-                        }
-                    });
-                }
-            });
-        }
-
-        function bulkAction(status) {
-            const checkedBoxes = $('.booking-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                Swal.fire('Warning', 'Please select at least one booking.', 'warning');
-                return;
-            }
-
-            const bookingIds = [];
-            checkedBoxes.each(function() {
-                bookingIds.push($(this).val());
-            });
-
-            const actionText = status === 'confirmed' ? 'confirm' : 'cancel';
-            
-            Swal.fire({
-                title: 'Bulk Action',
-                text: `Are you sure you want to ${actionText} ${bookingIds.length} selected booking(s)?`,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonText: status === 'confirmed' ? 'Confirm Bookings' : 'Cancel Bookings',
-                confirmButtonColor: status === 'confirmed' ? '#28a745' : '#dc3545'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: "{{ route('admin.bookings.bulk-update') }}",
-                        type: 'POST',
-                        data: {
-                            _method: 'PATCH',
-                            _token: '{{ csrf_token() }}',
-                            booking_ids: JSON.stringify(bookingIds),
-                            status: status
-                        },
-                        success: function(response) {
-                            Swal.fire('Success!', 'Bookings updated successfully.', 'success')
-                            .then(() => location.reload());
-                        },
-                        error: function() {
-                            Swal.fire('Error!', 'Failed to update bookings.', 'error');
+                            Swal.fire(
+                                'Error!',
+                                'An error occurred while deleting the booking.',
+                                'error'
+                            );
                         }
                     });
                 }
@@ -418,7 +300,6 @@
                 confirmButtonText: 'Yes, sync it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Show loading state
                     Swal.fire({
                         title: 'Syncing...',
                         didOpen: () => {
@@ -436,8 +317,8 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire('Synced!', 'Booking synced to Google Calendar successfully!', 'success')
-                            .then(() => location.reload());
+                            Swal.fire('Synced!', 'Booking synced to Google Calendar successfully!', 'success');
+                            $('#bookingsTable').DataTable().ajax.reload();
                         } else {
                             Swal.fire('Error!', 'Error syncing to Google Calendar: ' + (data.message || 'Unknown error'), 'error');
                         }
@@ -459,7 +340,6 @@
                 confirmButtonText: 'Yes, create it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // Show loading state
                     Swal.fire({
                         title: 'Creating...',
                         didOpen: () => {
@@ -477,8 +357,8 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            Swal.fire('Created!', 'Google Calendar event created successfully!', 'success')
-                            .then(() => location.reload());
+                            Swal.fire('Created!', 'Google Calendar event created successfully!', 'success');
+                            $('#bookingsTable').DataTable().ajax.reload();
                         } else {
                             Swal.fire('Error!', 'Error creating Google Calendar event: ' + (data.message || 'Unknown error'), 'error');
                         }
@@ -490,6 +370,4 @@
                 }
             });
         }
-             
     </script>
-@endsection

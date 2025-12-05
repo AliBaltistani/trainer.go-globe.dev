@@ -112,7 +112,7 @@
                 <table class="table table-bordered" id="programsTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
-                            <th>ID</th>
+                            <th>Sr.#</th>
                             <th>Program Name</th>
                             <th>Trainer</th>
                             <th>Client</th>
@@ -157,7 +157,7 @@
                     type: "GET"
                 },
                 columns: [
-                    { data: 'id', name: 'id' },
+                    { data: 'id', name: 'id', orderable: false },
                     { data: 'name', name: 'name' },
                     { data: 'trainer', name: 'trainer' },
                     { data: 'client', name: 'client' },

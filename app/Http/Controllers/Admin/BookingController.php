@@ -10,12 +10,14 @@ use App\Models\BlockedTime;
 use App\Models\SessionCapacity;
 use App\Models\BookingSetting;
 use App\Services\AvailabilityService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Yajra\DataTables\Facades\DataTables;
 
 /**
  * Admin Booking Controller
@@ -34,36 +36,13 @@ class BookingController extends Controller
      * Display a listing of all bookings
      * 
      * @param Request $request
-     * @return View
+     * @return View|JsonResponse
      */
-    public function index(Request $request): View
+    public function index(Request $request)
     {
-        $query = Schedule::with(['trainer:id,name,email', 'client:id,name,email'])
-            ->orderBy('date', 'desc')
-            ->orderBy('start_time', 'desc');
-
-        // Apply filters
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
+        if ($request->ajax()) {
+            return $this->getDataTableData($request);
         }
-
-        if ($request->filled('trainer_id')) {
-            $query->where('trainer_id', $request->trainer_id);
-        }
-
-        if ($request->filled('client_id')) {
-            $query->where('client_id', $request->client_id);
-        }
-
-        if ($request->filled('date_from')) {
-            $query->where('date', '>=', $request->date_from);
-        }
-
-        if ($request->filled('date_to')) {
-            $query->where('date', '<=', $request->date_to);
-        }
-
-        $bookings = $query->paginate(20);
 
         // Get filter options
         $trainers = User::where('role', 'trainer')
@@ -86,13 +65,169 @@ class BookingController extends Controller
         ];
 
         return view('admin.bookings.index', compact(
-            'bookings',
             'trainers',
             'clients',
             'statuses',
             'stats'
         ));
     }
+
+    /**
+     * Get data for the DataTable
+     *
+     * @param Request $request
+     * @return JsonResponse
+     */
+    private function getDataTableData(Request $request): JsonResponse
+    {
+        try {
+            $draw = $request->get('draw');
+            $start = $request->get('start', 0);
+            $length = $request->get('length', 10);
+            $search = $request->get('search')['value'] ?? '';
+            $order = $request->get('order')[0] ?? null;
+            $columns = $request->get('columns') ?? [];
+
+            $query = Schedule::with(['trainer:id,name,email,profile_image', 'client:id,name,email,profile_image']);
+
+            // Apply filters
+            if ($request->filled('status')) {
+                $query->where('status', $request->status);
+            }
+
+            if ($request->filled('trainer_id')) {
+                $query->where('trainer_id', $request->trainer_id);
+            }
+
+            if ($request->filled('client_id')) {
+                $query->where('client_id', $request->client_id);
+            }
+
+            if ($request->filled('date_from')) {
+                $query->where('date', '>=', $request->date_from);
+            }
+
+            if ($request->filled('date_to')) {
+                $query->where('date', '<=', $request->date_to);
+            }
+
+            // Apply search
+            if (!empty($search)) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('id', 'like', "%{$search}%")
+                      ->orWhere('status', 'like', "%{$search}%")
+                      ->orWhereHas('trainer', function ($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                      })
+                      ->orWhereHas('client', function ($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            $totalRecords = Schedule::count();
+            $filteredRecords = $query->count();
+
+            // Apply sorting
+            if ($order && isset($columns[$order['column']])) {
+                $columnName = $columns[$order['column']]['name'];
+                $direction = $order['dir'];
+                
+                if (in_array($columnName, ['id', 'date', 'status', 'created_at'])) {
+                    $query->orderBy($columnName, $direction);
+                } elseif ($columnName === 'start_time') { // Map 'time' to start_time
+                     $query->orderBy('start_time', $direction);
+                }
+            } else {
+                $query->orderBy('date', 'desc')->orderBy('start_time', 'desc');
+            }
+
+            $bookings = $query->skip($start)->take($length)->get();
+
+            $data = $bookings->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'trainer' => $this->formatUserColumn($booking->trainer),
+                    'client' => $this->formatUserColumn($booking->client),
+                    'date' => Carbon::parse($booking->date)->format('M d, Y'),
+                    'time' => Carbon::parse($booking->start_time)->format('H:i') . ' - ' . Carbon::parse($booking->end_time)->format('H:i'),
+                    'status' => $this->getStatusBadge($booking->status),
+                    'google_calendar' => $booking->google_event_id ? '<span class="badge bg-success"><i class="fab fa-google me-1"></i>Synced</span>' : '<span class="badge bg-light text-dark">Not Synced</span>',
+                    'created_at' => $booking->created_at->format('M d, Y'),
+                    'actions' => $this->getActionButtons($booking)
+                ];
+            });
+
+            return response()->json([
+                'draw' => intval($draw),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in BookingController@getDataTableData: ' . $e->getMessage());
+            return response()->json(['error' => 'Failed to load bookings data'], 500);
+        }
+    }
+
+    /**
+     * Format user column (trainer/client)
+     * 
+     * @param $user
+     * @return string
+     */
+    private function formatUserColumn($user)
+    {
+        if (!$user) {
+            return '<span class="text-danger">Deleted User</span>';
+        }
+
+        $initial = strtoupper(substr($user->name, 0, 1));
+        $avatar = $user->profile_image 
+            ? '<img src="' . asset('storage/' . $user->profile_image) . '" alt="avatar" class="avatar-img rounded-circle">' 
+            : '<div class="avatar-img rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold" style="width: 32px; height: 32px;">' . $initial . '</div>';
+
+        return '<div class="d-flex align-items-center">
+                    <div class="avatar avatar-sm me-2">' . $avatar . '</div>
+                    <div>
+                        <span class="fw-semibold">' . e($user->name) . '</span>
+                        <br><small class="text-muted">' . e($user->email) . '</small>
+                    </div>
+                </div>';
+    }
+
+    /**
+     * Get status badge HTML
+     * 
+     * @param string $status
+     * @return string
+     */
+    private function getStatusBadge($status)
+    {
+        $badges = [
+            'pending' => '<span class="badge bg-warning">Pending</span>',
+            'confirmed' => '<span class="badge bg-success">Confirmed</span>',
+            'cancelled' => '<span class="badge bg-danger">Cancelled</span>',
+            'completed' => '<span class="badge bg-info">Completed</span>',
+        ];
+
+        return $badges[$status] ?? '<span class="badge bg-secondary">' . ucfirst($status) . '</span>';
+    }
+
+    /**
+     * Get action buttons HTML
+     * 
+     * @param Schedule $booking
+     * @return string
+     */
+    private function getActionButtons(Schedule $booking)
+    {
+        return view('admin.bookings.partials.actions', compact('booking'))->render();
+    }
+
 
     /**
      * Show the form for creating a new booking

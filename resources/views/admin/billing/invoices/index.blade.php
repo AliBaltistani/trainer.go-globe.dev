@@ -57,70 +57,59 @@
 
     <x-tables.card title="All Invoices">
         <x-slot:tools>
-            <form method="GET" class="d-flex">
+            <div class="d-flex">
                 <select name="status" class="form-select form-select-sm me-2" style="max-width:180px">
                     <option value="">All Status</option>
                     @foreach(['draft','pending','paid','failed','cancelled'] as $st)
                         <option value="{{ $st }}" {{ request('status')===$st?'selected':'' }}>{{ ucfirst($st) }}</option>
                     @endforeach
                 </select>
-                <button class="btn btn-sm btn-primary">Filter</button>
-            </form>
+            </div>
         </x-slot:tools>
 
         <x-tables.table 
             id="invoicesTable" 
-            :headers="['ID', 'Trainer', 'Client', 'Total', 'Currency', 'Due Date', 'Status', 'Created']"
+            :headers="['Sr.#', 'Trainer', 'Client', 'Total', 'Currency', 'Due Date', 'Status', 'Created', 'Actions']"
         >
-            @forelse($invoices as $invoice)
-                <tr>
-                    <td>{{ $invoice->id }}</td>
-                    <td class="fw-semibold">{{ $invoice->trainer->name ?? '#' }}</td>
-                    <td class="fw-semibold">{{ $invoice->client->name ?? '#' }}</td>
-                    <td>{{ number_format($invoice->total_amount,2) }}</td>
-                    <td>{{ strtoupper($invoice->currency) }}</td>
-                    <td>{{ $invoice->due_date ? $invoice->due_date->format('M d, Y') : '—' }}</td>
-                    <td>
-                        @if($invoice->status==='pending')
-                            <span class="badge bg-warning-transparent">Pending</span>
-                        @elseif($invoice->status==='paid')
-                            <span class="badge bg-success-transparent">Paid</span>
-                        @elseif($invoice->status==='failed')
-                            <span class="badge bg-danger-transparent">Failed</span>
-                        @elseif($invoice->status==='cancelled')
-                            <span class="badge bg-secondary-transparent">Cancelled</span>
-                        @else
-                            <span class="badge bg-info-transparent">Draft</span>
-                        @endif
-                    </td>
-                    <td>{{ $invoice->created_at->format('M d, Y') }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="8" class="text-center py-4">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="ri-file-text-line fs-1 text-muted mb-2"></i>
-                            <h6 class="fw-semibold mb-1">No Invoices Found</h6>
-                            <p class="text-muted mb-0">No records match your filter.</p>
-                        </div>
-                    </td>
-                </tr>
-            @endforelse
         </x-tables.table>
-
-        @if($invoices->hasPages())
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <p class="text-muted mb-0">Showing {{ $invoices->firstItem() }} to {{ $invoices->lastItem() }} of {{ $invoices->total() }} results</p>
-                {{ $invoices->links() }}
-            </div>
-        @endif
     </x-tables.card>
 @endsection
 
 @section('scripts')
     <script>
-        $(function(){
-            $('#invoicesTable').DataTable({responsive:true, ordering:false, paging:false, searching:false, info:false});
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof jQuery === 'undefined') return;
+            var $ = jQuery;
+
+            $(function(){
+                var table = $('#invoicesTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    responsive: true,
+                    ajax: {
+                        url: "{{ route('admin.invoices.index') }}",
+                        data: function (d) {
+                            d.status = $('select[name="status"]').val();
+                        }
+                    },
+                    columns: [
+                        { data: 'id', name: 'id', orderable: false },
+                        { data: 'trainer', name: 'trainer' },
+                        { data: 'client', name: 'client' },
+                        { data: 'total', name: 'total_amount' },
+                        { data: 'currency', name: 'currency' },
+                        { data: 'due_date', name: 'due_date' },
+                        { data: 'status', name: 'status' },
+                        { data: 'created_at', name: 'created_at' },
+                        { data: 'actions', name: 'actions', orderable: false, searchable: false }
+                    ],
+                    order: [[0, 'desc']] // Default sort by ID desc
+                });
+
+                $('select[name="status"]').change(function(){
+                    table.draw();
+                });
+            });
         });
     </script>
 @endsection

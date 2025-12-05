@@ -27,7 +27,7 @@
     @endif
 
     <x-tables.table 
-        :headers="['ID', 'name', 'status', 'Created At', 'Updated At', 'Action']"
+        :headers="['Sr.#', 'name', 'status', 'Created At', 'Updated At', 'Action']"
         :striped="true"
     >
         @foreach ( $goals  as  $goal )

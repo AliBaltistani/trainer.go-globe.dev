@@ -102,7 +102,7 @@
         <x-slot:thead>
             <tr>
                 <th><input type="checkbox" id="selectAll"></th>
-                <th>ID</th>
+                <th>Sr.#</th>
                 <th>User</th>
                 <th>Role</th>
                 <th>Country</th>
@@ -169,7 +169,7 @@ $(document).ready(function() {
                     return '<input type="checkbox" class="row-checkbox" value="' + data + '">';
                 }
             },
-            { data: 'id', name: 'id' },
+            { data: 'id', name: 'id', orderable: false },
             { 
                 data: 'user', 
                 name: 'user.name',

@@ -23,7 +23,8 @@ $(document).ready(function() {
             { 
                 data: 'id', 
                 name: 'id', 
-                visible: false,
+                visible: true,
+                orderable: false,
                 searchable: false
             },
             { 
@@ -589,7 +590,7 @@ function showAlert(type, message) {
 
             <x-tables.table 
                 id="usersTable"
-                :headers="['ID', 'Profile', 'Email', 'Phone', 'Role', 'Status', 'Created At', 'Actions']"
+                :headers="['Sr.#', 'Profile', 'Email', 'Phone', 'Role', 'Status', 'Created At', 'Actions']"
             />
         </x-tables.card>
     </div>

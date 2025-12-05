@@ -128,7 +128,7 @@
 
                 <x-tables.table 
                     id="trainers-scheduling-table"
-                    :headers="['ID', 'Trainer', 'Email', 'Weekly Availability', 'Blocked Times', 'Session Capacity', 'Booking Approval', 'Setup Status', 'Last Updated', 'Actions']"
+                    :headers="['Sr.#', 'Trainer', 'Email', 'Weekly Availability', 'Blocked Times', 'Session Capacity', 'Booking Approval', 'Setup Status', 'Last Updated', 'Actions']"
                     :striped="true"
                     :bordered="true"
                 >

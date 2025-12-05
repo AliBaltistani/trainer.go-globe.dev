@@ -87,7 +87,7 @@
             
             <x-tables.table 
                 id="goalsTable"
-                :headers="['ID', 'Goal Name', 'User', 'Status', 'Created Date', 'Updated Date', 'Actions']"
+                :headers="['Sr.#', 'Goal Name', 'User', 'Status', 'Created Date', 'Updated Date', 'Actions']"
                 :bordered="true"
             >
                 <tbody>
@@ -127,7 +127,7 @@ $(document).ready(function() {
                 }
             },
             columns: [
-                { data: 'id', name: 'id', width: '5%' },
+                { data: 'id', name: 'id', width: '5%', orderable: false },
                 { 
                     data: 'name', 
                     name: 'name',

@@ -63,7 +63,7 @@
                         View All
                     </a>
                 </x-slot:tools>
-                <x-tables.table :headers="['ID', 'Type', 'Description', 'Amount', 'Status', 'Date']" :hover="true">
+                <x-tables.table :headers="['Sr.#', 'Type', 'Description', 'Amount', 'Status', 'Date']" :hover="true">
                     @forelse($recentActivity as $activity)
                         <tr>
                             <td>

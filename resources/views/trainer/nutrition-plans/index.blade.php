@@ -101,7 +101,7 @@
                     <table id="nutritionPlansTable" class="table table-bordered text-nowrap w-100">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>Sr.#</th>
                                 <th>Plan Name</th>
                                 <th>Client</th>
                                 <th>Goal Type</th>
@@ -166,7 +166,7 @@ $(document).ready(function() {
             }
         },
         columns: [
-            { data: 'id', name: 'id', width: '5%' },
+            { data: 'id', name: 'id', width: '5%', orderable: false },
             { 
                 data: 'plan_name', 
                 name: 'plan_name',

@@ -89,7 +89,7 @@
 
             <x-tables.table 
                 id="nutritionPlansTable"
-                :headers="['ID', 'Plan Name', 'Trainer', 'Client', 'Goal Type', 'Meals', 'Duration', 'Status', 'Featured', 'Restrictions', 'Created', 'Actions']"
+                :headers="['Sr.#', 'Plan Name', 'Trainer', 'Client', 'Goal Type', 'Meals', 'Duration', 'Status', 'Featured', 'Restrictions', 'Created', 'Actions']"
                 :bordered="true"
             >
                 <tbody>
@@ -131,7 +131,7 @@ $(document).ready(function() {
             }
         },
         columns: [
-            { data: 'id', name: 'id', width: '5%' },
+            { data: 'id', name: 'id', width: '5%', orderable: false },
             { 
                 data: 'plan_name', 
                 name: 'plan_name',

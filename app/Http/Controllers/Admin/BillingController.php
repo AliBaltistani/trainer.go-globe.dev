@@ -11,6 +11,7 @@ use App\Models\TrainerBankAccount;
 use App\Services\Payments\StripePaymentService;
 use App\Services\Payments\PayPalPaymentService;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -18,11 +19,9 @@ class BillingController extends Controller
 {
     public function invoices(Request $request)
     {
-        $query = Invoice::with(['client', 'trainer']);
-        if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
+        if ($request->ajax()) {
+            return $this->getInvoicesDataTable($request);
         }
-        $invoices = $query->latest()->paginate(20)->appends($request->query());
 
         $stats = [
             'total_invoices' => Invoice::count(),
@@ -31,16 +30,20 @@ class BillingController extends Controller
             'pending_count' => Invoice::where('status', 'pending')->count(),
         ];
 
-        return view('admin.billing.invoices.index', compact('invoices', 'stats'));
+        return view('admin.billing.invoices.index', compact('stats'));
+    }
+
+    public function showInvoice($id)
+    {
+        $invoice = Invoice::with(['client', 'trainer', 'items', 'transactions'])->findOrFail($id);
+        return view('admin.billing.invoices.show', compact('invoice'));
     }
 
     public function payouts(Request $request)
     {
-        $query = Payout::with(['trainer']);
-        if ($request->filled('status')) {
-            $query->where('payout_status', $request->string('status'));
+        if ($request->ajax()) {
+            return $this->getPayoutsDataTable($request);
         }
-        $payouts = $query->latest()->paginate(20)->appends($request->query());
 
         $stats = [
             'total_payouts' => Payout::count(),
@@ -49,24 +52,14 @@ class BillingController extends Controller
             'pending_count' => Payout::where('payout_status', 'processing')->count(),
         ];
 
-        return view('admin.billing.payouts.index', compact('payouts', 'stats'));
+        return view('admin.billing.payouts.index', compact('stats'));
     }
 
     public function transactions(Request $request)
     {
-        // Merge Client Payments (Transactions) and Trainer Payouts (Payouts) for a unified view
-        // This is a bit complex for pagination, so for now we might just show Client Payments (Transactions) 
-        // OR we can use a Union if schemas align, or just paginate Transactions table if that's the main focus.
-        // The user asked for "transactions", usually implies incoming money (Transactions table).
-        // Let's stick to the Transaction model for the full list, as Payouts has its own list.
-        
-        $query = Transaction::with(['invoice.client', 'invoice.trainer', 'gateway']);
-        
-        if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
+        if ($request->ajax()) {
+            return $this->getTransactionsDataTable($request);
         }
-        
-        $transactions = $query->latest()->paginate(20)->appends($request->query());
         
         $stats = [
             'total_transactions' => Transaction::count(),
@@ -75,7 +68,7 @@ class BillingController extends Controller
             'failed_count' => Transaction::where('status', 'failed')->count(),
         ];
         
-        return view('admin.billing.transactions.index', compact('transactions', 'stats'));
+        return view('admin.billing.transactions.index', compact('stats'));
     }
 
     public function exportPayouts()
@@ -260,6 +253,289 @@ class BillingController extends Controller
         } catch (\Exception $e) {
             Log::error('Refund Failed: ' . $e->getMessage());
             return back()->with('error', 'Refund failed: ' . $e->getMessage());
+        }
+    }
+
+    private function getInvoicesDataTable(Request $request): JsonResponse
+    {
+        try {
+            $draw = $request->get('draw');
+            $start = $request->get('start', 0);
+            $length = $request->get('length', 10);
+            $search = $request->get('search')['value'] ?? '';
+            $order = $request->get('order')[0] ?? null;
+            $columns = $request->get('columns') ?? [];
+
+            $query = Invoice::with(['client', 'trainer']);
+
+            // Status Filter
+            if ($request->filled('status')) {
+                $query->where('status', $request->input('status'));
+            }
+
+            // Search
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->where('id', 'like', "%{$search}%")
+                      ->orWhereHas('trainer', function($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      })
+                      ->orWhereHas('client', function($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            $totalRecords = Invoice::count();
+            $filteredRecords = $query->count();
+
+            // Sorting
+            if ($order && isset($columns[$order['column']])) {
+                $columnName = $columns[$order['column']]['name'];
+                $direction = $order['dir'];
+                
+                if (in_array($columnName, ['id', 'total_amount', 'currency', 'due_date', 'status', 'created_at'])) {
+                    $query->orderBy($columnName, $direction);
+                }
+            } else {
+                $query->latest();
+            }
+
+            $invoices = $query->skip($start)->take($length)->get();
+
+            $data = $invoices->map(function ($invoice) {
+                $statusBadge = match($invoice->status) {
+                    'pending' => '<span class="badge bg-warning-transparent">Pending</span>',
+                    'paid' => '<span class="badge bg-success-transparent">Paid</span>',
+                    'failed' => '<span class="badge bg-danger-transparent">Failed</span>',
+                    'cancelled' => '<span class="badge bg-secondary-transparent">Cancelled</span>',
+                    default => '<span class="badge bg-info-transparent">Draft</span>'
+                };
+
+                return [
+                    'id' => $invoice->id,
+                    'trainer' => '<span class="fw-semibold">' . e($invoice->trainer->name ?? '#') . '</span>',
+                    'client' => '<span class="fw-semibold">' . e($invoice->client->name ?? '#') . '</span>',
+                    'total' => number_format($invoice->total_amount, 2),
+                    'currency' => strtoupper($invoice->currency),
+                    'due_date' => $invoice->due_date ? $invoice->due_date->format('M d, Y') : '—',
+                    'status' => $statusBadge,
+                    'created_at' => $invoice->created_at->format('M d, Y'),
+                    'actions' => '<a href="' . route('admin.invoices.show', $invoice->id) . '" class="btn btn-sm btn-info-transparent"><i class="ri-eye-line"></i></a>' // Assuming show route exists or we add one
+                ];
+            });
+
+            return response()->json([
+                'draw' => intval($draw),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in BillingController@getInvoicesDataTable: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    private function getPayoutsDataTable(Request $request): JsonResponse
+    {
+        try {
+            $draw = $request->get('draw');
+            $start = $request->get('start', 0);
+            $length = $request->get('length', 10);
+            $search = $request->get('search')['value'] ?? '';
+            $order = $request->get('order')[0] ?? null;
+            $columns = $request->get('columns') ?? [];
+
+            $query = Payout::with(['trainer']);
+
+            if ($request->filled('status')) {
+                $query->where('payout_status', $request->input('status'));
+            }
+
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->where('id', 'like', "%{$search}%")
+                      ->orWhereHas('trainer', function($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            $totalRecords = Payout::count();
+            $filteredRecords = $query->count();
+
+            if ($order && isset($columns[$order['column']])) {
+                $columnName = $columns[$order['column']]['name'];
+                $direction = $order['dir'];
+                if (in_array($columnName, ['id', 'amount', 'currency', 'payout_status', 'created_at'])) {
+                    $query->orderBy($columnName, $direction);
+                }
+            } else {
+                $query->latest();
+            }
+
+            $payouts = $query->skip($start)->take($length)->get();
+
+            $data = $payouts->map(function ($payout) {
+                $statusBadge = match($payout->payout_status) {
+                    'completed' => '<span class="badge bg-success-transparent">Completed</span>',
+                    'processing' => '<span class="badge bg-warning-transparent">Processing</span>',
+                    'failed' => '<span class="badge bg-danger-transparent">Failed</span>',
+                    default => '<span class="badge bg-secondary-transparent">' . ucfirst($payout->payout_status) . '</span>'
+                };
+
+                $actions = '';
+                if ($payout->payout_status !== 'completed') {
+                    $actions = '<button type="button" class="btn btn-sm btn-primary-transparent" onclick="confirmPayout(\'' . $payout->id . '\')">
+                                    <i class="ri-bank-card-line me-1"></i> Process
+                                </button>
+                                <form id="payout-form-' . $payout->id . '" action="' . route('admin.payouts.process', $payout->id) . '" method="POST" style="display: none;">' . 
+                               csrf_field() . 
+                               '</form>';
+                } else {
+                    $actions = '<span class="text-success"><i class="ri-check-double-line"></i> Paid</span>';
+                }
+
+                return [
+                    'id' => $payout->id,
+                    'trainer' => '<span class="fw-semibold">' . e($payout->trainer->name ?? 'N/A') . '</span>',
+                    'amount' => number_format($payout->amount, 2),
+                    'currency' => strtoupper($payout->currency),
+                    'fee' => number_format($payout->fee_amount, 2),
+                    'status' => $statusBadge,
+                    'scheduled' => $payout->scheduled_at ? $payout->scheduled_at->format('M d, Y H:i') : '—',
+                    'created_at' => $payout->created_at->format('M d, Y'),
+                    'actions' => $actions
+                ];
+            });
+
+            return response()->json([
+                'draw' => intval($draw),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in BillingController@getPayoutsDataTable: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    private function getTransactionsDataTable(Request $request): JsonResponse
+    {
+        try {
+            $draw = $request->get('draw');
+            $start = $request->get('start', 0);
+            $length = $request->get('length', 10);
+            $search = $request->get('search')['value'] ?? '';
+            $order = $request->get('order')[0] ?? null;
+            $columns = $request->get('columns') ?? [];
+
+            $query = Transaction::with(['invoice.client', 'invoice.trainer', 'gateway']);
+
+            if ($request->filled('status')) {
+                $query->where('status', $request->input('status'));
+            }
+
+            if (!empty($search)) {
+                $query->where(function($q) use ($search) {
+                    $q->where('transaction_id', 'like', "%{$search}%")
+                      ->orWhereHas('invoice.client', function($q) use ($search) {
+                          $q->where('name', 'like', "%{$search}%");
+                      });
+                });
+            }
+
+            $totalRecords = Transaction::count();
+            $filteredRecords = $query->count();
+
+            if ($order && isset($columns[$order['column']])) {
+                $columnName = $columns[$order['column']]['name'];
+                $direction = $order['dir'];
+                if (in_array($columnName, ['id', 'transaction_id', 'amount', 'currency', 'status', 'created_at'])) {
+                    $query->orderBy($columnName, $direction);
+                }
+            } else {
+                $query->latest();
+            }
+
+            $transactions = $query->skip($start)->take($length)->get();
+
+            $data = $transactions->map(function ($transaction) {
+                $statusBadge = match($transaction->status) {
+                    'success' => '<span class="badge bg-success-transparent">Success</span>',
+                    'failed' => '<span class="badge bg-danger-transparent">Failed</span>',
+                    'refunded' => '<span class="badge bg-info-transparent">Refunded</span>',
+                    default => '<span class="badge bg-secondary-transparent">' . ucfirst($transaction->status) . '</span>'
+                };
+
+                // Gateway HTML
+                $gatewayHtml = match(strtolower($transaction->gateway->type ?? '')) {
+                    'stripe' => '<div class="d-flex align-items-center"><i class="ri-visa-line text-primary fs-18 me-1"></i> Stripe</div>',
+                    'paypal' => '<div class="d-flex align-items-center"><i class="ri-paypal-line text-info fs-18 me-1"></i> PayPal</div>',
+                    default => e($transaction->gateway->name ?? 'N/A')
+                };
+
+                // User HTML
+                $user = $transaction->invoice->client ?? $transaction->invoice->trainer ?? null;
+                $userHtml = '';
+                if ($user) {
+                    $avatar = $user->profile_image 
+                        ? '<img src="' . asset('storage/' . $user->profile_image) . '" alt="img" class="rounded-circle">'
+                        : '<span class="avatar-initial rounded-circle bg-primary-transparent">' . substr($user->name, 0, 1) . '</span>';
+                    
+                    $userHtml = '<div class="d-flex align-items-center">
+                                    <div class="avatar avatar-sm me-2">' . $avatar . '</div>
+                                    <div>
+                                        <div class="fw-semibold">' . e($user->name) . '</div>
+                                        <span class="text-muted fs-12">' . ucfirst($user->role) . '</span>
+                                    </div>
+                                </div>';
+                } else {
+                    $userHtml = '<span class="text-muted">Unknown User</span>';
+                }
+
+                // Actions
+                $actions = '<div class="hstack gap-2 fs-15">
+                                <a href="javascript:void(0);" class="btn btn-sm btn-icon btn-primary-light rounded-pill" data-bs-toggle="tooltip" title="View Details">
+                                    <i class="ri-eye-line"></i>
+                                </a>';
+                
+                if ($transaction->status === 'success') {
+                    $actions .= '<button type="button" class="btn btn-sm btn-icon btn-danger-light rounded-pill ms-1" data-bs-toggle="tooltip" title="Refund" onclick="confirmRefund(\'' . $transaction->id . '\')">
+                                    <i class="ri-refund-line"></i>
+                                </button>
+                                <form id="refund-form-' . $transaction->id . '" action="' . route('admin.transactions.refund', $transaction->id) . '" method="POST" style="display: none;">
+                                    ' . csrf_field() . '
+                                </form>';
+                }
+                $actions .= '</div>';
+
+                return [
+                    'id' => '#' . ($transaction->transaction_id ?? $transaction->id),
+                    'user' => $userHtml,
+                    'description' => 'Payment for Invoice #' . ($transaction->invoice->invoice_number ?? 'N/A'),
+                    'amount' => '<span class="fw-semibold text-success">' . $transaction->currency . ' ' . number_format($transaction->amount, 2) . '</span>',
+                    'gateway' => $gatewayHtml,
+                    'status' => $statusBadge,
+                    'created_at' => $transaction->created_at->format('d M Y, h:i A'),
+                    'actions' => $actions
+                ];
+            });
+
+            return response()->json([
+                'draw' => intval($draw),
+                'recordsTotal' => $totalRecords,
+                'recordsFiltered' => $filteredRecords,
+                'data' => $data
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error in BillingController@getTransactionsDataTable: ' . $e->getMessage());
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 }

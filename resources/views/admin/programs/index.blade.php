@@ -60,7 +60,7 @@
     <x-tables.card title="Programs List">
         <x-tables.table 
             id="programsTable"
-            :headers="['ID', 'Program Name', 'Trainer', 'Client', 'Duration', 'Weeks', 'Status', 'Created', 'Actions']"
+            :headers="['Sr.#', 'Program Name', 'Trainer', 'Client', 'Duration', 'Weeks', 'Status', 'Created', 'Actions']"
             :bordered="true"
             width="100%" 
             cellspacing="0"
@@ -86,7 +86,7 @@
                     type: "GET"
                 },
                 columns: [
-                    { data: 'id', name: 'id' },
+                    { data: 'id', name: 'id', orderable: false },
                     { data: 'name', name: 'name' },
                     { data: 'trainer', name: 'trainer' },
                     { data: 'client', name: 'client' },
