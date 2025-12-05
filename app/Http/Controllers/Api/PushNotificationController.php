@@ -7,6 +7,7 @@ use App\Models\DeviceToken;
 use App\Models\NotificationLog;
 use App\Models\User;
 use App\Jobs\SendNotificationJob;
+use App\Models\TrainerSubscription;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
@@ -90,8 +91,11 @@ class PushNotificationController extends Controller
      */
     public function sendToUser(Request $request)
     {
-        // Ideally only Admin or authorized users can call this. 
-        // Assuming the route is protected by appropriate middleware/policy.
+        $currentUser = Auth::user();
+        
+        if (!$currentUser) {
+             return response()->json(['message' => 'Unauthenticated'], 401);
+        }
 
         $validator = Validator::make($request->all(), [
             'user_id' => 'required|exists:users,id',
@@ -104,7 +108,27 @@ class PushNotificationController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $targetUser = User::find($request->user_id);
+        $targetUserId = $request->user_id;
+
+        // Access Control
+        if ($currentUser->role === 'admin') {
+            // Admin can send to anyone
+        } elseif ($currentUser->role === 'trainer') {
+            // Trainer can only send to their subscribed clients
+            $isSubscribed = TrainerSubscription::where('trainer_id', $currentUser->id)
+                ->where('client_id', $targetUserId)
+                ->where('status', 'active')
+                ->exists();
+
+            if (!$isSubscribed) {
+                 return response()->json(['message' => 'Access denied. You can only send notifications to your active clients.'], 403);
+            }
+        } else {
+             // Clients or others cannot use this endpoint directly
+             return response()->json(['message' => 'Access denied.'], 403);
+        }
+
+        $targetUser = User::find($targetUserId);
         $tokens = $targetUser->deviceTokens()->pluck('device_token')->toArray();
 
         if (empty($tokens)) {
@@ -144,7 +168,11 @@ class PushNotificationController extends Controller
      */
     public function broadcast(Request $request)
     {
-        // Only Admin should call this.
+        $currentUser = Auth::user();
+
+        if (!$currentUser || $currentUser->role !== 'admin') {
+             return response()->json(['message' => 'Access denied. Only Admins can broadcast.'], 403);
+        }
 
         $validator = Validator::make($request->all(), [
             'title' => 'required|string',

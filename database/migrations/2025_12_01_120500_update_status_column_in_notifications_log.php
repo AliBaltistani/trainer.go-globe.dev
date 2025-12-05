@@ -13,7 +13,9 @@ return new class extends Migration
     public function up(): void
     {
         // Change status column to string to accommodate 'read', 'unread', etc.
-        DB::statement("ALTER TABLE notifications_log MODIFY COLUMN status VARCHAR(50) DEFAULT 'pending'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE notifications_log MODIFY COLUMN status VARCHAR(50) DEFAULT 'pending'");
+        }
     }
 
     /**
@@ -22,6 +24,8 @@ return new class extends Migration
     public function down(): void
     {
         // Revert to enum
-        DB::statement("ALTER TABLE notifications_log MODIFY COLUMN status ENUM('pending', 'sent', 'failed') DEFAULT 'pending'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE notifications_log MODIFY COLUMN status ENUM('pending', 'sent', 'failed') DEFAULT 'pending'");
+        }
     }
 };

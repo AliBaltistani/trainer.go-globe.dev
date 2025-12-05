@@ -564,6 +564,9 @@ Route::middleware('auth')->group(function () {
      * Trainer dashboard and profile management
      */
     Route::middleware('trainer')->prefix('trainer')->group(function () {
+        // Client Management
+        Route::resource('clients', \App\Http\Controllers\Trainer\ClientController::class, ['names' => 'trainer.clients']);
+
         // Trainer Dashboard
         Route::get('/dashboard', [TrainerDashboardController::class, 'index'])->name('trainer.dashboard');
         Route::get('/certifications', [TrainerDashboardController::class, 'certifications'])->name('trainer.certifications');

@@ -269,6 +269,20 @@ class User extends Authenticatable
             ->where('status', 'active')
             ->exists();
     }
+
+    /**
+     * Check if the trainer has an active subscription with the client.
+     * 
+     * @param int $clientId
+     * @return bool
+     */
+    public function hasActiveClient(int $clientId): bool
+    {
+        return $this->subscriptionsAsTrainer()
+            ->where('client_id', $clientId)
+            ->where('status', 'active')
+            ->exists();
+    }
     
     /**
      * Get all schedules for the user (trainer or client).
@@ -559,5 +573,65 @@ class User extends Authenticatable
     public function getPhoneAttribute($value): ?string
     {
         return $value;
+    }
+
+    /**
+     * Get the health profile for the user.
+     * 
+     * @return HasOne
+     */
+    public function healthProfile(): HasOne
+    {
+        return $this->hasOne(UserHealthProfile::class);
+    }
+
+    /**
+     * Get the weight logs for the user.
+     * 
+     * @return HasMany
+     */
+    public function weightLogs(): HasMany
+    {
+        return $this->hasMany(ClientWeightLog::class);
+    }
+
+    /**
+     * Get the activity logs for the user.
+     * 
+     * @return HasMany
+     */
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ClientActivityLog::class);
+    }
+
+    /**
+     * Get notes written about this client.
+     * 
+     * @return HasMany
+     */
+    public function clientNotes(): HasMany
+    {
+        return $this->hasMany(TrainerClientNote::class, 'client_id');
+    }
+
+    /**
+     * Get notes written by this trainer.
+     * 
+     * @return HasMany
+     */
+    public function trainerNotes(): HasMany
+    {
+        return $this->hasMany(TrainerClientNote::class, 'trainer_id');
+    }
+
+    /**
+     * Get progress records for this client.
+     * 
+     * @return HasMany
+     */
+    public function clientProgress(): HasMany
+    {
+        return $this->hasMany(ClientProgress::class, 'client_id');
     }
 }

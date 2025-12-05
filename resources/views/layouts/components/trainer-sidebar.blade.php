@@ -69,10 +69,15 @@
 								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M225.86,110.61l-168,95.88A16,16,0,0,1,32,192V64a16,16,0,0,1,25.86-12.61l168,95.88A16,16,0,0,1,225.86,110.61Z" opacity="0.2"/><path d="M225.86,110.61l-168,95.88A16,16,0,0,1,32,192V64a16,16,0,0,1,25.86-12.61l168,95.88A16,16,0,0,1,225.86,110.61Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
 								Client Reviews</a>
 						</li>
-						<li class="slide {{ request()->is('trainer/subscriptions*') ? 'active' : '' }}">
+						<!-- <li class="slide {{ request()->is('trainer/subscriptions*') ? 'active' : '' }}">
 							<a href="{{route('trainer.subscriptions.index')}}" class="side-menu__item">
 								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M225.86,110.61l-168,95.88A16,16,0,0,1,32,192V64a16,16,0,0,1,25.86-12.61l168,95.88A16,16,0,0,1,225.86,110.61Z" opacity="0.2"/><path d="M225.86,110.61l-168,95.88A16,16,0,0,1,32,192V64a16,16,0,0,1,25.86-12.61l168,95.88A16,16,0,0,1,225.86,110.61Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
 								Subscribed Clients</a>
+						</li> -->
+						<li class="slide {{ request()->is('trainer/clients*') ? 'active' : '' }}">
+							<a href="{{route('trainer.clients.index')}}" class="side-menu__item">
+								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M225.86,110.61l-168,95.88A16,16,0,0,1,32,192V64a16,16,0,0,1,25.86-12.61l168,95.88A16,16,0,0,1,225.86,110.61Z" opacity="0.2"/><path d="M225.86,110.61l-168,95.88A16,16,0,0,1,32,192V64a16,16,0,0,1,25.86-12.61l168,95.88A16,16,0,0,1,225.86,110.61Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+								my Clients</a>
 						</li>
 					</ul>
 				</li>

@@ -12,11 +12,19 @@ class Goal extends Model
         'name',
         'status',
         'user_id',
+        'target_value',
+        'current_value',
+        'metric_unit',
+        'deadline',
+        'achieved_at',
     ];
 
-    // protected $casts = [
-    //     'status' => 'boolean',
-    // ];
+    protected $casts = [
+        'target_value' => 'decimal:2',
+        'current_value' => 'decimal:2',
+        'deadline' => 'date',
+        'achieved_at' => 'datetime',
+    ];
 
     protected $attributes = [
         'status' => 1, // Default to active

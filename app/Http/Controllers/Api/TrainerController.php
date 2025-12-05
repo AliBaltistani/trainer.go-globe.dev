@@ -15,6 +15,8 @@ use App\Models\TestimonialLikesDislike;
 use App\Models\Availability;
 use App\Models\BlockedTime;
 use App\Models\Schedule;
+use App\Mail\ClientInvitation;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -165,10 +167,20 @@ class TrainerController extends Controller
             $search = trim((string) $request->get('search', ''));
             $perPage = (int) $request->get('per_page', 20);
             $perPage = min(max($perPage, 1), 100);
+            $updatedAfter = $request->get('updated_after');
 
             $subsQuery = TrainerSubscription::where('trainer_id', $trainer->id)
                 ->where('status', 'active')
                 ->with(['client:id,name,email,phone,profile_image']);
+
+            if ($updatedAfter) {
+                $subsQuery->where(function($q) use ($updatedAfter) {
+                    $q->where('updated_at', '>', $updatedAfter)
+                      ->orWhereHas('client', function($cq) use ($updatedAfter) {
+                          $cq->where('updated_at', '>', $updatedAfter);
+                      });
+                });
+            }
 
             if ($search !== '') {
                 $subsQuery->whereHas('client', function ($q) use ($search) {
@@ -1436,14 +1448,15 @@ class TrainerController extends Controller
                 ], 403);
             }
 
-            // Validate request data based on the form fields from the image
+            // Validate request data
             $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'email' => 'required|email|unique:users,email|max:255',
                 'phone' => 'required|string|max:20',
-                'fitness_goals' => 'nullable|string|max:1000',
-                'current_fitness_level' => 'nullable|string|in:Beginner,Intermediate,Advanced',
+                'fitness_goals' => 'nullable|array', // Expecting array of strings
+                'fitness_goals.*' => 'string|max:255',
+                'fitness_level' => 'nullable|string|in:Beginner,Intermediate,Advanced',
                 'health_considerations' => 'nullable|string|max:1000'
             ]);
 
@@ -1455,25 +1468,58 @@ class TrainerController extends Controller
                 ], 422);
             }
 
+            DB::beginTransaction();
+
             // Create client user account
+            $tempPassword = \Illuminate\Support\Str::random(12); // Generate random password
             $clientData = [
                 'name' => trim($request->first_name . ' ' . $request->last_name),
                 'email' => $request->email,
                 'phone' => $request->phone,
                 'role' => 'client',
-                'password' => \Illuminate\Support\Facades\Hash::make('password123'), // Default password
+                'password' => \Illuminate\Support\Facades\Hash::make($tempPassword),
                 'email_verified_at' => now(), // Auto-verify trainer created clients
             ];
 
             $client = User::create($clientData);
 
+            // Create UserHealthProfile
+            $client->healthProfile()->create([
+                'fitness_level' => $request->fitness_level,
+                'chronic_conditions' => $request->health_considerations ? [$request->health_considerations] : [], // Store as array
+                'allergies' => [] // Default empty array
+            ]);
+
             // Create fitness goals if provided
             if ($request->filled('fitness_goals')) {
-                $client->goals()->create([
-                    'name' => $request->fitness_goals,
-                    'status' => 1
-                ]);
+                $goals = $request->fitness_goals;
+                if (is_array($goals)) {
+                    foreach ($goals as $goalName) {
+                        $client->goals()->create([
+                            'name' => $goalName,
+                            'status' => 1
+                        ]);
+                    }
+                }
             }
+
+            // Create Subscription (Link Client to Trainer)
+            TrainerSubscription::create([
+                'trainer_id' => $trainer->id,
+                'client_id' => $client->id,
+                'status' => 'active',
+                'subscribed_at' => now()
+            ]);
+
+            // Send invitation email
+            try {
+                Mail::to($client->email)->send(new ClientInvitation($client, $trainer, $tempPassword));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to send invitation email to new client: ' . $e->getMessage());
+                // Continue without failing the request, as the client is created
+            }
+
+            DB::commit();
 
             // Log client creation
             \Illuminate\Support\Facades\Log::info('New client added by trainer', [
@@ -1493,7 +1539,7 @@ class TrainerController extends Controller
                 'email' => $client->email,
                 'phone' => $client->phone,
                 'fitness_goals' => $request->fitness_goals,
-                'current_fitness_level' => $request->current_fitness_level,
+                'fitness_level' => $request->fitness_level,
                 'health_considerations' => $request->health_considerations,
                 'role' => $client->role,
                 'status' => 'active',
@@ -1508,6 +1554,7 @@ class TrainerController extends Controller
             ], 201);
 
         } catch (\Exception $e) {
+            DB::rollBack();
             \Illuminate\Support\Facades\Log::error('Failed to add client via trainer API: ' . $e->getMessage(), [
                 'trainer_id' => Auth::id(),
                 'request_data' => $request->all(),
@@ -1516,7 +1563,8 @@ class TrainerController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to add client. Please try again.'
+                'message' => 'Failed to add client. Please try again.',
+                'error' => config('app.debug') ? $e->getMessage() : null
             ], 500);
         }
     }
@@ -1549,7 +1597,8 @@ class TrainerController extends Controller
                 'sort_by' => 'nullable|string|in:name,email,created_at',
                 'sort_order' => 'nullable|string|in:asc,desc',
                 'per_page' => 'nullable|integer|min:5|max:100',
-                'page' => 'nullable|integer|min:1'
+                'page' => 'nullable|integer|min:1',
+                'updated_after' => 'nullable|date_format:Y-m-d H:i:s'
             ]);
 
             if ($validator->fails()) {
@@ -1562,6 +1611,9 @@ class TrainerController extends Controller
 
             // Build query for clients
             $query = User::where('role', 'client')
+                ->whereHas('subscriptionsAsClient', function($q) use ($trainer) {
+                    $q->where('trainer_id', $trainer->id);
+                })
                 ->with([
                     'goals:id,user_id,name,status',
                     'clientSchedules' => function($q) use ($trainer) {
@@ -1569,7 +1621,12 @@ class TrainerController extends Controller
                           ->select('id', 'client_id', 'trainer_id', 'date', 'status');
                     }
                 ])
-                ->select('id', 'name', 'email', 'phone', 'profile_image', 'created_at');
+                ->select('id', 'name', 'email', 'phone', 'profile_image', 'created_at', 'updated_at');
+
+            // Filter by updated_at for offline sync
+            if ($request->filled('updated_after')) {
+                $query->where('updated_at', '>', $request->updated_after);
+            }
 
             // Apply search filter
             if ($request->filled('search')) {

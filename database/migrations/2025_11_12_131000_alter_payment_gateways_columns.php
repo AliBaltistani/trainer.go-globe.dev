@@ -7,12 +7,16 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement('ALTER TABLE payment_gateways MODIFY COLUMN public_key TEXT NULL');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE payment_gateways MODIFY COLUMN public_key TEXT NULL');
+        }
     }
 
     public function down(): void
     {
-        DB::statement('ALTER TABLE payment_gateways MODIFY COLUMN public_key VARCHAR(191) NULL');
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement('ALTER TABLE payment_gateways MODIFY COLUMN public_key VARCHAR(191) NULL');
+        }
     }
 };
 

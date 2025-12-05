@@ -307,10 +307,17 @@ Route::middleware('auth:sanctum')->group(function () {
          * Complete client management operations for trainers
          */
         Route::prefix('clients')->name('clients.')->group(function () {
-            Route::post('/', [\App\Http\Controllers\Api\TrainerController::class, 'addClient'])->name('store');
-            Route::get('/', [\App\Http\Controllers\Api\TrainerController::class, 'getClients'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Api\Trainer\ClientController::class, 'store'])->name('store');
+            Route::get('/', [\App\Http\Controllers\Api\Trainer\ClientController::class, 'index'])->name('index');
             Route::get('/{clientId}/details', [\App\Http\Controllers\Api\TrainerController::class, 'getClientDetails'])->name('details');
             Route::get('/{clientId}/invoice-items', [\App\Http\Controllers\Api\TrainerInvoiceController::class, 'getClientInvoiceItems'])->name('invoice-items');
+
+            // Client Profile Routes
+            Route::get('/{id}/header', [\App\Http\Controllers\Api\Trainer\ClientProfileController::class, 'getHeader'])->name('header');
+            Route::get('/{id}/overview', [\App\Http\Controllers\Api\Trainer\ClientProfileController::class, 'getOverview'])->name('overview');
+            Route::get('/{id}/weight', [\App\Http\Controllers\Api\Trainer\ClientProfileController::class, 'getWeight'])->name('weight');
+            Route::post('/{id}/weight', [\App\Http\Controllers\Api\Trainer\ClientProfileController::class, 'storeWeight'])->name('weight.store');
+            Route::get('/{id}/time-metrics', [\App\Http\Controllers\Api\Trainer\ClientProfileController::class, 'getTimeMetrics'])->name('time-metrics');
         });
 
         // Billing: Stripe Connect + Invoices + Payouts

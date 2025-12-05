@@ -19,7 +19,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-
+use Illuminate\Support\Facades\DB;
 return new class extends Migration
 {
     /**
@@ -34,6 +34,20 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // SQLite doesn't support dropping primary keys or adding auto-increment columns to existing tables easily
+        if (DB::getDriverName() === 'sqlite') {
+            Schema::dropIfExists('password_reset_tokens');
+            Schema::create('password_reset_tokens', function (Blueprint $table) {
+                 $table->id();
+                 $table->string('email')->nullable();
+                 $table->string('token');
+                 $table->timestamp('created_at')->nullable();
+                 
+                 $table->unique('email', 'password_reset_tokens_email_unique');
+             });
+            return;
+        }
+
         Schema::table('password_reset_tokens', function (Blueprint $table) {
             // First, drop the primary key constraint on email
             $table->dropPrimary(['email']);
