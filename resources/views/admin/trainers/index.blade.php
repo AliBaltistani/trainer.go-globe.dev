@@ -103,7 +103,7 @@
 
             <x-tables.table 
                 id="trainersTable"
-                :headers="['Name', 'Email', 'Phone', 'Designation', 'Experience', 'Status', 'Subscribers', 'Actions']"
+                :headers="['Sr.#', 'Name', 'Email', 'Phone', 'Designation', 'Experience', 'Status', 'Subscribers', 'Actions']"
                 :bordered="true"
                 :striped="true"
                 :hover="true"
@@ -340,6 +340,7 @@ $(document).ready(function() {
             }
         },
         columns: [
+            { data: 'id', name: 'id', width: '5%', orderable: false },
             { 
                 data: 'name', 
                 name: 'name', 

@@ -21,21 +21,24 @@
         columns: [
             { data: 'id', name: 'id', width: '5%', orderable: false },
             { 
-                data: 'profile_image', 
-                name: 'profile_image', 
-                orderable: false, 
-                searchable: false,
-                width: '8%',
+                data: 'name', 
+                name: 'name', 
+                width: '20%',
                 render: function(data, type, row) {
-                    if (data) {
-                        return `<img src="${data}" alt="Profile" class="avatar avatar-sm avatar-rounded">`;
+                    let avatar = '';
+                    if (row.profile_image) {
+                        avatar = `<img src="${row.profile_image}" alt="Profile" class="avatar avatar-sm avatar-rounded me-2">`;
+                    } else {
+                        avatar = `<span class="avatar avatar-sm avatar-rounded bg-info-transparent me-2">
+                                    <i class="ri-user-line"></i>
+                                </span>`;
                     }
-                    return `<span class="avatar avatar-sm avatar-rounded bg-info-transparent">
-                                <i class="ri-user-line"></i>
-                            </span>`;
+                    return `<div class="d-flex align-items-center">
+                                ${avatar}
+                                <span class="fw-semibold">${data}</span>
+                            </div>`;
                 }
             },
-            { data: 'name', name: 'name', width: '15%' },
             { data: 'email', name: 'email', width: '15%' },
             { data: 'phone', name: 'phone', width: '10%' },
             { 
@@ -301,7 +304,7 @@ function showAlert(type, message) {
 
             <x-tables.table 
                 id="traineesTable" 
-                :headers="['Sr.#', 'Avatar', 'Name', 'Email', 'Phone', 'Goals', 'Reviews', 'Status', 'Created', 'Actions']"
+                :headers="['Sr.#', 'Name', 'Email', 'Phone', 'Goals', 'Reviews', 'Status', 'Created', 'Actions']"
                 :striped="true"
                 :hover="true"
             />
