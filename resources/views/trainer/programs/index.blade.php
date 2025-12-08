@@ -1,11 +1,5 @@
 @extends('layouts.master')
 
-@section('styles')
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.9/css/responsive.bootstrap5.min.css">
-@endsection
-
 @section('content')
 <div class="container-fluid">
     <!-- Page Header -->
@@ -22,129 +16,64 @@
     <!-- Statistics Cards -->
     <div class="row mb-4">
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
-                                Total Programs
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="total-programs">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Total Programs"
+                value="0"
+                icon="ri-file-list-line"
+                color="primary"
+                valueId="total-programs"
+            />
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
-                                Active Programs
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="active-programs">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Active Programs"
+                value="0"
+                icon="ri-checkbox-circle-line"
+                color="success"
+                valueId="active-programs"
+            />
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-info shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
-                                Assigned Programs
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="assigned-programs">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-check fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Assigned Programs"
+                value="0"
+                icon="ri-user-follow-line"
+                color="info"
+                valueId="assigned-programs"
+            />
         </div>
 
         <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card border-left-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
-                                Unassigned Programs
-                            </div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800" id="unassigned-programs">
-                                <div class="spinner-border spinner-border-sm" role="status"></div>
-                            </div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-times fa-2x text-gray-300"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <x-widgets.stat-card-style1
+                title="Unassigned Programs"
+                value="0"
+                icon="ri-user-unfollow-line"
+                color="warning"
+                valueId="unassigned-programs"
+            />
         </div>
     </div>
 
     <!-- Main Content -->
-    <div class="card shadow mb-4">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Programs List</h6>
-        </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-bordered" id="programsTable" width="100%" cellspacing="0">
-                    <thead>
-                        <tr>
-                            <th>Sr.#</th>
-                            <th>Program Name</th>
-                            <th>Trainer</th>
-                            <th>Client</th>
-                            <th>Duration</th>
-                            <th>Weeks</th>
-                            <th>Status</th>
-                            <th>Created</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Data will be loaded via AJAX -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    <x-tables.card title="Programs List">
+        <x-tables.table 
+            id="programsTable"
+            :headers="['Sr.#', 'Program Name', 'Trainer', 'Client', 'Duration', 'Weeks', 'Status', 'Created', 'Actions']"
+            :bordered="true"
+            width="100%" 
+            cellspacing="0"
+        >
+            <tbody>
+                <!-- Data will be loaded via AJAX -->
+            </tbody>
+        </x-tables.table>
+    </x-tables.card>
 </div>
 @endsection
 
 @section('scripts')
-    <!-- DataTables JS -->
-    <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.9/js/dataTables.responsive.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.2.9/js/responsive.bootstrap5.min.js"></script>
-    
-    <!-- Sweet Alert -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-
     <script>
         $(document).ready(function() {
             // Initialize DataTable

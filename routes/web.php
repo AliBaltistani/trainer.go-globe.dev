@@ -565,6 +565,11 @@ Route::middleware('auth')->group(function () {
      */
     Route::middleware('trainer')->prefix('trainer')->group(function () {
         // Client Management
+        Route::prefix('clients/{client}')->name('trainer.clients.')->group(function () {
+            Route::post('/weight', [\App\Http\Controllers\Trainer\ClientController::class, 'storeWeight'])->name('weight.store');
+            Route::post('/notes', [\App\Http\Controllers\Trainer\ClientController::class, 'storeNote'])->name('notes.store');
+            Route::put('/health-profile', [\App\Http\Controllers\Trainer\ClientController::class, 'updateHealthProfile'])->name('health-profile.update');
+        });
         Route::resource('clients', \App\Http\Controllers\Trainer\ClientController::class, ['names' => 'trainer.clients']);
 
         // Trainer Dashboard
@@ -599,10 +604,13 @@ Route::middleware('auth')->group(function () {
         Route::prefix('programs')->name('trainer.programs.')->group(function () {
             Route::get('/stats', [\App\Http\Controllers\Trainer\ProgramController::class, 'getStats'])->name('stats');
             Route::post('/{program}/duplicate', [\App\Http\Controllers\Trainer\ProgramController::class, 'duplicate'])->name('duplicate');
+            Route::post('/{program}/assign', [\App\Http\Controllers\Trainer\ProgramController::class, 'assign'])->name('assign');
             Route::get('/{program}/pdf-data', [\App\Http\Controllers\Trainer\ProgramController::class, 'pdfData'])->name('pdf-data');
             Route::get('/{program}/pdf-inline', [\App\Http\Controllers\Trainer\ProgramController::class, 'pdfInline'])->name('pdf-inline');
             Route::get('/{program}/pdf-view', [\App\Http\Controllers\Trainer\ProgramController::class, 'pdfView'])->name('pdf-view');
             Route::get('/{program}/pdf-download', [\App\Http\Controllers\Trainer\ProgramController::class, 'pdfDownload'])->name('pdf-download');
+            Route::get('/{program}/progress', [\App\Http\Controllers\Trainer\ProgramController::class, 'progress'])->name('progress');
+            Route::post('/{program}/days/{day}/complete', [\App\Http\Controllers\Trainer\ProgramController::class, 'markDayComplete'])->name('mark-day-complete');
         });
         Route::resource('programs', \App\Http\Controllers\Trainer\ProgramController::class, ['names' => [
             'index' => 'trainer.programs.index',

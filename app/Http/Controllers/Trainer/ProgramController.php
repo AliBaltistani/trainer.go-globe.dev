@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Trainer;
 
 use App\Models\Program;
+use App\Models\ClientProgress;
+use App\Models\Day;
+use App\Support\UnitConverter;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\View\View;
@@ -314,19 +317,16 @@ class ProgramController extends Controller
             $totalPrograms = Program::where('trainer_id', $trainerId)->count();
             $activePrograms = Program::where('trainer_id', $trainerId)
                 ->where('is_active', true)->count();
-            $templatePrograms = Program::where('trainer_id', $trainerId)
+            $assignedPrograms = Program::where('trainer_id', $trainerId)
+                ->whereNotNull('client_id')->count();
+            $unassignedPrograms = Program::where('trainer_id', $trainerId)
                 ->whereNull('client_id')->count();
-
-            $totalWeeks = DB::table('weeks')
-                ->join('programs', 'weeks.program_id', '=', 'programs.id')
-                ->where('programs.trainer_id', $trainerId)
-                ->count();
 
             return response()->json([
                 'total_programs' => $totalPrograms,
                 'active_programs' => $activePrograms,
-                'template_programs' => $templatePrograms,
-                'total_weeks' => $totalWeeks
+                'assigned_programs' => $assignedPrograms,
+                'unassigned_programs' => $unassignedPrograms
             ]);
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Error in ProgramController@getStats: ' . $e->getMessage());
@@ -335,18 +335,323 @@ class ProgramController extends Controller
     }
 
     /**
-     * Duplicate a program
+     * Assign a program template to a client (create a copy)
      */
-    public function duplicate(Program $program): RedirectResponse
+    public function assign(Request $request, Program $program): RedirectResponse
+    {
+        $this->authorizeTrainer($program);
+        
+        $request->validate([
+            'client_id' => 'required|exists:users,id'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Create a duplicate of the program ASSIGNED TO THE CLIENT
+            $assignedProgram = Program::create([
+                'trainer_id' => Auth::id(),
+                'client_id' => $request->client_id,
+                'name' => $program->name,
+                'duration' => $program->duration,
+                'description' => $program->description,
+                'is_active' => true // Activate by default when assigning
+            ]);
+
+            // Load the program with all its nested relationships
+            $program->load([
+                'weeks.days.circuits.programExercises.exerciseSets'
+            ]);
+
+            // Duplicate all weeks
+            foreach ($program->weeks as $week) {
+                $duplicatedWeek = $assignedProgram->weeks()->create([
+                    'week_number' => $week->week_number,
+                    'title' => $week->title,
+                    'description' => $week->description
+                ]);
+
+                // Duplicate all days for this week
+                foreach ($week->days as $day) {
+                    $duplicatedDay = $duplicatedWeek->days()->create([
+                        'day_number' => $day->day_number,
+                        'title' => $day->title,
+                        'description' => $day->description
+                    ]);
+
+                    // Duplicate all circuits for this day
+                    foreach ($day->circuits as $circuit) {
+                        $duplicatedCircuit = $duplicatedDay->circuits()->create([
+                            'circuit_number' => $circuit->circuit_number,
+                            'title' => $circuit->title,
+                            'description' => $circuit->description,
+                            'rounds' => $circuit->rounds,
+                            'rest_between_rounds' => $circuit->rest_between_rounds
+                        ]);
+
+                        // Duplicate all program exercises for this circuit
+                        foreach ($circuit->programExercises as $programExercise) {
+                            $duplicatedProgramExercise = $duplicatedCircuit->programExercises()->create([
+                                'workout_id' => $programExercise->workout_id,
+                                'name' => $programExercise->name,
+                                'order' => $programExercise->order,
+                                'tempo' => $programExercise->tempo,
+                                'rest_interval' => $programExercise->rest_interval,
+                                'notes' => $programExercise->notes
+                            ]);
+
+                            // Duplicate all exercise sets for this program exercise
+                            foreach ($programExercise->exerciseSets as $exerciseSet) {
+                                $duplicatedProgramExercise->exerciseSets()->create([
+                                    'set_number' => $exerciseSet->set_number,
+                                    'reps' => $exerciseSet->reps,
+                                    'weight' => $exerciseSet->weight
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('trainer.programs.edit', $assignedProgram->id)
+                ->with('success', 'Program assigned successfully. You can now customize it for this client.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Error in ProgramController@assign: ' . $e->getMessage());
+            return back()->with('error', 'An error occurred while assigning the program.');
+        }
+    }
+
+    /**
+     * Duplicate a program with all its weeks, days, circuits, exercises and sets
+     */
+    public function duplicate(Program $program): JsonResponse
     {
         $this->authorizeTrainer($program);
 
-        $newProgram = $program->replicate();
-        $newProgram->name = $program->name . ' (Copy)';
-        $newProgram->save();
+        try {
+            DB::beginTransaction();
 
-        return redirect()->route('trainer.programs.edit', $newProgram)
-            ->with('success', 'Program duplicated successfully.');
+            // Create a duplicate of the program (without client assignment)
+            $duplicatedProgram = Program::create([
+                'trainer_id' => Auth::id(),
+                'client_id' => null, // Remove client assignment for template
+                'name' => $program->name . ' (Copy)',
+                'duration' => $program->duration,
+                'description' => $program->description,
+                'is_active' => $program->is_active
+            ]);
+
+            // Load the program with all its nested relationships
+            $program->load([
+                'weeks.days.circuits.programExercises.exerciseSets'
+            ]);
+
+            // Duplicate all weeks
+            foreach ($program->weeks as $week) {
+                $duplicatedWeek = $duplicatedProgram->weeks()->create([
+                    'week_number' => $week->week_number,
+                    'title' => $week->title,
+                    'description' => $week->description
+                ]);
+
+                // Duplicate all days for this week
+                foreach ($week->days as $day) {
+                    $duplicatedDay = $duplicatedWeek->days()->create([
+                        'day_number' => $day->day_number,
+                        'title' => $day->title,
+                        'description' => $day->description
+                    ]);
+
+                    // Duplicate all circuits for this day
+                    foreach ($day->circuits as $circuit) {
+                        $duplicatedCircuit = $duplicatedDay->circuits()->create([
+                            'circuit_number' => $circuit->circuit_number,
+                            'title' => $circuit->title,
+                            'description' => $circuit->description,
+                            'rounds' => $circuit->rounds,
+                            'rest_between_rounds' => $circuit->rest_between_rounds
+                        ]);
+
+                        // Duplicate all program exercises for this circuit
+                        foreach ($circuit->programExercises as $programExercise) {
+                            $duplicatedProgramExercise = $duplicatedCircuit->programExercises()->create([
+                                'workout_id' => $programExercise->workout_id,
+                                'name' => $programExercise->name,
+                                'order' => $programExercise->order,
+                                'tempo' => $programExercise->tempo,
+                                'rest_interval' => $programExercise->rest_interval,
+                                'notes' => $programExercise->notes
+                            ]);
+
+                            // Duplicate all exercise sets for this program exercise
+                            foreach ($programExercise->exerciseSets as $exerciseSet) {
+                                $duplicatedProgramExercise->exerciseSets()->create([
+                                    'set_number' => $exerciseSet->set_number,
+                                    'reps' => $exerciseSet->reps,
+                                    'weight' => $exerciseSet->weight
+                                ]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Program duplicated successfully.',
+                'program_id' => $duplicatedProgram->id,
+                'redirect_url' => route('trainer.programs.edit', $duplicatedProgram->id)
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('Error in Trainer\ProgramController@duplicate: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while duplicating the program.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Show program progress (Workouts Completed)
+     */
+    public function progress(Program $program): View
+    {
+        $this->authorizeTrainer($program);
+
+        // Ensure program is assigned to a client
+        if (!$program->client_id) {
+            abort(404, 'Program is not assigned to any client.');
+        }
+
+        // Load full program structure with client progress
+        $program->load([
+            'weeks.days.circuits.programExercises.workout', 
+            'weeks.days.circuits.programExercises.exerciseSets',
+            'weeks.days.circuits.programExercises.clientProgress' => function($q) use ($program) {
+                $q->where('client_id', $program->client_id)->where('status', 'completed');
+            }
+        ]);
+
+        // Fetch completed exercises for this program for Stats Calculation
+        $rawProgress = ClientProgress::whereHas('programExercise.circuit.day.week', function($q) use ($program) {
+                $q->where('program_id', $program->id);
+            })
+            ->where('status', 'completed')
+            ->with(['programExercise.circuit.day.week', 'programExercise.workout'])
+            ->orderBy('completed_at', 'desc')
+            ->get();
+
+        // Group by date for the list view (Historical Logs)
+        $progress = $rawProgress->groupBy(function($item) {
+            return $item->completed_at->format('Y-m-d');
+        });
+
+        // 1. Calculate Stats
+        $totalWorkouts = $progress->count();
+        $totalExercisesCompleted = $rawProgress->count();
+        
+        // Total Volume (Weight * Reps) - Convert weight to Lbs for volume calculation
+        $totalVolume = $rawProgress->sum(function($item) {
+            $weightInLbs = $item->logged_weight ? UnitConverter::kgToLbs($item->logged_weight) : 0;
+            return $weightInLbs * $item->logged_reps;
+        });
+
+        // Program Completion Percentage
+        $totalProgramDays = 0;
+        foreach($program->weeks as $week) {
+            $totalProgramDays += $week->days->count();
+        }
+        $completionPercentage = $totalProgramDays > 0 ? ($totalWorkouts / $totalProgramDays) * 100 : 0;
+        $completionPercentage = min(100, round($completionPercentage, 1));
+
+        // 2. Prepare Chart Data (Volume over time)
+        // Group by date ascending for the chart
+        $chartData = $rawProgress->sortBy('completed_at')->groupBy(function($item) {
+            return $item->completed_at->format('Y-m-d');
+        })->map(function($dayLogs) {
+            return [
+                'date' => $dayLogs->first()->completed_at->format('M d'),
+                'volume' => $dayLogs->sum(function($item) {
+                    $weightInLbs = $item->logged_weight ? UnitConverter::kgToLbs($item->logged_weight) : 0;
+                    return $weightInLbs * $item->logged_reps;
+                })
+            ];
+        })->values();
+
+        // 3. Get client details
+        $client = $program->client;
+
+        return view('trainer.programs.progress', compact(
+            'program', 
+            'progress', 
+            'client', 
+            'totalWorkouts', 
+            'totalExercisesCompleted',
+            'totalVolume',
+            'completionPercentage',
+            'totalProgramDays',
+            'chartData'
+        ));
+    }
+
+    /**
+     * Mark a specific day as complete for the client
+     */
+    public function markDayComplete(Request $request, Program $program, Day $day)
+    {
+        $this->authorizeTrainer($program);
+        
+        if ($day->week->program_id !== $program->id) {
+            abort(404, 'Day does not belong to this program.');
+        }
+
+        if (!$program->client_id) {
+             return back()->with('error', 'Program is not assigned to any client.');
+        }
+
+        // Load necessary relationships
+        $day->load('circuits.programExercises.exerciseSets');
+
+        DB::transaction(function () use ($day, $program) {
+            $completedAt = now();
+            
+            // Loop through all exercises in the day
+            foreach ($day->circuits as $circuit) {
+                foreach ($circuit->programExercises as $exercise) {
+                    foreach ($exercise->exerciseSets as $set) {
+                        // Check if already completed to avoid duplicates
+                        $exists = ClientProgress::where('client_id', $program->client_id)
+                            ->where('program_exercise_id', $exercise->id)
+                            ->where('set_number', $set->set_number)
+                            ->where('status', 'completed')
+                            ->exists();
+
+                        if (!$exists) {
+                            ClientProgress::create([
+                                'client_id' => $program->client_id,
+                                'program_exercise_id' => $exercise->id,
+                                'set_number' => $set->set_number,
+                                'status' => 'completed',
+                                'logged_reps' => $set->reps,
+                                'logged_weight' => $set->weight,
+                                'notes' => 'Marked complete by trainer',
+                                'completed_at' => $completedAt,
+                            ]);
+                        }
+                    }
+                }
+            }
+        });
+
+        return back()->with('success', 'Day marked as complete successfully.');
     }
 
     /**

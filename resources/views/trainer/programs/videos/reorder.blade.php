@@ -202,15 +202,30 @@ saveButton.addEventListener('click', function() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(data.message);
-            window.location.href = '{{ route("trainer.program-videos.index", $program->id) }}';
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: data.message,
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                window.location.href = '{{ route("trainer.program-videos.index", $program->id) }}';
+            });
         } else {
-            alert('Error saving order');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Error saving order'
+            });
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error saving order');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error saving order'
+        });
     });
 });
 

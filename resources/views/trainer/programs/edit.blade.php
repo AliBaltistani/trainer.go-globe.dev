@@ -202,9 +202,7 @@
 
 @section('scripts')
     <!-- Select2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <!-- Sweet Alert -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {{-- <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script> --}}
 
     <script>
         $(document).ready(function() {
@@ -258,16 +256,40 @@
                 confirmButtonText: 'Yes, duplicate it!'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    var form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = '{{ route("trainer.programs.duplicate", $program->id) }}';
-                    var csrf = document.createElement('input');
-                    csrf.type = 'hidden';
-                    csrf.name = '_token';
-                    csrf.value = '{{ csrf_token() }}';
-                    form.appendChild(csrf);
-                    document.body.appendChild(form);
-                    form.submit();
+                    $.ajax({
+                        url: `/trainer/programs/{{ $program->id }}/duplicate`,
+                        type: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    title: 'Success!',
+                                    text: response.message,
+                                    icon: 'success',
+                                    confirmButtonText: 'View New Program'
+                                }).then((result) => {
+                                    if (result.isConfirmed) {
+                                        window.location.href = `/trainer/programs/${response.program_id}/edit`;
+                                    }
+                                });
+                            } else {
+                                Swal.fire(
+                                    'Error!',
+                                    response.message,
+                                    'error'
+                                );
+                            }
+                        },
+                        error: function() {
+                            Swal.fire(
+                                'Error!',
+                                'An error occurred while duplicating the program.',
+                                'error'
+                            );
+                        }
+                    });
                 }
             });
         }

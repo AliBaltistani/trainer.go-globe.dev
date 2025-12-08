@@ -5,6 +5,12 @@ namespace App\Http\Controllers\Trainer;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\TrainerSubscription;
+use App\Models\ClientWeightLog;
+use App\Models\ClientActivityLog;
+use App\Models\ClientProgress;
+use App\Models\Goal;
+use App\Models\Program;
+use Carbon\Carbon;
 use App\Mail\ClientInvitation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -180,8 +186,144 @@ class ClientController extends Controller
              return redirect()->route('trainer.clients.index')->with('error', 'Unauthorized access to client.');
         }
 
-        $client = User::with(['goals', 'videoProgress'])->findOrFail($id);
+        $client = User::with(['goals', 'videoProgress', 'healthProfile', 'clientNotes'])->findOrFail($id);
+        
+        // Prepare Overview Data
+        $workoutsCompleted = ClientProgress::where('client_id', $id)
+            ->where('status', 'completed')
+            ->distinct('completed_at')
+            ->count();
+            
+        $totalSessions = ClientProgress::where('client_id', $id)
+            ->distinct(DB::raw('DATE(completed_at)'))
+            ->count('completed_at');
+            
+        // Weight Logs for Chart
+        $threeMonthsAgo = Carbon::now()->subMonths(3);
+        $weightLogs = ClientWeightLog::where('user_id', $id)
+            ->where('logged_at', '>=', $threeMonthsAgo)
+            ->orderBy('logged_at', 'asc')
+            ->get();
+            
+        $currentWeight = $weightLogs->last()?->weight ?? 0;
+        $startWeight = $weightLogs->first()?->weight ?? 0;
+        $weightChange = $currentWeight - $startWeight;
+        
+        // Health Profile
+        $healthProfile = $client->healthProfile;
+        
+        // Latest Note
+        $latestNote = $client->clientNotes()->latest()->first();
+        
+        // All Weight Logs for table
+        $allWeightLogs = ClientWeightLog::where('user_id', $id)
+            ->orderBy('logged_at', 'desc')
+            ->paginate(10);
+            
+        // All Notes
+        $allNotes = $client->clientNotes()->with('trainer')->latest()->paginate(5, ['*'], 'notes_page');
 
-        return view('trainer.clients.show', compact('client'));
+        // Client Programs
+        $clientPrograms = Program::where('client_id', $id)
+            ->where('trainer_id', $trainer->id)
+            ->latest()
+            ->get();
+
+        // Available Program Templates (for assignment)
+        $programTemplates = Program::where('trainer_id', $trainer->id)
+            ->whereNull('client_id')
+            ->latest()
+            ->get();
+
+        return view('trainer.clients.show', compact(
+            'client', 
+            'workoutsCompleted', 
+            'totalSessions', 
+            'weightLogs', 
+            'currentWeight', 
+            'startWeight', 
+            'weightChange',
+            'healthProfile',
+            'latestNote',
+            'allWeightLogs',
+            'allNotes',
+            'clientPrograms',
+            'programTemplates'
+        ));
+    }
+
+    public function storeWeight(Request $request, $id)
+    {
+        $trainer = Auth::user();
+        if (!$trainer->hasActiveClient($id)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'weight' => 'required|numeric',
+            'unit' => 'required|in:lbs,kg',
+            'logged_at' => 'required|date',
+            'notes' => 'nullable|string'
+        ]);
+
+        ClientWeightLog::create([
+            'user_id' => $id,
+            'weight' => $request->weight,
+            'unit' => $request->unit,
+            'logged_at' => $request->logged_at,
+            'notes' => $request->notes
+        ]);
+
+        return back()->with('success', 'Weight logged successfully.');
+    }
+
+    public function storeNote(Request $request, $id)
+    {
+        $trainer = Auth::user();
+        if (!$trainer->hasActiveClient($id)) {
+            abort(403);
+        }
+
+        $request->validate([
+            'note' => 'required|string'
+        ]);
+
+        $client = User::findOrFail($id);
+        
+        // Ensure relationship exists or create manually if needed, 
+        // but based on API controller usage, clientNotes() should be available on User model.
+        // If not, we might need to add it or use DB::table.
+        // Assuming User model has clientNotes() relationship.
+        $client->clientNotes()->create([
+            'trainer_id' => $trainer->id,
+            'note' => $request->note
+        ]);
+
+        return back()->with('success', 'Note added successfully.');
+    }
+
+    public function updateHealthProfile(Request $request, $id)
+    {
+        $trainer = Auth::user();
+        if (!$trainer->hasActiveClient($id)) {
+            abort(403);
+        }
+
+        $client = User::findOrFail($id);
+        
+        $data = [
+            'fitness_level' => $request->fitness_level,
+            // Assuming array input for these or comma separated string processing
+            'chronic_conditions' => $request->chronic_conditions ?? [],
+            'allergies' => $request->allergies ?? [],
+        ];
+        
+        if ($client->healthProfile) {
+            $client->healthProfile->update($data);
+        } else {
+            $client->healthProfile()->create($data);
+        }
+
+        return back()->with('success', 'Health profile updated.');
     }
 }
