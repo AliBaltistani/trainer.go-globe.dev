@@ -194,7 +194,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="text-center py-4">
+                                        <td colspan="9" class="text-center py-4">
                                             <div class="d-flex flex-column align-items-center">
                                                 <i class="ri-calendar-line fs-1 text-muted mb-2"></i>
                                                 <h6 class="fw-semibold mb-1">No Bookings Found</h6>
@@ -264,6 +264,7 @@
     <script>
         $(document).ready(function() {
             // Initialize DataTable
+            @if($bookings->isNotEmpty())
             $('#bookingsTable').DataTable({
                 responsive: true,
                 ordering: false,
@@ -271,7 +272,7 @@
                 searching: false,
                 info: false
             });
-
+            @endif
         });
 
         function deleteBooking(id) {

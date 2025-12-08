@@ -86,7 +86,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4">
+                                <td colspan="9" class="text-center py-4">
                                     <div class="d-flex flex-column align-items-center">
                                         <i class="ri-file-text-line fs-1 text-muted mb-2"></i>
                                         <h6 class="fw-semibold mb-1">No Invoices Found</h6>
@@ -111,7 +111,9 @@
 @section('scripts')
     <script>
         $(function(){
+            @if($invoices->isNotEmpty())
             $('#invoicesTable').DataTable({responsive:true, ordering:false, paging:false, searching:false, info:false});
+            @endif
         });
     </script>
 @endsection

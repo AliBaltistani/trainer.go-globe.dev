@@ -95,7 +95,9 @@
 @section('scripts')
     <script>
         $(function(){
+            @if($payouts->isNotEmpty())
             $('#payoutsTable').DataTable({responsive:true, ordering:false, paging:false, searching:false, info:false});
+            @endif
         });
     </script>
 @endsection
