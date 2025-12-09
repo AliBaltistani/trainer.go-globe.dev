@@ -236,14 +236,14 @@
                     <div class="d-flex align-items-start justify-content-between mb-2">
                         <div class="d-flex align-items-center gap-2">
                             <span class="avatar avatar-sm avatar-rounded">
-                                @if($testimonial->trainer->profile_image)
+                                @if($testimonial->trainer && $testimonial->trainer->profile_image)
                                     <img src="{{ asset('storage/' . $testimonial->trainer->profile_image) }}" alt="{{ $testimonial->trainer->name }}">
                                 @else
-                                    <img src="{{asset('build/assets/images/faces/12.jpg')}}" alt="{{ $testimonial->trainer->name }}">
+                                    <img src="{{asset('build/assets/images/faces/12.jpg')}}" alt="{{ $testimonial->trainer ? $testimonial->trainer->name : 'Unknown Trainer' }}">
                                 @endif
                             </span>
                             <div>
-                                <h6 class="fw-semibold mb-0">{{ $testimonial->trainer->name }}</h6>
+                                <h6 class="fw-semibold mb-0">{{ $testimonial->trainer ? $testimonial->trainer->name : 'Unknown Trainer' }}</h6>
                                 <span class="text-muted fs-12">{{ $testimonial->created_at->format('M d, Y') }}</span>
                             </div>
                         </div>

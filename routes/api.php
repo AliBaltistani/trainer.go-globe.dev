@@ -23,6 +23,8 @@ use App\Models\Week;
 use App\Http\Controllers\ApiAuthController;
 use App\Http\Controllers\Api\TrainerController;
 use App\Http\Controllers\Api\SessionBookingController;
+use App\Http\Controllers\Api\ConversationController;
+use App\Http\Controllers\Api\MessageController;
 
 
 
@@ -79,6 +81,17 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/notifications/history', [\App\Http\Controllers\Api\PushNotificationController::class, 'history']);
     Route::post('/notification/send-to-user', [\App\Http\Controllers\Api\PushNotificationController::class, 'sendToUser']);
     Route::post('/notification/broadcast', [\App\Http\Controllers\Api\PushNotificationController::class, 'broadcast']);
+
+    /**
+     * Chat Routes
+     */
+    Route::prefix('chat')->group(function () {
+        Route::get('/conversations', [ConversationController::class, 'index']);
+        Route::post('/conversations', [ConversationController::class, 'store']);
+        Route::get('/messages/{conversationId}', [MessageController::class, 'index']);
+        Route::post('/messages', [MessageController::class, 'store']);
+        Route::post('/messages/read', [MessageController::class, 'read']);
+    });
 
     /**
      * Unified Schedule API

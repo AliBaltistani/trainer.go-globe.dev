@@ -34,6 +34,15 @@
 				<!-- End::slide -->
 
 				<!-- Start::slide -->
+				<li class="slide {{ request()->is('client/chat*') ? 'active' : '' }}">
+					<a href="{{route('client.chat.index')}}" class="side-menu__item">
+						<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M216,48H40A16,16,0,0,0,24,64V224a15.84,15.84,0,0,0,9.25,14.5A16.05,16.05,0,0,0,40,240a15.89,15.89,0,0,0,10.25-3.78l42.6-36.22H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48Z" opacity="0.2"/><path d="M216,48H40A16,16,0,0,0,24,64V224a15.84,15.84,0,0,0,9.25,14.5A16.05,16.05,0,0,0,40,240a15.89,15.89,0,0,0,10.25-3.78l42.6-36.22H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM40,224V64H216V200H92.85a8,8,0,0,0-5.24,1.94L40,240.22Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
+						<span class="side-menu__label">Chats</span>
+					</a>
+				</li>
+				<!-- End::slide -->
+
+				<!-- Start::slide -->
 				<li class="slide {{ request()->is('client/goals*') ? 'active' : '' }}">
 					<a href="{{route('client.goals')}}" class="side-menu__item">
 						<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="128" cy="128" r="40" opacity="0.2"/><circle cx="128" cy="128" r="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="m70.7,185.3,33.6-33.6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="m151.7,104.3,33.6-33.6" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="208" y1="32" x2="224" y2="48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="208" y1="80" x2="224" y2="64" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="32" y1="208" x2="48" y2="224" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="32" y1="176" x2="48" y2="192" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>

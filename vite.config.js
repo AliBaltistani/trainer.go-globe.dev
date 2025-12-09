@@ -43,6 +43,7 @@ export default defineConfig({
                 'resources/assets/js/canada',
                 'resources/assets/js/chartjs-charts',
                 'resources/assets/js/chat',
+                'resources/js/chat-integration.js',
                 'resources/assets/js/choices',
                 'resources/assets/js/color-picker',
                 'resources/assets/js/coming-soon',
