@@ -541,7 +541,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
             // Nutrition recommendations management
             Route::get('/recommendations', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getCurrentRecommendations'])->name('recommendations.current');
-            Route::put('/recommendations', [\App\Http\Controllers\Api\ClientNutritionController::class, 'updateCurrentRecommendations'])->name('recommendations.update');
+            
+            // Client Nutrition Targets (CRUD)
+            // Clients can only manage their own targets. They cannot modify trainer recommendations.
+            Route::get('/targets', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getClientTargets'])->name('targets.index');
+            Route::post('/targets', [\App\Http\Controllers\Api\ClientNutritionController::class, 'updateClientTargets'])->name('targets.store');
+            Route::put('/targets', [\App\Http\Controllers\Api\ClientNutritionController::class, 'updateClientTargets'])->name('targets.update');
+            Route::delete('/targets', [\App\Http\Controllers\Api\ClientNutritionController::class, 'deleteClientTargets'])->name('targets.destroy');
+
+            // Legacy support: redirects to client targets (does NOT update recommendations)
+            Route::put('/recommendations', [\App\Http\Controllers\Api\ClientNutritionController::class, 'updateClientTargets'])->name('recommendations.update');
 
             // Nutrition goal types
             Route::get('/goal-types', [\App\Http\Controllers\Api\ClientNutritionController::class, 'getNutritionGoalTypes'])->name('goal-types');

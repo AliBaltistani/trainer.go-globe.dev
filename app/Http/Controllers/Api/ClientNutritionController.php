@@ -9,6 +9,7 @@ use App\Models\NutritionRecipe;
 use App\Models\NutritionMacro;
 use App\Models\NutritionRestriction;
 use App\Models\NutritionRecommendation;
+use App\Models\ClientNutritionTarget;
 use App\Models\FoodDiary;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -1179,7 +1180,10 @@ class ClientNutritionController extends Controller
     }
 
     /**
-     * Get current nutrition recommendations for the authenticated client
+     * Get current nutrition recommendations and targets
+     * 
+     * Returns both the trainer's recommendations (from the active plan)
+     * and the client's own self-set targets.
      * 
      * @return \Illuminate\Http\JsonResponse
      */
@@ -1188,148 +1192,171 @@ class ClientNutritionController extends Controller
         try {
             $clientId = Auth::id();
             
-            // Get the client's active nutrition plan with recommendations
+            // Get the client's active nutrition plan with recommendations (Trainer's input)
             $plan = NutritionPlan::where('client_id', $clientId)
                 ->where('status', 'active')
                 ->with(['recommendations', 'trainer:id,name,email,profile_image'])
                 ->first();
             
-            if (!$plan) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No active nutrition plan found'
-                ], 404);
-            }
-            
-            // Get recommendations or create default ones if none exist
-            $recommendations = $plan->recommendations;
-            if (!$recommendations) {
-                // Create default recommendations based on goal type
-                $defaultCalories = $this->getDefaultCaloriesByGoalType($plan->goal_type);
-                $recommendations = NutritionRecommendation::create([
-                    'plan_id' => $plan->id,
-                    'target_calories' => $defaultCalories,
-                    'protein' => round($defaultCalories * 0.25 / 4), // 25% of calories from protein
-                    'carbs' => round($defaultCalories * 0.45 / 4),   // 45% of calories from carbs
-                    'fats' => round($defaultCalories * 0.30 / 9)     // 30% of calories from fats
-                ]);
-            }
-            
-            return response()->json([
-                'success' => true,
-                'message' => 'Current recommendations retrieved successfully',
-                'data' => [
+            $trainerRecommendations = null;
+            if ($plan && $plan->recommendations) {
+                $rec = $plan->recommendations;
+                $trainerRecommendations = [
                     'plan_id' => $plan->id,
                     'plan_name' => $plan->plan_name,
-                    'goal_type' => $plan->goal_type,
-                    'goal_type_display' => $plan->goal_type ? ucfirst(str_replace('_', ' ', $plan->goal_type)) : null,
                     'trainer' => $plan->trainer ? [
                         'id' => $plan->trainer->id,
                         'name' => $plan->trainer->name,
-                        'email' => $plan->trainer->email,
                         'profile_image' => $plan->trainer->profile_image ? asset('storage/' . $plan->trainer->profile_image) : null
                     ] : null,
-                    'recommendations' => [
-                        'target_calories' => $recommendations->target_calories,
-                        'protein' => $recommendations->protein,
-                        'carbs' => $recommendations->carbs,
-                        'fats' => $recommendations->fats,
-                        'macro_distribution' => $recommendations->macro_distribution,
-                        'total_macro_calories' => $recommendations->total_macro_calories
-                    ],
-                    'last_updated' => $recommendations->updated_at,
-                    'created_at' => $recommendations->created_at
+                    'target_calories' => $rec->target_calories,
+                    'protein' => $rec->protein,
+                    'carbs' => $rec->carbs,
+                    'fats' => $rec->fats,
+                    'macro_distribution' => $rec->macro_distribution,
+                    'total_macro_calories' => $rec->total_macro_calories,
+                    'updated_at' => $rec->updated_at
+                ];
+            }
+
+            // Get client's own targets
+            $clientTarget = ClientNutritionTarget::where('client_id', $clientId)->first();
+            $clientTargetsData = null;
+            if ($clientTarget) {
+                $clientTargetsData = [
+                    'id' => $clientTarget->id,
+                    'target_calories' => $clientTarget->target_calories,
+                    'protein' => $clientTarget->protein,
+                    'carbs' => $clientTarget->carbs,
+                    'fats' => $clientTarget->fats,
+                    'updated_at' => $clientTarget->updated_at
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Nutrition recommendations and targets retrieved successfully',
+                'data' => [
+                    'trainer_recommendations' => $trainerRecommendations,
+                    'client_targets' => $clientTargetsData,
+                    // Backward compatibility fields (optional, if frontend relies on them directly at root)
+                    // We can map client targets as primary if they exist, or trainer's if not
+                    'target_calories' => $clientTargetsData['target_calories'] ?? ($trainerRecommendations['target_calories'] ?? 0),
+                    'protein' => $clientTargetsData['protein'] ?? ($trainerRecommendations['protein'] ?? 0),
+                    'carbs' => $clientTargetsData['carbs'] ?? ($trainerRecommendations['carbs'] ?? 0),
+                    'fats' => $clientTargetsData['fats'] ?? ($trainerRecommendations['fats'] ?? 0),
                 ]
             ]);
             
         } catch (\Exception $e) {
-            Log::error('Failed to retrieve current recommendations: ' . $e->getMessage(), [
+            Log::error('Failed to retrieve nutrition data: ' . $e->getMessage(), [
                 'client_id' => Auth::id(),
                 'trace' => $e->getTraceAsString()
             ]);
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to retrieve current recommendations'
+                'message' => 'Failed to retrieve nutrition data'
             ], 500);
         }
     }
 
     /**
-     * Update current nutrition recommendations for the authenticated client
+     * Get client's own nutrition targets
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getClientTargets(): JsonResponse
+    {
+        try {
+            $clientId = Auth::id();
+            
+            $target = ClientNutritionTarget::where('client_id', $clientId)->first();
+            
+            if (!$target) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No nutrition targets set',
+                    'data' => null
+                ]);
+            }
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Nutrition targets retrieved successfully',
+                'data' => [
+                    'id' => $target->id,
+                    'target_calories' => $target->target_calories,
+                    'protein' => $target->protein,
+                    'carbs' => $target->carbs,
+                    'fats' => $target->fats,
+                    'updated_at' => $target->updated_at
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to retrieve client nutrition targets: ' . $e->getMessage(), [
+                'client_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve nutrition targets'
+            ], 500);
+        }
+    }
+
+    /**
+     * Update client's own nutrition targets
+     * 
+     * Allows the client to set their own nutrition goals/targets
+     * independent of the trainer's recommendations.
      * 
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function updateCurrentRecommendations(Request $request): JsonResponse
+    public function updateClientTargets(Request $request): JsonResponse
     {
         try {
             $request->validate([
-                'target_calories' => 'required|numeric|min:800|max:5000',
-                'protein' => 'required|numeric|min:20|max:300',
-                'carbs' => 'required|numeric|min:50|max:500',
-                'fats' => 'required|numeric|min:20|max:200'
+                'target_calories' => 'required|numeric|min:500|max:10000',
+                'protein' => 'required|numeric|min:0|max:1000',
+                'carbs' => 'required|numeric|min:0|max:1000',
+                'fats' => 'required|numeric|min:0|max:1000'
             ]);
             
             $clientId = Auth::id();
             
-            // Get the client's active nutrition plan
-            $plan = NutritionPlan::where('client_id', $clientId)
-                ->where('status', 'active')
-                ->with(['recommendations', 'trainer:id,name,email'])
-                ->first();
-            
-            if (!$plan) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No active nutrition plan found'
-                ], 404);
-            }
-            
-            // Update or create recommendations
-            $recommendations = $plan->recommendations;
-            if ($recommendations) {
-                $recommendations->update([
+            // Update or create client targets
+            $target = ClientNutritionTarget::updateOrCreate(
+                ['client_id' => $clientId],
+                [
                     'target_calories' => $request->target_calories,
                     'protein' => $request->protein,
                     'carbs' => $request->carbs,
                     'fats' => $request->fats
-                ]);
-            } else {
-                $recommendations = NutritionRecommendation::create([
-                    'plan_id' => $plan->id,
-                    'target_calories' => $request->target_calories,
-                    'protein' => $request->protein,
-                    'carbs' => $request->carbs,
-                    'fats' => $request->fats
-                ]);
-            }
+                ]
+            );
             
-            // Log the update for audit purposes
-            Log::info('Client updated nutrition recommendations', [
+            // Log the update
+            Log::info('Client updated nutrition targets', [
                 'client_id' => $clientId,
-                'plan_id' => $plan->id,
-                'old_values' => $plan->recommendations ? $plan->recommendations->getOriginal() : null,
-                'new_values' => $recommendations->toArray()
+                'targets' => $target->toArray()
             ]);
             
             return response()->json([
                 'success' => true,
-                'message' => 'Nutrition recommendations updated successfully',
+                'message' => 'Nutrition targets updated successfully',
                 'data' => [
-                    'plan_id' => $plan->id,
-                    'plan_name' => $plan->plan_name,
-                    'goal_type' => $plan->goal_type,
-                    'goal_type_display' => $plan->goal_type ? ucfirst(str_replace('_', ' ', $plan->goal_type)) : null,
-                    'recommendations' => [
-                        'target_calories' => $recommendations->target_calories,
-                        'protein' => $recommendations->protein,
-                        'carbs' => $recommendations->carbs,
-                        'fats' => $recommendations->fats,
-                        'macro_distribution' => $recommendations->macro_distribution,
-                        'total_macro_calories' => $recommendations->total_macro_calories
-                    ],
-                    'updated_at' => $recommendations->updated_at
+                    'client_targets' => [
+                        'id' => $target->id,
+                        'target_calories' => $target->target_calories,
+                        'protein' => $target->protein,
+                        'carbs' => $target->carbs,
+                        'fats' => $target->fats,
+                        'updated_at' => $target->updated_at
+                    ]
                 ]
             ]);
             
@@ -1341,7 +1368,7 @@ class ClientNutritionController extends Controller
             ], 422);
             
         } catch (\Exception $e) {
-            Log::error('Failed to update nutrition recommendations: ' . $e->getMessage(), [
+            Log::error('Failed to update client nutrition targets: ' . $e->getMessage(), [
                 'client_id' => Auth::id(),
                 'request_data' => $request->all(),
                 'trace' => $e->getTraceAsString()
@@ -1349,7 +1376,46 @@ class ClientNutritionController extends Controller
             
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update nutrition recommendations'
+                'message' => 'Failed to update nutrition targets'
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete client's nutrition targets
+     * 
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function deleteClientTargets(): JsonResponse
+    {
+        try {
+            $clientId = Auth::id();
+            
+            $target = ClientNutritionTarget::where('client_id', $clientId)->first();
+            
+            if (!$target) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No nutrition targets found'
+                ], 404);
+            }
+            
+            $target->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Nutrition targets deleted successfully'
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to delete client nutrition targets: ' . $e->getMessage(), [
+                'client_id' => Auth::id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete nutrition targets'
             ], 500);
         }
     }

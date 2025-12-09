@@ -146,13 +146,12 @@ class NutritionCalculatorController extends Controller
             $client = User::findOrFail($request->client_id);
             $currentUser = Auth::user();
 
-            // Check if user is trainer/admin or the client themselves
+            // Check if user is trainer/admin (Clients cannot create official nutrition plans)
             if ($currentUser->role !== 'admin' && 
-                $currentUser->role !== 'trainer' && 
-                $currentUser->id !== $client->id) {
+                $currentUser->role !== 'trainer') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized to create plan for this client'
+                    'message' => 'Only trainers can create nutrition plans and recommendations. Please set your personal targets instead.'
                 ], 403);
             }
 
@@ -424,13 +423,12 @@ class NutritionCalculatorController extends Controller
             $plan = NutritionPlan::with(['client', 'recommendations'])->findOrFail($planId);
             $currentUser = Auth::user();
 
-            // Check permissions
+            // Check permissions (Clients cannot recalculate/modify official recommendations)
             if ($currentUser->role !== 'admin' && 
-                $currentUser->role !== 'trainer' && 
-                $currentUser->id !== $plan->client_id) {
+                $currentUser->role !== 'trainer') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized to modify this nutrition plan'
+                    'message' => 'Only trainers can modify nutrition recommendations. Please update your personal targets instead.'
                 ], 403);
             }
 
