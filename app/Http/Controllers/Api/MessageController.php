@@ -80,6 +80,9 @@ class MessageController extends Controller
         // Update last message
         $conversation->update(['last_message_id' => $message->id]);
 
+        // Load sender for broadcast
+        $message->load('sender');
+
         // Broadcast event
         broadcast(new MessageSent($message))->toOthers();
 
@@ -123,7 +126,8 @@ class MessageController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Messages marked as read'
+            'message' => 'Messages marked as read',
+            'updated_count' => $updated
         ]);
     }
 }

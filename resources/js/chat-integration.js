@@ -1,16 +1,31 @@
 import axios from 'axios';
+import './bootstrap';
 
 let currentConversationId = null;
-const authUserId = document.querySelector('meta[name="user-id"]')?.content;
+const authUserId = document.querySelector('meta[name="user-id"]')?.content || window.authUserId;
 
 if (!authUserId) {
     console.error('User ID meta tag not found');
 } else {
     // Global listener for real-time sidebar updates
-    window.Echo.private(`user.${authUserId}`)
-        .listen('MessageSent', (e) => {
-            handleIncomingMessage(e.message);
-        });
+    const initEchoListener = () => {
+        if (window.Echo) {
+            window.Echo.private(`user.${authUserId}`)
+                .listen('.App\\Events\\MessageSent', (e) => {
+                    handleIncomingMessage(e.message);
+                });
+        } else {
+            // Echo might not be initialized yet, retry shortly
+            setTimeout(initEchoListener, 500);
+        }
+    };
+    
+    // Start trying to listen once DOM is ready (or immediately if already ready)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEchoListener);
+    } else {
+        initEchoListener();
+    }
 }
 
 function handleIncomingMessage(msg) {
@@ -22,7 +37,52 @@ function handleIncomingMessage(msg) {
     
     if (recentList) {
         recentItem = recentList.querySelector(`li[data-id="${conversationId}"]`);
-        if (recentItem) {
+        
+        // If not in recent list, create it (New Conversation)
+        // Ensure msg.sender exists before trying to access properties
+        if (!recentItem && msg.sender) {
+            recentItem = document.createElement('li');
+            recentItem.className = 'checkforactive';
+            recentItem.setAttribute('data-id', conversationId);
+            
+            const senderName = msg.sender.name || 'Unknown';
+            const senderImg = msg.sender.profile_image ? `/${msg.sender.profile_image}` : '/build/assets/images/faces/9.jpg';
+            const date = new Date(msg.created_at);
+            const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const text = msg.message_type === 'text' ? msg.message : 'Attachment';
+            const previewText = text.length > 30 ? text.substring(0, 30) + '...' : text;
+            
+            recentItem.innerHTML = `
+                <a href="javascript:void(0);" onclick="selectConversation('${conversationId}', this)">
+                    <div class="d-flex align-items-top">
+                        <div class="me-1 lh-1">
+                            <span class="avatar avatar-md online me-2 avatar-rounded">
+                                <img src="${senderImg}" alt="img">
+                            </span>
+                        </div>
+                        <div class="flex-fill">
+                            <p class="mb-0 fw-medium">
+                                ${senderName}
+                                <span class="float-end text-muted fw-normal fs-11">
+                                    ${time}
+                                </span>
+                            </p>
+                            <p class="fs-13 mb-0">
+                                <span class="chat-msg text-truncate">
+                                    ${previewText}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            `;
+            
+            recentList.prepend(recentItem);
+            
+            // Remove "No conversations" placeholder
+            const noConv = recentList.querySelector('li.text-center');
+            if (noConv) noConv.remove();
+        } else if (recentItem) {
             updateListItemContent(recentItem, msg);
             recentList.prepend(recentItem);
         }
@@ -30,7 +90,27 @@ function handleIncomingMessage(msg) {
     
     // 2. Handle Unread Status (If not current conversation)
     if (currentConversationId != conversationId) {
-        // Update Unread List
+        
+        // 2a. Update Badge on Recent List Item (if exists)
+        if (recentItem) {
+             let badge = recentItem.querySelector('.chat-read-icon');
+             if (!badge) {
+                 const p = recentItem.querySelector('.fs-13');
+                 if (p) {
+                     badge = document.createElement('span');
+                     badge.className = 'chat-read-icon float-end align-middle badge bg-danger rounded-circle text-white';
+                     badge.style.cssText = 'width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px;';
+                     badge.textContent = '0';
+                     p.appendChild(badge);
+                 }
+             }
+             if (badge) {
+                 let count = parseInt(badge.textContent) || 0;
+                 badge.textContent = count + 1;
+             }
+        }
+
+        // 2b. Update Unread List
         const unreadList = document.getElementById('chat-unread-msg-scroll');
         if (unreadList) {
             let unreadItem = unreadList.querySelector(`li[data-id="${conversationId}"]`);
@@ -51,22 +131,8 @@ function handleIncomingMessage(msg) {
                 updateTabBadges(1, 0);
 
             } else if (recentItem) {
-                // Not in unread list, clone from recent
+                // Not in unread list, clone from recent (which now has the badge)
                 unreadItem = recentItem.cloneNode(true);
-                
-                // Add badge
-                const p = unreadItem.querySelector('.fs-13');
-                if (p) {
-                    // Check if badge already exists (it shouldn't if it came from recent without unread)
-                    let badge = unreadItem.querySelector('.chat-read-icon');
-                    if (!badge) {
-                        badge = document.createElement('span');
-                        badge.className = 'chat-read-icon float-end align-middle badge bg-danger rounded-circle text-white';
-                        badge.style.cssText = 'width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px;';
-                        p.appendChild(badge);
-                    }
-                    badge.textContent = '1';
-                }
                 
                 unreadList.prepend(unreadItem);
                 
@@ -137,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (emojiBtn && typeof FgEmojiPicker !== 'undefined') {
         emojiPicker = new FgEmojiPicker({
             trigger: ['.emoji-picker'],
+            dir: '/build/assets/libs/fg-emoji-picker/',
             removeOnSelection: false,
             closeButton: true,
             position: ['top', 'right', 'bottom', 'left'],
@@ -233,11 +300,16 @@ window.selectConversation = function(conversationId, element) {
     }
     currentConversationId = conversationId;
     
-    // UI updates
+    // UI updates: Mark active in ALL lists
     document.querySelectorAll('.checkforactive').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll(`li[data-id="${conversationId}"]`).forEach(el => el.classList.add('active'));
+
+    // If element is missing, try to find one to update header info
+    if (!element) {
+        element = document.querySelector(`li[data-id="${conversationId}"]`);
+    }
+
     if (element) {
-        element.closest('li').classList.add('active');
-        
         // Update header info
         const nameElement = element.querySelector('.fw-medium');
         const name = nameElement ? nameElement.childNodes[0].textContent.trim() : 'Unknown';
@@ -284,87 +356,103 @@ window.selectConversation = function(conversationId, element) {
             renderMessages(messages);
             scrollToBottom();
             
-            // Mark as read
+            // Optimistic UI Update: Clear badges immediately
+            const listItems = document.querySelectorAll(`li[data-id="${conversationId}"]`);
+            let optimisticUnreadCount = 0;
+            
+            listItems.forEach(li => {
+                const badge = li.querySelector('.chat-read-icon');
+                if (badge) {
+                    const count = parseInt(badge.textContent) || 0;
+                    if (count > optimisticUnreadCount) optimisticUnreadCount = count;
+                    badge.remove(); 
+                }
+            });
+
+            // Remove from "Unread" list specifically
+            const unreadList = document.getElementById('chat-unread-msg-scroll');
+            if (unreadList) {
+                const unreadItem = unreadList.querySelector(`li[data-id="${conversationId}"]`);
+                if (unreadItem) {
+                    unreadItem.remove();
+                    
+                    // If list is empty (only title remains), show placeholder
+                    if (unreadList.querySelectorAll('li').length <= 1) {
+                        const noMsg = document.createElement('li');
+                        noMsg.className = 'text-center p-3';
+                        noMsg.textContent = 'No unread conversations.';
+                        unreadList.appendChild(noMsg);
+                    }
+                }
+            }
+
+            // Update Tab Badges (decrement)
+            if (optimisticUnreadCount > 0) {
+                updateTabBadges(-optimisticUnreadCount, -1);
+            }
+
+            // Mark as read in backend
             console.log('Marking messages as read for conversation:', conversationId);
             axios.post('/chat/messages/read', { conversation_id: conversationId })
-                .then(() => {
+                .then((readResponse) => {
                     console.log('Messages marked as read successfully');
-                    // Update local unread count badge if exists
-                    const badge = element.querySelector('.chat-read-icon');
-                    let unreadCount = 0;
-                    if(badge) {
-                        unreadCount = parseInt(badge.textContent) || 0;
-                        badge.remove();
-                    }
-
-                    // Remove from "Unread" list
-                    const unreadList = document.getElementById('chat-unread-msg-scroll');
-                    if (unreadList) {
-                        const unreadItem = unreadList.querySelector(`li[data-id="${conversationId}"]`);
-                        if (unreadItem) {
-                            unreadItem.remove();
-                            
-                            // If list is empty (only title remains), show placeholder
-                            // Title is first li, so check length
-                            if (unreadList.querySelectorAll('li').length <= 1) {
-                                const noMsg = document.createElement('li');
-                                noMsg.className = 'text-center p-3';
-                                noMsg.textContent = 'No unread conversations.';
-                                unreadList.appendChild(noMsg);
-                            }
-                        }
-                    }
-
-                    // Update Tab Badges (decrement)
-                    if (unreadCount > 0) {
-                        updateTabBadges(-unreadCount, -1);
-                    }
+                    // We already updated UI optimistically, so we don't need to do it here
+                    // unless we want to reconcile counts, but for now optimistic is smoother.
                 })
-                .catch(err => console.error('Failed to mark messages as read', err));
-
-            // Listen for new messages and read status updates
-            let typingTimer;
-            const channel = window.Echo.private(`conversation.${conversationId}`);
-
-            channel
-                .listen('MessageSent', (e) => {
-                    if (e.message.sender_id != authUserId) {
-                        appendMessage(e.message);
-                        scrollToBottom();
-                    }
-                })
-                .listen('MessageRead', (e) => {
-                    if (e.userId != authUserId) {
-                        // Update read status for all my messages (chat-item-end)
-                        document.querySelectorAll('.chat-item-end .chat-read-mark').forEach(mark => {
-                            mark.classList.remove('ri-check-line');
-                            mark.classList.add('ri-check-double-line');
-                            mark.classList.add('text-success');
-                        });
-                    }
-                })
-                .listenForWhisper('typing', (e) => {
-                    if (e.userId != authUserId) {
-                        const typingIndicator = document.getElementById('typing-indicator');
-                        if (typingIndicator) {
-                            typingIndicator.classList.remove('d-none');
-                            
-                            clearTimeout(typingTimer);
-                            typingTimer = setTimeout(() => {
-                                typingIndicator.classList.add('d-none');
-                            }, 3000);
-                        }
-                    }
+                .catch(err => {
+                    console.error('Failed to mark messages as read', err);
+                    // Revert UI changes if needed? Complex. 
+                    // For now, assume success or user will refresh.
                 });
 
-            // Setup typing trigger
-            const input = document.querySelector('.chat-message-space');
-            if (input) {
-                input.oninput = () => {
-                    channel.whisper('typing', {
-                        userId: authUserId
+            // Listen for new messages and read status updates
+            if (window.Echo) {
+                let typingTimer;
+                const channel = window.Echo.private(`conversation.${conversationId}`);
+
+                channel
+                    .listen('.App\\Events\\MessageSent', (e) => {
+                        if (e.message.sender_id != authUserId) {
+                            appendMessage(e.message);
+                            scrollToBottom();
+                            
+                            // Mark as read immediately since we are viewing it
+                            axios.post('/chat/messages/read', { conversation_id: conversationId });
+                        }
+                    })
+                    .listen('.App\\Events\\MessageRead', (e) => {
+                        if (e.userId != authUserId) {
+                            // Update read status for all my messages (chat-item-end)
+                            document.querySelectorAll('.chat-item-end .chat-read-mark').forEach(mark => {
+                                mark.classList.remove('ri-check-line');
+                                mark.classList.add('ri-check-double-line');
+                                mark.classList.add('text-success');
+                            });
+                        }
+                    })
+                    .listenForWhisper('typing', (e) => {
+                        if (e.userId != authUserId) {
+                            const typingIndicator = document.getElementById('typing-indicator');
+                            if (typingIndicator) {
+                                typingIndicator.classList.remove('d-none');
+                                
+                                clearTimeout(typingTimer);
+                                typingTimer = setTimeout(() => {
+                                    typingIndicator.classList.add('d-none');
+                                }, 3000);
+                            }
+                        }
                     });
-                };
+
+                // Setup typing trigger
+                const input = document.querySelector('.chat-message-space');
+                if (input) {
+                    input.oninput = () => {
+                        channel.whisper('typing', {
+                            userId: authUserId
+                        });
+                    };
+                }
             }
         })
         .catch(error => console.error(error));

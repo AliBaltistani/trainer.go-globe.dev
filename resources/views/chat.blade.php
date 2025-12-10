@@ -458,7 +458,6 @@
                                 </a>
                             </div>
                         </div>
-                        
                     </div>
 
                     <!-- Start::chat user details offcanvas -->
