@@ -82,16 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/notification/send-to-user', [\App\Http\Controllers\Api\PushNotificationController::class, 'sendToUser']);
     Route::post('/notification/broadcast', [\App\Http\Controllers\Api\PushNotificationController::class, 'broadcast']);
 
-    /**
-     * Chat Routes
-     */
-    Route::prefix('chat')->group(function () {
-        Route::get('/conversations', [ConversationController::class, 'index']);
-        Route::post('/conversations', [ConversationController::class, 'store']);
-        Route::get('/messages/{conversationId}', [MessageController::class, 'index']);
-        Route::post('/messages', [MessageController::class, 'store']);
-        Route::post('/messages/read', [MessageController::class, 'read']);
-    });
+   
 
     /**
      * Unified Schedule API

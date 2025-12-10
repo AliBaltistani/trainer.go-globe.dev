@@ -120,13 +120,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/activity-log', [UserProfileController::class, 'activityLog'])->name('profile.activity-log');
     });
 
-    // Chat Routes (Shared)
-    Route::prefix('chat')->name('chat.')->group(function () {
-        Route::post('/create', [\App\Http\Controllers\ChatController::class, 'store'])->name('create');
-        Route::get('/messages/{conversation}', [\App\Http\Controllers\ChatController::class, 'fetchMessages'])->name('messages');
-        Route::post('/send', [\App\Http\Controllers\ChatController::class, 'sendMessage'])->name('send');
-        Route::post('/messages/read', [\App\Http\Controllers\ChatController::class, 'markAsRead'])->name('read');
-    });
+   
 
     // Notification Routes
     Route::get('/notifications/latest', [\App\Http\Controllers\NotificationController::class, 'getNotifications'])->name('notifications.latest');
@@ -156,11 +150,7 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{id}/delete-image', [\App\Http\Controllers\Admin\UsersController::class, 'deleteImage'])->name('admin.users.delete-image');
         });
 
-        // Chat Management Routes
-        Route::prefix('chat')->group(function () {
-            Route::get('/', [\App\Http\Controllers\Admin\ChatController::class, 'index'])->name('admin.chat.index');
-            Route::get('/{conversation}', [\App\Http\Controllers\Admin\ChatController::class, 'show'])->name('admin.chat.show');
-        });
+        
         
         // Trainers Management Routes
         Route::prefix('trainers')->group(function () {
@@ -572,10 +562,7 @@ Route::middleware('auth')->group(function () {
             Route::delete('/{id}', [ClientDashboardController::class, 'destroyTestimonial'])->name('client.testimonials.destroy');
         });
 
-        // Chat
-        Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('client.chat.index');
-        Route::post('/chat/send', [\App\Http\Controllers\ChatController::class, 'sendMessage'])->name('client.chat.send');
-        Route::get('/chat/messages/{conversation}', [\App\Http\Controllers\ChatController::class, 'fetchMessages'])->name('client.chat.messages');
+       
     });
 
     /**
@@ -597,11 +584,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/testimonials', [TrainerDashboardController::class, 'testimonials'])->name('trainer.testimonials');
         Route::get('/profile', [TrainerDashboardController::class, 'profile'])->name('trainer.profile');
         Route::get('/profile/edit', [UserProfileController::class, 'edit'])->name('trainer.profile.edit');
-        
-        // Chat
-        Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('trainer.chat.index');
-        Route::post('/chat/send', [\App\Http\Controllers\ChatController::class, 'sendMessage'])->name('trainer.chat.send');
-        Route::get('/chat/messages/{conversation}', [\App\Http\Controllers\ChatController::class, 'fetchMessages'])->name('trainer.chat.messages');
         
         // Certification Management Routes for Trainers
         Route::prefix('certifications')->group(function () {
