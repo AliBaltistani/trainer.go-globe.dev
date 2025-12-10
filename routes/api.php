@@ -88,6 +88,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('chat')->group(function () {
         Route::get('/conversations', [ConversationController::class, 'index']);
         Route::post('/conversations', [ConversationController::class, 'store']);
+        Route::delete('/conversations/{id}', [ConversationController::class, 'destroy']);
+        Route::get('/unread-counts', [ConversationController::class, 'unreadCounts']);
+        Route::get('/contacts', [ConversationController::class, 'contacts']);
         Route::get('/messages/{conversationId}', [MessageController::class, 'index']);
         Route::post('/messages', [MessageController::class, 'store']);
         Route::post('/messages/read', [MessageController::class, 'read']);

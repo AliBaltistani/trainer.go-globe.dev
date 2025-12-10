@@ -46,7 +46,7 @@ class MessageController extends Controller
     {
         $request->validate([
             'conversation_id' => 'required|exists:conversations,id',
-            'message' => 'nullable|string',
+            'message' => 'required|string',
             'file' => 'nullable|file|max:10240', // 10MB max
         ]);
 
