@@ -1,7 +1,8 @@
 @extends('layouts.master')
 
 @section('styles')
-
+        <meta name="user-id" content="{{ auth()->id() }}">
+        
         <!-- GLightbox CSS -->
         <link rel="stylesheet" href="{{asset('build/assets/libs/glightbox/css/glightbox.min.css')}}">
         <style>

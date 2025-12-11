@@ -3,6 +3,7 @@ import './bootstrap';
 
 let currentConversationId = null;
 const authUserId = document.querySelector('meta[name="user-id"]')?.content || window.authUserId;
+const appendedMessageIds = new Set(); // Track appended messages to prevent duplicates
 
 if (!authUserId) {
     console.error('User ID meta tag not found');
@@ -19,7 +20,7 @@ if (!authUserId) {
             setTimeout(initEchoListener, 500);
         }
     };
-    
+
     // Start trying to listen once DOM is ready (or immediately if already ready)
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initEchoListener);
@@ -29,29 +30,37 @@ if (!authUserId) {
 }
 
 function handleIncomingMessage(msg) {
+    console.log('📨 [GLOBAL CHANNEL] Incoming message:', {
+        messageId: msg.id,
+        conversationId: msg.conversation_id,
+        currentConversationId: currentConversationId,
+        isCurrentConversation: currentConversationId == msg.conversation_id
+    });
+
     const conversationId = msg.conversation_id;
-    
+
     // 1. Update Recent List (Always update preview and move to top)
     const recentList = document.getElementById('chat-msg-scroll');
     let recentItem = null;
-    
+
     if (recentList) {
         recentItem = recentList.querySelector(`li[data-id="${conversationId}"]`);
-        
+
         // If not in recent list, create it (New Conversation)
         // Ensure msg.sender exists before trying to access properties
         if (!recentItem && msg.sender) {
+            console.log('Creating new conversation item for:', conversationId);
             recentItem = document.createElement('li');
             recentItem.className = 'checkforactive';
             recentItem.setAttribute('data-id', conversationId);
-            
+
             const senderName = msg.sender.name || 'Unknown';
             const senderImg = msg.sender.profile_image ? `/${msg.sender.profile_image}` : '/build/assets/images/faces/9.jpg';
             const date = new Date(msg.created_at);
             const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
             const text = msg.message_type === 'text' ? msg.message : 'Attachment';
             const previewText = text.length > 30 ? text.substring(0, 30) + '...' : text;
-            
+
             recentItem.innerHTML = `
                 <a href="javascript:void(0);" onclick="selectConversation('${conversationId}', this)">
                     <div class="d-flex align-items-top">
@@ -76,9 +85,9 @@ function handleIncomingMessage(msg) {
                     </div>
                 </a>
             `;
-            
+
             recentList.prepend(recentItem);
-            
+
             // Remove "No conversations" placeholder
             const noConv = recentList.querySelector('li.text-center');
             if (noConv) noConv.remove();
@@ -87,62 +96,75 @@ function handleIncomingMessage(msg) {
             recentList.prepend(recentItem);
         }
     }
-    
-    // 2. Handle Unread Status (If not current conversation)
-    if (currentConversationId != conversationId) {
-        
-        // 2a. Update Badge on Recent List Item (if exists)
-        if (recentItem) {
-             let badge = recentItem.querySelector('.chat-read-icon');
-             if (!badge) {
-                 const p = recentItem.querySelector('.fs-13');
-                 if (p) {
-                     badge = document.createElement('span');
-                     badge.className = 'chat-read-icon float-end align-middle badge bg-danger rounded-circle text-white';
-                     badge.style.cssText = 'width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px;';
-                     badge.textContent = '0';
-                     p.appendChild(badge);
-                 }
-             }
-             if (badge) {
-                 let count = parseInt(badge.textContent) || 0;
-                 badge.textContent = count + 1;
-             }
-        }
 
-        // 2b. Update Unread List
-        const unreadList = document.getElementById('chat-unread-msg-scroll');
-        if (unreadList) {
-            let unreadItem = unreadList.querySelector(`li[data-id="${conversationId}"]`);
-            
-            if (unreadItem) {
-                // Already in unread list, just update
-                updateListItemContent(unreadItem, msg);
-                
-                // Increment badge
-                const badge = unreadItem.querySelector('.chat-read-icon');
-                if (badge) {
-                    let count = parseInt(badge.textContent) || 0;
-                    badge.textContent = count + 1;
-                }
-                unreadList.prepend(unreadItem);
-                
-                // Update Tab Badges (1 new message, 0 new conversations)
-                updateTabBadges(1, 0);
+    // 2. If this is the current conversation, append the message immediately
+    if (currentConversationId == conversationId) {
+        console.log('✅ [GLOBAL] Message is for current conversation, appending...');
+        appendMessage(msg);
+        scrollToBottom();
 
-            } else if (recentItem) {
-                // Not in unread list, clone from recent (which now has the badge)
-                unreadItem = recentItem.cloneNode(true);
-                
-                unreadList.prepend(unreadItem);
-                
-                // Remove "No unread conversations" placeholder
-                const noMsg = unreadList.querySelector('li.text-center');
-                if (noMsg) noMsg.remove();
-                
-                // Update Tab Badges (1 new message, 1 new conversation)
-                updateTabBadges(1, 1);
+        // Mark as read immediately since we are viewing it
+        axios.post('/chat/messages/read', { conversation_id: conversationId })
+            .catch(err => console.error('Failed to mark as read:', err));
+
+        return; // Don't show unread badge for current conversation
+    }
+
+    // 3. Handle Unread Status (If not current conversation)
+    console.log('Message is for different conversation, updating badges...');
+
+    // 3a. Update Badge on Recent List Item (if exists)
+    if (recentItem) {
+        let badge = recentItem.querySelector('.chat-read-icon');
+        if (!badge) {
+            const p = recentItem.querySelector('.fs-13');
+            if (p) {
+                badge = document.createElement('span');
+                badge.className = 'chat-read-icon float-end align-middle badge bg-danger rounded-circle text-white';
+                badge.style.cssText = 'width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px;';
+                badge.textContent = '0';
+                p.appendChild(badge);
             }
+        }
+        if (badge) {
+            let count = parseInt(badge.textContent) || 0;
+            badge.textContent = count + 1;
+            console.log('Updated badge count to:', count + 1);
+        }
+    }
+
+    // 3b. Update Unread List
+    const unreadList = document.getElementById('chat-unread-msg-scroll');
+    if (unreadList) {
+        let unreadItem = unreadList.querySelector(`li[data-id="${conversationId}"]`);
+
+        if (unreadItem) {
+            // Already in unread list, just update
+            updateListItemContent(unreadItem, msg);
+
+            // Increment badge
+            const badge = unreadItem.querySelector('.chat-read-icon');
+            if (badge) {
+                let count = parseInt(badge.textContent) || 0;
+                badge.textContent = count + 1;
+            }
+            unreadList.prepend(unreadItem);
+
+            // Update Tab Badges (1 new message, 0 new conversations)
+            updateTabBadges(1, 0);
+
+        } else if (recentItem) {
+            // Not in unread list, clone from recent (which now has the badge)
+            unreadItem = recentItem.cloneNode(true);
+
+            unreadList.prepend(unreadItem);
+
+            // Remove "No unread conversations" placeholder
+            const noMsg = unreadList.querySelector('li.text-center');
+            if (noMsg) noMsg.remove();
+
+            // Update Tab Badges (1 new message, 1 new conversation)
+            updateTabBadges(1, 1);
         }
     }
 }
@@ -155,7 +177,7 @@ function updateListItemContent(li, msg) {
         const text = msg.message_type === 'text' ? msg.message : 'Attachment';
         msgPreview.textContent = text.length > 30 ? text.substring(0, 30) + '...' : text;
     }
-    
+
     // Update Time
     const timeSpan = li.querySelector('.float-end.text-muted');
     if (timeSpan) {
@@ -224,23 +246,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAttach = document.getElementById('btn-attach');
     const fileInput = document.getElementById('chat-file-input');
     const btnRemoveAttachment = document.getElementById('btn-remove-attachment');
-    
+
     // Responsive Chat Close Button
     const responsiveCloseBtn = document.querySelector('.responsive-chat-close');
-    if(responsiveCloseBtn) {
+    if (responsiveCloseBtn) {
         responsiveCloseBtn.addEventListener('click', () => {
-             const chartWrapper = document.querySelector(".main-chart-wrapper");
-             if(chartWrapper) {
-                 chartWrapper.classList.remove("responsive-chat-open");
-             }
+            const chartWrapper = document.querySelector(".main-chart-wrapper");
+            if (chartWrapper) {
+                chartWrapper.classList.remove("responsive-chat-open");
+            }
         });
     }
 
-    if(sendBtn) {
+    if (sendBtn) {
         sendBtn.addEventListener('click', sendMessage);
     }
-    
-    if(input) {
+
+    if (input) {
         input.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') sendMessage();
         });
@@ -255,13 +277,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.target.files.length > 0) {
                 window.selectedFile = e.target.files[0];
                 btnAttach.classList.add('text-primary'); // Indicate file selected
-                
+
                 // Show Preview
                 const previewDiv = document.getElementById('chat-attachment-preview');
                 const previewName = document.getElementById('preview-name');
                 const previewIcon = document.getElementById('preview-icon');
-                
-                if(previewDiv && previewName && previewIcon) {
+
+                if (previewDiv && previewName && previewIcon) {
                     previewName.textContent = window.selectedFile.name;
                     previewIcon.className = getFileIcon(window.selectedFile.name);
                     previewDiv.classList.remove('d-none');
@@ -271,7 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    
+
     if (btnRemoveAttachment) {
         btnRemoveAttachment.addEventListener('click', clearAttachment);
     }
@@ -285,21 +307,25 @@ document.addEventListener('DOMContentLoaded', () => {
 function clearAttachment() {
     window.selectedFile = null;
     const fileInput = document.getElementById('chat-file-input');
-    if(fileInput) fileInput.value = '';
-    
+    if (fileInput) fileInput.value = '';
+
     const btnAttach = document.getElementById('btn-attach');
-    if(btnAttach) btnAttach.classList.remove('text-primary');
-    
+    if (btnAttach) btnAttach.classList.remove('text-primary');
+
     const previewDiv = document.getElementById('chat-attachment-preview');
-    if(previewDiv) previewDiv.classList.add('d-none');
+    if (previewDiv) previewDiv.classList.add('d-none');
 }
 
-window.selectConversation = function(conversationId, element) {
+window.selectConversation = function (conversationId, element) {
     if (currentConversationId) {
         window.Echo.leave(`conversation.${currentConversationId}`);
     }
     currentConversationId = conversationId;
-    
+
+    // Clear message tracking for new conversation
+    appendedMessageIds.clear();
+    console.log('🔄 Switched to conversation:', conversationId);
+
     // UI updates: Mark active in ALL lists
     document.querySelectorAll('.checkforactive').forEach(el => el.classList.remove('active'));
     document.querySelectorAll(`li[data-id="${conversationId}"]`).forEach(el => el.classList.add('active'));
@@ -317,7 +343,7 @@ window.selectConversation = function(conversationId, element) {
         const img = imgElement ? imgElement.src : '';
         const statusElement = element.querySelector('.avatar');
         const status = statusElement && statusElement.classList.contains('online') ? 'online' : 'offline';
-        
+
         document.querySelectorAll(".chatnameperson").forEach(el => el.innerText = name);
         document.querySelectorAll(".chatimageperson").forEach(el => el.src = img);
         document.querySelectorAll(".chatstatusperson").forEach(el => {
@@ -325,18 +351,18 @@ window.selectConversation = function(conversationId, element) {
             el.classList.add(status);
         });
         const statusText = document.querySelector(".chatpersonstatus");
-        if(statusText) statusText.innerText = status;
-        
+        if (statusText) statusText.innerText = status;
+
         const chartWrapper = document.querySelector(".main-chart-wrapper");
-        if(chartWrapper) chartWrapper.classList.add("responsive-chat-open");
+        if (chartWrapper) chartWrapper.classList.add("responsive-chat-open");
     }
-    
+
     // Show chat area, hide placeholder
     const noChatPlaceholder = document.getElementById('no-chat-selected');
     const chatList = document.getElementById('chat-messages-list');
     const chatHead = document.querySelector('.main-chat-head');
     const chatFooter = document.querySelector('.chat-footer');
-    
+
     if (noChatPlaceholder) {
         noChatPlaceholder.classList.add('d-none');
         noChatPlaceholder.classList.remove('d-flex');
@@ -346,26 +372,26 @@ window.selectConversation = function(conversationId, element) {
     }
     if (chatHead) chatHead.classList.remove('d-none');
     if (chatFooter) chatFooter.classList.remove('d-none');
-    
+
     // Fetch messages
     axios.get(`/chat/messages/${conversationId}`)
         .then(response => {
             // Handle paginated response (data.data is the array for Laravel pagination JSON)
             // We get them desc (newest first), so we reverse to show oldest first
-            const messages = response.data.data.reverse(); 
+            const messages = response.data.data.reverse();
             renderMessages(messages);
             scrollToBottom();
-            
+
             // Optimistic UI Update: Clear badges immediately
             const listItems = document.querySelectorAll(`li[data-id="${conversationId}"]`);
             let optimisticUnreadCount = 0;
-            
+
             listItems.forEach(li => {
                 const badge = li.querySelector('.chat-read-icon');
                 if (badge) {
                     const count = parseInt(badge.textContent) || 0;
                     if (count > optimisticUnreadCount) optimisticUnreadCount = count;
-                    badge.remove(); 
+                    badge.remove();
                 }
             });
 
@@ -375,7 +401,7 @@ window.selectConversation = function(conversationId, element) {
                 const unreadItem = unreadList.querySelector(`li[data-id="${conversationId}"]`);
                 if (unreadItem) {
                     unreadItem.remove();
-                    
+
                     // If list is empty (only title remains), show placeholder
                     if (unreadList.querySelectorAll('li').length <= 1) {
                         const noMsg = document.createElement('li');
@@ -410,14 +436,28 @@ window.selectConversation = function(conversationId, element) {
                 let typingTimer;
                 const channel = window.Echo.private(`conversation.${conversationId}`);
 
+                console.log('📡 Listening on conversation channel:', conversationId);
+
                 channel
                     .listen('.App\\Events\\MessageSent', (e) => {
+                        console.log('📩 [CONVERSATION CHANNEL] Received MessageSent event:', {
+                            messageId: e.message.id,
+                            senderId: e.message.sender_id,
+                            receiverId: e.message.receiver_id,
+                            currentUserId: authUserId,
+                            conversationId: e.message.conversation_id
+                        });
+
                         if (e.message.sender_id != authUserId) {
+                            console.log('✅ Message from other user, appending to conversation...');
                             appendMessage(e.message);
                             scrollToBottom();
-                            
+
                             // Mark as read immediately since we are viewing it
-                            axios.post('/chat/messages/read', { conversation_id: conversationId });
+                            axios.post('/chat/messages/read', { conversation_id: conversationId })
+                                .catch(err => console.error('Failed to mark as read:', err));
+                        } else {
+                            console.log('⏭️ Own message, skipping (already displayed)');
                         }
                     })
                     .listen('.App\\Events\\MessageRead', (e) => {
@@ -432,10 +472,11 @@ window.selectConversation = function(conversationId, element) {
                     })
                     .listenForWhisper('typing', (e) => {
                         if (e.userId != authUserId) {
+                            console.log('⌨️ User is typing...');
                             const typingIndicator = document.getElementById('typing-indicator');
                             if (typingIndicator) {
                                 typingIndicator.classList.remove('d-none');
-                                
+
                                 clearTimeout(typingTimer);
                                 typingTimer = setTimeout(() => {
                                     typingIndicator.classList.add('d-none');
@@ -461,9 +502,9 @@ window.selectConversation = function(conversationId, element) {
 function renderMessages(messages) {
     const chatList = document.getElementById('chat-messages-list');
     if (!chatList) return;
-    
+
     chatList.innerHTML = '';
-    
+
     messages.forEach(msg => {
         appendMessage(msg);
     });
@@ -476,11 +517,18 @@ function renderMessages(messages) {
 
 function appendMessage(msg) {
     const chatList = document.getElementById('chat-messages-list');
+    console.log("chatList:", chatList);
     if (!chatList) return;
+
+    // Prevent duplicate messages
+    if (msg.id && appendedMessageIds.has(msg.id)) {
+        console.log('⚠️ Message already appended, skipping:', msg.id);
+        return;
+    }
 
     const isMe = msg.sender_id == authUserId;
     const alignClass = isMe ? 'chat-item-end' : 'chat-item-start';
-    
+
     // Use stored partner avatar or fallback
     let avatarSrc = '';
     if (isMe) {
@@ -494,7 +542,7 @@ function appendMessage(msg) {
     // Format time
     const date = new Date(msg.created_at);
     const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    
+
     let contentHtml = '';
     if (msg.message_type === 'text') {
         contentHtml = `<p class="mb-0">${msg.message}</p>`;
@@ -549,8 +597,13 @@ function appendMessage(msg) {
             </div>
         </li>
     `;
-    
+
     chatList.insertAdjacentHTML('beforeend', html);
+
+    // Track this message as appended
+    if (msg.id) {
+        appendedMessageIds.add(msg.id);
+    }
 }
 
 function getFileIcon(filename) {
@@ -568,16 +621,16 @@ function getFileIcon(filename) {
     }
 }
 
-window.sendMessage = function() {
+window.sendMessage = function () {
     const input = document.querySelector('.chat-message-space');
     const sendBtn = document.querySelector('.btn-send');
     const message = input.value;
-    
+
     if (!message.trim() && !window.selectedFile) return;
     if (!currentConversationId) return;
 
     // Disable button
-    if(sendBtn) {
+    if (sendBtn) {
         sendBtn.disabled = true;
         const originalContent = sendBtn.innerHTML;
         sendBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i>';
@@ -588,16 +641,16 @@ window.sendMessage = function() {
     formData.append('conversation_id', currentConversationId);
     if (message.trim()) formData.append('message', message);
     if (window.selectedFile) formData.append('file', window.selectedFile);
-    
+
     axios.post('/chat/send', formData)
         .then(response => {
             input.value = '';
-            
+
             clearAttachment();
 
             appendMessage(response.data.message);
             scrollToBottom();
-            
+
             // Re-init GLightbox for new image if sent
             if (typeof GLightbox !== 'undefined' && response.data.message.message_type === 'image') {
                 GLightbox({ selector: '.glightbox' });
@@ -606,7 +659,7 @@ window.sendMessage = function() {
         .catch(error => console.error(error))
         .finally(() => {
             // Re-enable button
-            if(sendBtn) {
+            if (sendBtn) {
                 sendBtn.disabled = false;
                 sendBtn.innerHTML = sendBtn.dataset.originalContent || '<i class="ri-send-plane-2-line"></i>';
             }
@@ -617,13 +670,13 @@ function scrollToBottom() {
     // Priority: 1. Main Chat Content ID, 2. SimpleBar Wrapper
     const chatContent = document.getElementById('main-chat-content');
     const simpleBar = document.querySelector('.chat-content .simplebar-content-wrapper');
-    
+
     // Helper to scroll
     const performScroll = (element) => {
-        if(element) {
+        if (element) {
             // Scroll immediately
             element.scrollTop = element.scrollHeight;
-            
+
             // And again after a short delay to account for images/reflows
             setTimeout(() => {
                 element.scrollTop = element.scrollHeight;
@@ -643,20 +696,20 @@ function scrollToBottom() {
     }
 }
 
-window.startNewChat = function(partnerId) {
+window.startNewChat = function (partnerId) {
     axios.post('/chat/create', { partner_id: partnerId })
         .then(response => {
             const conversation = response.data.conversation;
-            
+
             // Reload to update list and select the conversation
-            window.location.reload(); 
+            window.location.reload();
         })
         .catch(error => {
             console.error('Error creating chat:', error);
-            if(error.response && error.response.status === 403) {
-                 alert('You are not authorized to chat with this user (subscription inactive).');
+            if (error.response && error.response.status === 403) {
+                alert('You are not authorized to chat with this user (subscription inactive).');
             } else {
-                 alert('Failed to start chat. Please try again.');
+                alert('Failed to start chat. Please try again.');
             }
         });
 };

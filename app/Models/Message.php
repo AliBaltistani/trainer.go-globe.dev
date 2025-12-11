@@ -26,6 +26,11 @@ class Message extends Model
         'is_read' => 'boolean',
     ];
 
+    /**
+     * Eager load sender relationship by default
+     */
+    protected $with = ['sender'];
+
     public function conversation(): BelongsTo
     {
         return $this->belongsTo(Conversation::class);

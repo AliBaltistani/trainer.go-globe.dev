@@ -38,4 +38,35 @@ class MessageSent implements ShouldBroadcast
             new PrivateChannel('user.' . $this->message->sender_id),
         ];
     }
+
+    /**
+     * Get the data to broadcast with the event.
+     *
+     * @return array
+     */
+    public function broadcastWith(): array
+    {
+        // Load sender relationship if not already loaded
+        $this->message->load('sender');
+        
+        return [
+            'message' => [
+                'id' => $this->message->id,
+                'conversation_id' => $this->message->conversation_id,
+                'sender_id' => $this->message->sender_id,
+                'receiver_id' => $this->message->receiver_id,
+                'message' => $this->message->message,
+                'message_type' => $this->message->message_type,
+                'media_url' => $this->message->media_url,
+                'is_read' => $this->message->is_read,
+                'created_at' => $this->message->created_at->toISOString(),
+                'sender' => [
+                    'id' => $this->message->sender->id,
+                    'name' => $this->message->sender->name,
+                    'email' => $this->message->sender->email,
+                    'profile_image' => $this->message->sender->profile_image,
+                ],
+            ],
+        ];
+    }
 }

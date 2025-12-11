@@ -154,8 +154,11 @@ class ChatController extends Controller
         // Update last message
         $conversation->update(['last_message_id' => $message->id]);
 
-        // Broadcast event
-        broadcast(new MessageSent($message))->toOthers();
+        // Load sender relationship for response
+        $message->load('sender');
+
+        // Broadcast event (don't use toOthers() - frontend handles duplicate prevention)
+        broadcast(new MessageSent($message));
 
         // Send Notification (Logic to be added)
 
