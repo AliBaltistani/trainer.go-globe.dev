@@ -38,7 +38,9 @@
                                     @if($user->profile_image)
                                         <img src="{{ asset('storage/' . $user->profile_image) }}" alt="">
                                     @else
-                                        <img src="{{asset('build/assets/images/faces/12.jpg')}}" alt="">
+                                         <span class="avatar avatar-xl bg-primary-transparent avatar-rounded">
+                                            {{ strtoupper(substr($user->name, 0, 2)) }}
+                                        </span>
                                     @endif
                                 </span>
                                 <div class="mt-4 mb-3 d-flex align-items-center flex-wrap gap-3 justify-content-between">
