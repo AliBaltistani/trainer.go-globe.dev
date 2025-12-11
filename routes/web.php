@@ -595,8 +595,18 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [TrainerDashboardController::class, 'index'])->name('trainer.dashboard');
         Route::get('/certifications', [TrainerDashboardController::class, 'certifications'])->name('trainer.certifications');
         Route::get('/testimonials', [TrainerDashboardController::class, 'testimonials'])->name('trainer.testimonials');
-        Route::get('/profile', [TrainerDashboardController::class, 'profile'])->name('trainer.profile');
-        Route::get('/profile/edit', [UserProfileController::class, 'edit'])->name('trainer.profile.edit');
+        
+        // Trainer Profile Routes
+        Route::prefix('profile')->group(function () {
+            Route::get('/', [TrainerDashboardController::class, 'profile'])->name('trainer.profile');
+            Route::get('/edit', [UserProfileController::class, 'edit'])->name('trainer.profile.edit');
+            Route::post('/update', [UserProfileController::class, 'update'])->name('trainer.profile.update');
+            Route::get('/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('trainer.profile.change-password');
+            Route::post('/change-password', [UserProfileController::class, 'changePassword'])->name('trainer.profile.password.update');
+            Route::post('/delete-image', [UserProfileController::class, 'deleteProfileImage'])->name('trainer.profile.delete-image');
+            Route::get('/settings', [UserProfileController::class, 'settings'])->name('trainer.profile.settings');
+            Route::get('/activity-log', [UserProfileController::class, 'activityLog'])->name('trainer.profile.activity-log');
+        });
         
         // Chat
         Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('trainer.chat.index');

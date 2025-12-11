@@ -48,7 +48,7 @@
                 </div>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ route('profile.password.update') }}">
+                <form method="POST" action="{{ route(Auth::user()->role.'.profile.password.update') }}">
                     @csrf
                     <div class="row gy-3">
                         <div class="col-xl-12">
@@ -95,7 +95,7 @@
             </div>
             <div class="card-footer">
                 <div class="text-center">
-                    <a href="{{ route('profile.index') }}" class="text-primary">Back to Profile</a>
+                    <a href="{{ route(Auth::user()->role.'.profile') }}" class="text-primary">Back to Profile</a>
                 </div>
             </div>
         </div>

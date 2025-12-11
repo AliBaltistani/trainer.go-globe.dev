@@ -149,9 +149,13 @@
             <li class="header-element dropdown">
                 <!-- Start::header-link|dropdown-toggle -->
                 <a href="javascript:void(0);" class="header-link dropdown-toggle" id="mainHeaderProfile" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                    @if($user->profile_image)
+                    <img src="{{ asset('storage/' . $user->profile_image) }}" alt="profile-img" class="rounded-circle header-link-icon">
+                    @else
                     <div class="header-link-icon avatar bg-primary-transparent avatar-rounded">
                          {{ strtoupper(substr($user->name, 0, 1)) }}
                     </div>
+                    @endif
                 </a>
                 <!-- End::header-link|dropdown-toggle -->
                 <div class="main-header-dropdown dropdown-menu pt-0 overflow-hidden header-profile-dropdown dropdown-menu-end" aria-labelledby="mainHeaderProfile">
@@ -165,9 +169,14 @@
                     <div class="p-3">
                         <div class="d-flex align-items-start gap-2">
                             <div class="lh-1">
-                                <span class="avatar avatar-sm bg-primary-transparent avatar-rounded">
-                                    {{ strtoupper(substr($user->name, 0, 1)) }}
-                                </span>
+                                 @if($user->profile_image)
+                                    <img src="{{ asset('storage/' . $user->profile_image) }}" alt="profile-img" class="rounded-circle header-link-icon">
+                                @else
+                                    <span class="avatar avatar-sm bg-primary-transparent avatar-rounded">
+                                        {{ strtoupper(substr($user->name, 0, 1)) }}
+                                    </span>
+                                @endif
+                                
                             </div>
                             <div>
                                 <span class="d-block fw-semibold lh-1">{{ $user->name }}</span>
@@ -184,6 +193,9 @@
                                 </li>
                                 <li>
                                     <a class="dropdown-item d-flex align-items-center" href="{{ route(Auth::user()->role.'.profile.edit') }}"><i class="ti ti-settings-cog me-2 fs-18"></i>Account Settings</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="{{ route(Auth::user()->role.'.profile.change-password') }}"><i class="ti ti-lock me-2 fs-18"></i>Change Password</a>
                                 </li>
                             </ul>        
                         </li>
