@@ -26,7 +26,7 @@
                 <div class="card custom-card profile-card">
                     <div class="profile-banner-image">
                          @if($user->role === 'trainer' && $user->business_logo)
-                            <img src="{{ asset('storage/' . $user->business_logo) }}" class="card-img-top" alt="...">
+                            <img src="{{ asset('storage/' . $user->business_logo) }}" class="card-img-top" alt="..." height="200">
                         @else
                             <img src="{{asset('build/assets/images/media/media-3.jpg')}}" class="card-img-top" alt="...">
                         @endif
