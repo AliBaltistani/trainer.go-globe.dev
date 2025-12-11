@@ -64,13 +64,15 @@ class UserProfileController extends Controller
     public function update(Request $request)
     {
         $user = Auth::user();
+        $currentUser = Auth::user(); // The logged-in user making the request
         
         // Base validation rules for all users
         $validationRules = [
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'phone' => 'required|string|max:20|unique:users,phone,' . $user->id,
-            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'timezone' => 'nullable|string|max:50'
         ];
         
         $validationMessages = [
@@ -83,8 +85,15 @@ class UserProfileController extends Controller
             'phone.unique' => 'This phone number is already taken.',
             'profile_image.image' => 'Profile image must be an image file.',
             'profile_image.mimes' => 'Profile image must be jpeg, png, jpg, or gif.',
-            'profile_image.max' => 'Profile image size cannot exceed 2MB.'
+            'profile_image.max' => 'Profile image size cannot exceed 2MB.',
+            'timezone.max' => 'Timezone value is invalid.'
         ];
+        
+        // Add admin-specific validation rules - only admins can change roles
+        if ($currentUser->role === 'admin') {
+            $validationRules['role'] = 'nullable|in:admin,trainer,client';
+            $validationMessages['role.in'] = 'Please select a valid role.';
+        }
         
         // Add trainer-specific validation rules if user is a trainer
         if ($user->role === 'trainer') {
@@ -140,6 +149,21 @@ class UserProfileController extends Controller
             $user->name = $request->name;
             $user->email = $request->email;
             $user->phone = $request->phone;
+            
+            // Update timezone if provided
+            if ($request->has('timezone')) {
+                $user->timezone = $request->timezone;
+            }
+            
+            // SECURITY: Only admins can update role
+            // Silently ignore role changes from non-admin users for security
+            if ($currentUser->role === 'admin' && $request->has('role')) {
+                $user->role = $request->role;
+            }
+            
+            // SECURITY: Prevent any updates to email_verified_at from form submissions
+            // This field should only be modified through email verification process
+            // Even admins cannot modify this through the profile update form
             
             // Update trainer-specific fields if user is a trainer
             if ($user->role === 'trainer') {

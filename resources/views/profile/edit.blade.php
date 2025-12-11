@@ -1,7 +1,23 @@
 @extends('layouts.master')
 
 @section('styles')
-
+<style>
+    .avatar-initial {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        font-size: 2.5rem;
+        font-weight: 600;
+        color: #fff;
+        text-transform: uppercase;
+    }
+    
+    .bg-primary-gradient {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+</style>
 @endsection
 
 @section('content')
@@ -54,11 +70,13 @@
                         <div class="col-xl-6">
                             <div class="d-flex align-items-start flex-wrap gap-3">
                                 <div>
-                                    <span class="avatar avatar-xxl">
+                                    <span class="avatar avatar-xxl" id="profileAvatarContainer">
                                         @if($user->profile_image)
-                                            <img src="{{ asset('storage/' . $user->profile_image) }}" alt="">
+                                            <img id="profileAvatarImage" src="{{ asset('storage/' . $user->profile_image) }}" alt="{{ $user->name }}">
                                         @else
-                                            <img src="{{asset('build/assets/images/faces/9.jpg')}}" alt="">
+                                            <span id="profileAvatarPlaceholder" class="avatar-initial rounded-circle bg-primary-gradient">
+                                                {{ strtoupper(substr($user->name, 0, 1)) }}
+                                            </span>
                                         @endif
                                     </span>
                                 </div>
@@ -127,11 +145,78 @@
                             @enderror
                         </div>
                         <div class="col-xl-6">
-                            <label for="profile-role" class="form-label">Role :</label>
-                            <input type="text" class="form-control" id="profile-role" value="{{ ucfirst($user->role) }}" readonly>
+                            <label for="profile-timezone" class="form-label">Timezone :</label>
+                            <select class="form-select @error('timezone') is-invalid @enderror" id="profile-timezone" name="timezone">
+                                <option value="UTC" {{ old('timezone', $user->timezone ?? 'UTC') === 'UTC' ? 'selected' : '' }}>UTC (Coordinated Universal Time)</option>
+                                <optgroup label="UTC Positive Offsets">
+                                    <option value="UTC+1" {{ old('timezone', $user->timezone) === 'UTC+1' ? 'selected' : '' }}>UTC+1 (Central European Time)</option>
+                                    <option value="UTC+2" {{ old('timezone', $user->timezone) === 'UTC+2' ? 'selected' : '' }}>UTC+2 (Eastern European Time)</option>
+                                    <option value="UTC+3" {{ old('timezone', $user->timezone) === 'UTC+3' ? 'selected' : '' }}>UTC+3 (Moscow Time)</option>
+                                    <option value="UTC+3:30" {{ old('timezone', $user->timezone) === 'UTC+3:30' ? 'selected' : '' }}>UTC+3:30 (Iran Time)</option>
+                                    <option value="UTC+4" {{ old('timezone', $user->timezone) === 'UTC+4' ? 'selected' : '' }}>UTC+4 (Gulf Standard Time)</option>
+                                    <option value="UTC+4:30" {{ old('timezone', $user->timezone) === 'UTC+4:30' ? 'selected' : '' }}>UTC+4:30 (Afghanistan Time)</option>
+                                    <option value="UTC+5" {{ old('timezone', $user->timezone) === 'UTC+5' ? 'selected' : '' }}>UTC+5 (Pakistan Standard Time)</option>
+                                    <option value="UTC+5:30" {{ old('timezone', $user->timezone) === 'UTC+5:30' ? 'selected' : '' }}>UTC+5:30 (India Standard Time)</option>
+                                    <option value="UTC+5:45" {{ old('timezone', $user->timezone) === 'UTC+5:45' ? 'selected' : '' }}>UTC+5:45 (Nepal Time)</option>
+                                    <option value="UTC+6" {{ old('timezone', $user->timezone) === 'UTC+6' ? 'selected' : '' }}>UTC+6 (Bangladesh Time)</option>
+                                    <option value="UTC+6:30" {{ old('timezone', $user->timezone) === 'UTC+6:30' ? 'selected' : '' }}>UTC+6:30 (Myanmar Time)</option>
+                                    <option value="UTC+7" {{ old('timezone', $user->timezone) === 'UTC+7' ? 'selected' : '' }}>UTC+7 (Indochina Time)</option>
+                                    <option value="UTC+8" {{ old('timezone', $user->timezone) === 'UTC+8' ? 'selected' : '' }}>UTC+8 (China/Singapore Time)</option>
+                                    <option value="UTC+9" {{ old('timezone', $user->timezone) === 'UTC+9' ? 'selected' : '' }}>UTC+9 (Japan/Korea Time)</option>
+                                    <option value="UTC+9:30" {{ old('timezone', $user->timezone) === 'UTC+9:30' ? 'selected' : '' }}>UTC+9:30 (Australian Central Time)</option>
+                                    <option value="UTC+10" {{ old('timezone', $user->timezone) === 'UTC+10' ? 'selected' : '' }}>UTC+10 (Australian Eastern Time)</option>
+                                    <option value="UTC+11" {{ old('timezone', $user->timezone) === 'UTC+11' ? 'selected' : '' }}>UTC+11 (Solomon Islands Time)</option>
+                                    <option value="UTC+12" {{ old('timezone', $user->timezone) === 'UTC+12' ? 'selected' : '' }}>UTC+12 (New Zealand Time)</option>
+                                    <option value="UTC+13" {{ old('timezone', $user->timezone) === 'UTC+13' ? 'selected' : '' }}>UTC+13 (Tonga Time)</option>
+                                    <option value="UTC+14" {{ old('timezone', $user->timezone) === 'UTC+14' ? 'selected' : '' }}>UTC+14 (Line Islands Time)</option>
+                                </optgroup>
+                                <optgroup label="UTC Negative Offsets">
+                                    <option value="UTC-1" {{ old('timezone', $user->timezone) === 'UTC-1' ? 'selected' : '' }}>UTC-1 (Azores Time)</option>
+                                    <option value="UTC-2" {{ old('timezone', $user->timezone) === 'UTC-2' ? 'selected' : '' }}>UTC-2 (South Georgia Time)</option>
+                                    <option value="UTC-3" {{ old('timezone', $user->timezone) === 'UTC-3' ? 'selected' : '' }}>UTC-3 (Argentina Time)</option>
+                                    <option value="UTC-3:30" {{ old('timezone', $user->timezone) === 'UTC-3:30' ? 'selected' : '' }}>UTC-3:30 (Newfoundland Time)</option>
+                                    <option value="UTC-4" {{ old('timezone', $user->timezone) === 'UTC-4' ? 'selected' : '' }}>UTC-4 (Atlantic Time)</option>
+                                    <option value="UTC-5" {{ old('timezone', $user->timezone) === 'UTC-5' ? 'selected' : '' }}>UTC-5 (Eastern Time)</option>
+                                    <option value="UTC-6" {{ old('timezone', $user->timezone) === 'UTC-6' ? 'selected' : '' }}>UTC-6 (Central Time)</option>
+                                    <option value="UTC-7" {{ old('timezone', $user->timezone) === 'UTC-7' ? 'selected' : '' }}>UTC-7 (Mountain Time)</option>
+                                    <option value="UTC-8" {{ old('timezone', $user->timezone) === 'UTC-8' ? 'selected' : '' }}>UTC-8 (Pacific Time)</option>
+                                    <option value="UTC-9" {{ old('timezone', $user->timezone) === 'UTC-9' ? 'selected' : '' }}>UTC-9 (Alaska Time)</option>
+                                    <option value="UTC-10" {{ old('timezone', $user->timezone) === 'UTC-10' ? 'selected' : '' }}>UTC-10 (Hawaii Time)</option>
+                                    <option value="UTC-11" {{ old('timezone', $user->timezone) === 'UTC-11' ? 'selected' : '' }}>UTC-11 (Samoa Time)</option>
+                                    <option value="UTC-12" {{ old('timezone', $user->timezone) === 'UTC-12' ? 'selected' : '' }}>UTC-12 (Baker Island Time)</option>
+                                </optgroup>
+                            </select>
+                            @error('timezone')
+                                <div class="invalid-feedback">
+                                    {{ $message }}
+                                </div>
+                            @enderror
                             <div class="form-text">
-                                <small class="text-muted">Contact administrator to change your role</small>
+                                <small class="text-muted">Your timezone is used for scheduling and notifications</small>
                             </div>
+                        </div>
+                        <div class="col-xl-6">
+                            <label for="profile-role" class="form-label">Role :</label>
+                            @if(Auth::user()->role === 'admin')
+                                <select class="form-select @error('role') is-invalid @enderror" id="profile-role" name="role">
+                                    <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                                    <option value="trainer" {{ $user->role === 'trainer' ? 'selected' : '' }}>Trainer</option>
+                                    <option value="client" {{ $user->role === 'client' ? 'selected' : '' }}>Client</option>
+                                </select>
+                                @error('role')
+                                    <div class="invalid-feedback">
+                                        {{ $message }}
+                                    </div>
+                                @enderror
+                                <div class="form-text">
+                                    <small class="text-muted">As an admin, you can change user roles</small>
+                                </div>
+                            @else
+                                <input type="text" class="form-control" id="profile-role" value="{{ ucfirst($user->role) }}" readonly>
+                                <div class="form-text">
+                                    <small class="text-muted">Contact administrator to change your role</small>
+                                </div>
+                            @endif
                         </div>
                         <div class="col-xl-6">
                             <label for="profile-created" class="form-label">Member Since :</label>
@@ -294,9 +379,41 @@ document.getElementById('profileImage').addEventListener('change', function(e) {
         // Preview the selected image
         const reader = new FileReader();
         reader.onload = function(e) {
-            const avatarImg = document.querySelector('.avatar img');
-            if (avatarImg) {
-                avatarImg.src = e.target.result;
+            const avatarContainer = document.getElementById('profileAvatarContainer');
+            if (avatarContainer) {
+                // Check if there's already an img element
+                let avatarImg = document.getElementById('profileAvatarImage');
+                
+                if (avatarImg) {
+                    // Update existing image
+                    avatarImg.src = e.target.result;
+                } else {
+                    // Remove placeholder and create new image element
+                    const placeholder = document.getElementById('profileAvatarPlaceholder');
+                    if (placeholder) {
+                        placeholder.remove();
+                    }
+                    
+                    // Create and append new image
+                    avatarImg = document.createElement('img');
+                    avatarImg.id = 'profileAvatarImage';
+                    avatarImg.src = e.target.result;
+                    avatarImg.alt = 'Profile Image';
+                    avatarContainer.appendChild(avatarImg);
+                }
+                
+                // Show delete button if it doesn't exist
+                const deleteBtn = document.getElementById('deleteImageBtn');
+                if (!deleteBtn) {
+                    const btnList = document.querySelector('.btn-list');
+                    const newDeleteBtn = document.createElement('button');
+                    newDeleteBtn.type = 'button';
+                    newDeleteBtn.className = 'btn btn-sm btn-light btn-wave';
+                    newDeleteBtn.id = 'deleteImageBtn';
+                    newDeleteBtn.onclick = deleteProfileImage;
+                    newDeleteBtn.innerHTML = '<i class="ri-delete-bin-line me-1"></i>Remove';
+                    btnList.appendChild(newDeleteBtn);
+                }
             }
         };
         reader.readAsDataURL(file);
