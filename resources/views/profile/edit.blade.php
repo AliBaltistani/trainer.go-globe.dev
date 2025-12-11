@@ -94,6 +94,7 @@
                             </div>
                         </div>
                         
+                         @if(Auth::user()->role == 'trainer' || $user->role == 'trainer')
                             <div class="col-xl-6">
                                 <div class="d-flex align-items-start flex-wrap gap-3">
                                     <div>
@@ -117,6 +118,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
                         <div class="col-xl-6">
                             <label for="profile-user-name" class="form-label">User Name :</label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" id="profile-user-name" name="name" value="{{ old('name', $user->name) }}" placeholder="Enter Name">
