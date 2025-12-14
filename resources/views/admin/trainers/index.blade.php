@@ -103,15 +103,11 @@
 
             <x-tables.table 
                 id="trainersTable"
-                :headers="['Sr.#', 'Name', 'Email', 'Phone', 'Designation', 'Experience', 'Status', 'Subscribers', 'Actions']"
+                :headers="['Sr.#', 'Name', 'Phone', 'Designation', 'Experience', 'Status', 'Subscribers', 'Actions']"
                 :bordered="true"
                 :striped="true"
                 :hover="true"
-            >
-                <tbody>
-                    <!-- Data will be loaded via AJAX -->
-                </tbody>
-            </x-tables.table>
+            />
         </x-tables.card>
     </div>
 </div>
@@ -344,7 +340,7 @@ $(document).ready(function() {
             { 
                 data: 'name', 
                 name: 'name', 
-                width: '15%',
+                width: '20%',
                 render: function(data, type, row) {
                     let profileImage = '';
                     if (row.profile_image) {
@@ -354,15 +350,25 @@ $(document).ready(function() {
                                             <i class="ri-user-star-line"></i>
                                         </span>`;
                     }
+                    let emailDisplay = row.email ? `<div class="text-muted fs-11 mt-1">${row.email}</div>` : '';
                     return `<div class="d-flex align-items-center">
                                 ${profileImage}
-                                <span class="fw-semibold">${data}</span>
+                                <div>
+                                    <div class="fw-semibold">${data || ''}</div>
+                                    ${emailDisplay}
+                                </div>
                             </div>`;
                 }
             },
-            { data: 'email', name: 'email', width: '10%' },
             { data: 'phone', name: 'phone', width: '10%' },
-            { data: 'designation', name: 'designation', width: '10%' },
+            { 
+                data: 'designation', 
+                name: 'designation', 
+                width: '14%',
+                render: function(data, type, row) {
+                    return `<span style="display: inline-block; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${data}">${data}</span>`;
+                } 
+            },
             { data: 'experience', name: 'experience', width: '10%' },
             { 
                 data: 'status', 
@@ -393,37 +399,35 @@ $(document).ready(function() {
                 name: 'actions', 
                 orderable: false, 
                 searchable: false,
-                width: '13%',
+                width: '15%',
                 render: function(data, type, row) {
                     return `
-                     <div class="d-flex justify-content-end">
-                        <div class="btn-group" role="group">
-                            <a href="/admin/trainers/${data}" class="btn btn-sm btn-info btn-wave" title="View">
+                     <div class="hstack gap-2 fs-15 justify-content-end">
+                            <a href="/admin/trainers/${data}" class="btn btn-icon btn-sm btn-info-transparent rounded-pill" title="View">
                                 <i class="ri-eye-line"></i>
                             </a>
-                            <a href="/admin/trainers/${data}/subscribers" class="btn btn-sm btn-secondary btn-wave" title="Subscribers">
+                            <a href="/admin/trainers/${data}/subscribers" class="btn btn-icon btn-sm btn-secondary-transparent rounded-pill" title="Subscribers">
                                 <i class="ri-group-line"></i>
                             </a>
-                            <button type="button" class="btn btn-sm btn-success btn-wave" onclick="editTrainer(${data})" title="Edit">
-                                <i class="ri-edit-2-line"></i>
+                            <button type="button" class="btn btn-icon btn-sm btn-primary-transparent rounded-pill" onclick="editTrainer(${data})" title="Edit">
+                                <i class="ri-edit-line"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-primary btn-wave" onclick="addCertification(${data})" title="Add Certification">
+                            <button type="button" class="btn btn-icon btn-sm btn-success-transparent rounded-pill" onclick="addCertification(${data})" title="Add Certification">
                                 <i class="ri-award-line"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-warning btn-wave" onclick="toggleTrainerStatus(${data})" title="Toggle Status">
+                            <button type="button" class="btn btn-icon btn-sm btn-warning-transparent rounded-pill" onclick="toggleTrainerStatus(${data})" title="Toggle Status">
                                 <i class="ri-toggle-line"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-danger btn-wave" onclick="deleteTrainer(${data})" title="Delete">
-                                <i class="ri-delete-bin-5-line"></i>
+                            <button type="button" class="btn btn-icon btn-sm btn-danger-transparent rounded-pill" onclick="deleteTrainer(${data})" title="Delete">
+                                <i class="ri-delete-bin-line"></i>
                             </button>
-                        </div>
                     </div>
                     `;
                 }
             }
         ],
         order: [[0, 'desc']],
-        pageLength: 25,
+        pageLength: 10,
         lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
         language: {
             processing: '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>',

@@ -77,22 +77,20 @@
                 width: '15%',
                 render: function(data, type, row) {
                     return `
-                      <div class="d-flex justify-content-end">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-sm btn-info btn-wave" onclick="viewTrainee(${data})" title="View">
+                      <div class="hstack gap-2 fs-15 justify-content-end">
+                            <button type="button" class="btn btn-icon btn-sm btn-info-transparent rounded-pill" onclick="viewTrainee(${data})" title="View">
                                 <i class="ri-eye-line"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-success btn-wave" onclick="editTrainee(${data})" title="Edit">
-                                <i class="ri-edit-2-line"></i>
+                            <button type="button" class="btn btn-icon btn-sm btn-primary-transparent rounded-pill" onclick="editTrainee(${data})" title="Edit">
+                                <i class="ri-edit-line"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-warning btn-wave" onclick="toggleTraineeStatus(${data})" title="Toggle Status">
+                            <button type="button" class="btn btn-icon btn-sm btn-warning-transparent rounded-pill" onclick="toggleTraineeStatus(${data})" title="Toggle Status">
                                 <i class="ri-toggle-line"></i>
                             </button>
-                            <button type="button" class="btn btn-sm btn-danger btn-wave" onclick="deleteTrainee(${data})" title="Delete">
-                                <i class="ri-delete-bin-5-line"></i>
+                            <button type="button" class="btn btn-icon btn-sm btn-danger-transparent rounded-pill" onclick="deleteTrainee(${data})" title="Delete">
+                                <i class="ri-delete-bin-line"></i>
                             </button>
-                        </div>
-                        </div>
+                      </div>
                     `;
                 }
             }
@@ -305,6 +303,7 @@ function showAlert(type, message) {
             <x-tables.table 
                 id="traineesTable" 
                 :headers="['Sr.#', 'Name', 'Email', 'Phone', 'Goals', 'Reviews', 'Status', 'Created', 'Actions']"
+                :bordered="true"
                 :striped="true"
                 :hover="true"
             />
