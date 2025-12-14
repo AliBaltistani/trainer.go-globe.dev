@@ -335,54 +335,15 @@ class TrainersController extends Controller
 
     /**
      * Display the specified trainer with detailed information
+     * redirects to unified user profile
      * 
+     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function show(Request $request, $id)
     {
-        try {
-            $trainer = User::where('role', 'trainer')
-                          ->with([
-                              'receivedTestimonials.client',
-                              'certifications',
-                              'workouts'
-                          ])
-                          ->findOrFail($id);
-            
-            // Calculate trainer statistics
-            $stats = [
-                'total_testimonials' => $trainer->receivedTestimonials->count(),
-                'average_rating' => $trainer->receivedTestimonials->avg('rate') ?? 0,
-                'total_likes' => $trainer->receivedTestimonials->sum('likes'),
-                'total_certifications' => $trainer->certifications->count(),
-                'total_workouts' => $trainer->workouts->count(),
-                'recent_testimonials' => $trainer->receivedTestimonials->take(5),
-                'recent_certifications' => $trainer->certifications->take(3)
-            ];
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'trainer' => $trainer,
-                    'stats' => $stats
-                ]);
-            }
-            
-            return view('admin.trainers.show', compact('trainer', 'stats'));
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to load trainer details: ' . $e->getMessage());
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Trainer not found'
-                ], 404);
-            }
-            
-            return redirect()->route('admin.trainers.index')->with('error', 'Trainer not found');
-        }
+        return redirect()->route('admin.users.show', $id);
     }
 
     public function subscribers(Request $request, $id)
@@ -417,21 +378,14 @@ class TrainersController extends Controller
 
     /**
      * Show the form for editing the specified trainer
+     * redirects to unified user edit
      * 
      * @param  int  $id
-     * @return \Illuminate\View\View
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function edit($id)
     {
-        try {
-            $trainer = User::where('role', 'trainer')->findOrFail($id);
-            
-            return view('admin.trainers.edit', compact('trainer'));
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to load trainer edit form: ' . $e->getMessage());
-            return redirect()->route('admin.trainers.index')->with('error', 'Trainer not found');
-        }
+        return redirect()->route('admin.users.edit', $id);
     }
 
     /**

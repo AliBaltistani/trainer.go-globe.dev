@@ -116,6 +116,7 @@ class TrainerDashboardController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             
+            Log::error('Failed to add certification: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to add certification',

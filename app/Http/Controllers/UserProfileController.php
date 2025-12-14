@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\UserLocation;
 
 use \Illuminate\Support\Facades\Log;
 
@@ -35,36 +37,80 @@ class UserProfileController extends Controller
 
     /**
      * Show user profile page
-     *
+     * 
+     * @param User|null $user Optional user parameter for admin viewing other users
      * @return \Illuminate\Contracts\View\View
      */
-    public function index()
+    public function index(User $user = null)
     {
-        $user = Auth::user();
-        return view('profile.index', compact('user'));
+        $currentUser = Auth::user();
+        
+        // If no user specified, show current user's profile
+        if (!$user) {
+            $user = $currentUser;
+        }
+        
+        // Check permissions: users can view their own profile, admins can view any profile
+        if ($user->id !== $currentUser->id && $currentUser->role !== 'admin') {
+            abort(403, 'Unauthorized access to this profile.');
+        }
+        
+        // Determine if viewing own profile and if can edit
+        $isOwnProfile = ($user->id === $currentUser->id);
+        $canEdit = $isOwnProfile || $currentUser->role === 'admin';
+        
+        return view('profile.index', compact('user', 'isOwnProfile', 'canEdit'));
     }
 
     /**
      * Show profile edit form
-     *
+     * 
+     * @param User|null $user Optional user parameter for admin editing other users
      * @return \Illuminate\Contracts\View\View
      */
-    public function edit()
+    public function edit(User $user = null)
     {
-        $user = Auth::user();
-        return view('profile.edit', compact('user'));
+        $currentUser = Auth::user();
+        
+        // If no user specified, edit current user's profile
+        if (!$user) {
+            $user = $currentUser;
+        }
+        
+        // Check permissions: users can edit their own profile, admins can edit any profile
+        if ($user->id !== $currentUser->id && $currentUser->role !== 'admin') {
+            abort(403, 'Unauthorized access to edit this profile.');
+        }
+        
+        // Determine if editing own profile and if can change role
+        $isOwnProfile = ($user->id === $currentUser->id);
+        $canChangeRole = !$isOwnProfile && $currentUser->role === 'admin';
+        
+        return view('profile.edit', compact('user', 'isOwnProfile', 'canChangeRole'));
     }
 
     /**
      * Update user profile information
      *
      * @param Request $request
+     * @param User|null $user Optional user parameter for admin editing other users
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request)
+    public function update(Request $request, User $user = null)
     {
-        $user = Auth::user();
         $currentUser = Auth::user(); // The logged-in user making the request
+        
+        // If no user specified, update current user's profile
+        if (!$user) {
+            $user = $currentUser;
+        }
+        
+        // Check permissions: users can update their own profile, admins can update any profile
+        if ($user->id !== $currentUser->id && $currentUser->role !== 'admin') {
+            abort(403, 'Unauthorized access to update this profile.');
+        }
+        
+        $isOwnProfile = ($user->id === $currentUser->id);
         
         // Base validation rules for all users
         $validationRules = [
@@ -89,14 +135,25 @@ class UserProfileController extends Controller
             'timezone.max' => 'Timezone value is invalid.'
         ];
         
-        // Add admin-specific validation rules - only admins can change roles
-        if ($currentUser->role === 'admin') {
+        // Add admin-specific validation rules - only admins can change roles when editing others
+        if ($currentUser->role === 'admin' && !$isOwnProfile) {
             $validationRules['role'] = 'nullable|in:admin,trainer,client';
             $validationMessages['role.in'] = 'Please select a valid role.';
         }
+
+        // Admin-only: allow status change
+        if ($currentUser->role === 'admin') {
+            $validationRules['status'] = 'nullable|boolean';
+        }
         
-        // Add trainer-specific validation rules if user is a trainer
-        if ($user->role === 'trainer') {
+        // Determine target role for validation (use requested role if admin is changing it, otherwise current role)
+        $targetRole = $user->role;
+        if ($currentUser->role === 'admin' && !$isOwnProfile && $request->has('role')) {
+            $targetRole = $request->role;
+        }
+        
+        // Add trainer-specific validation rules if user is or will be a trainer
+        if ($targetRole === 'trainer') {
             $validationRules = array_merge($validationRules, [
                 'designation' => 'nullable|string|max:255',
                 'experience' => 'nullable|in:less_than_1_year,1_year,2_years,3_years,4_years,5_years,6_years,7_years,8_years,9_years,10_years,more_than_10_years',
@@ -137,7 +194,7 @@ class UserProfileController extends Controller
             }
 
             // Handle business logo upload (trainers only)
-            if ($user->role === 'trainer' && $request->hasFile('business_logo')) {
+            if ($targetRole === 'trainer' && $request->hasFile('business_logo')) {
                 if ($user->business_logo && Storage::disk('public')->exists($user->business_logo)) {
                     Storage::disk('public')->delete($user->business_logo);
                 }
@@ -154,29 +211,45 @@ class UserProfileController extends Controller
             if ($request->has('timezone')) {
                 $user->timezone = $request->timezone;
             }
+
+            // Admin-only: update active/inactive using email_verified_at
+            if ($currentUser->role === 'admin' && $request->has('status')) {
+                $user->email_verified_at = $request->boolean('status') ? now() : null;
+            }
             
-            // SECURITY: Only admins can update role
-            // Silently ignore role changes from non-admin users for security
-            if ($currentUser->role === 'admin' && $request->has('role')) {
+            // SECURITY: Only admins can update role when editing other users
+            if ($currentUser->role === 'admin' && !$isOwnProfile && $request->has('role')) {
                 $user->role = $request->role;
             }
             
-            // SECURITY: Prevent any updates to email_verified_at from form submissions
-            // This field should only be modified through email verification process
-            // Even admins cannot modify this through the profile update form
-            
-            // Update trainer-specific fields if user is a trainer
-            if ($user->role === 'trainer') {
+            // Update trainer-specific fields if user is or will be a trainer
+            if ($targetRole === 'trainer') {
                 $user->designation = $request->designation;
                 $user->experience = $request->experience;
                 $user->about = $request->about;
                 $user->training_philosophy = $request->training_philosophy;
+            } else {
+                // Clear trainer-specific fields if role is changed from trainer to something else
+                if ($user->role !== 'trainer' && $targetRole !== 'trainer') {
+                    $user->designation = null;
+                    $user->experience = null;
+                    $user->about = null;
+                    $user->training_philosophy = null;
+                    $user->business_logo = null;
+                }
             }
             
             $user->save();
 
-            return redirect()->route('profile.index')
-                ->with('success', 'Profile updated successfully!');
+            // Redirect based on who is updating
+            if ($isOwnProfile) {
+                return redirect()->route('profile.index')
+                    ->with('success', 'Profile updated successfully!');
+            } else {
+                // Admin editing another user - redirect to admin user view
+                return redirect()->route('admin.users.show', $user->id)
+                    ->with('success', 'User profile updated successfully!');
+            }
 
         } catch (\Exception $e) {
             // Log error for debugging
@@ -334,5 +407,92 @@ class UserProfileController extends Controller
     {
         $user = Auth::user();
         return view('profile.settings', compact('user'));
+    }
+
+    /**
+     * Update or create user location
+     * Allows users to manage their own location information
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
+     */
+    public function updateLocation(Request $request)
+    {
+        $user = Auth::user();
+        
+        // Validate location data
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'country' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'city' => 'nullable|string|max:100',
+            'address' => 'nullable|string|max:255',
+            'zipcode' => 'nullable|string|max:20',
+        ]);
+
+        // Security check: users can only update their own location
+        if ($validated['user_id'] != $user->id && $user->role !== 'admin') {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Access Denied. You can only update your own location.'
+                ], 403);
+            }
+            abort(403, 'Access Denied. You can only update your own location.');
+        }
+
+        try {
+            DB::beginTransaction();
+            
+            // Get or create location
+            $location = UserLocation::firstOrNew(['user_id' => $validated['user_id']]);
+            $location->country = $validated['country'] ?? null;
+            $location->state = $validated['state'] ?? null;
+            $location->city = $validated['city'] ?? null;
+            $location->address = $validated['address'] ?? null;
+            $location->zipcode = $validated['zipcode'] ?? null;
+            $location->save();
+            
+            DB::commit();
+            
+            Log::info('User location updated successfully', [
+                'location_id' => $location->id,
+                'user_id' => $location->user_id
+            ]);
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Location saved successfully',
+                    'data' => [
+                        'id' => $location->id,
+                        'country' => $location->country,
+                        'state' => $location->state,
+                        'city' => $location->city,
+                        'address' => $location->address,
+                        'zipcode' => $location->zipcode
+                    ]
+                ]);
+            }
+            
+            return redirect()->back()
+                ->with('success', 'Location saved successfully.');
+                
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating user location: ' . $e->getMessage());
+            
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to save location. Please try again.',
+                    'error' => $e->getMessage()
+                ], 500);
+            }
+            
+            return back()
+                ->withInput()
+                ->with('error', 'Failed to save location. Please try again.');
+        }
     }
 }

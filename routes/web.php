@@ -116,6 +116,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/change-password', [UserProfileController::class, 'changePassword'])->name('profile.password.update');
         Route::post('/delete-image', [UserProfileController::class, 'deleteProfileImage'])->name('profile.delete-image');
         Route::post('/delete-business-logo', [UserProfileController::class, 'deleteBusinessLogo'])->name('profile.delete-business-logo');
+        Route::post('/update-location', [UserProfileController::class, 'updateLocation'])->name('profile.update-location');
         Route::get('/settings', [UserProfileController::class, 'settings'])->name('profile.settings');
         Route::get('/activity-log', [UserProfileController::class, 'activityLog'])->name('profile.activity-log');
     });
@@ -232,16 +233,9 @@ Route::middleware('auth')->group(function () {
             Route::get('/user/{userId}', [\App\Http\Controllers\Admin\UserLocationsController::class, 'getLocationsByUser'])->name('admin.user-locations.by-user');
         });
         
-         Route::prefix('profile')->group(function () {
-            Route::get('/', [UserProfileController::class, 'index'])->name('admin.profile');
-            Route::get('/edit', [UserProfileController::class, 'edit'])->name('admin.profile.edit');
-            Route::post('/update', [UserProfileController::class, 'update'])->name('admin.profile.update');
-            Route::get('/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('admin.profile.change-password');
-            Route::post('/change-password', [UserProfileController::class, 'changePassword'])->name('admin.profile.password.update');
-            Route::post('/delete-image', [UserProfileController::class, 'deleteProfileImage'])->name('admin.profile.delete-image');
-            Route::get('/settings', [UserProfileController::class, 'settings'])->name('admin.profile.settings');
-            Route::get('/activity-log', [UserProfileController::class, 'activityLog'])->name('admin.profile.activity-log');
-        });
+         // Unified Profile Redirects
+        Route::get('profile', function() { return redirect()->route('profile.index'); })->name('admin.profile');
+        Route::get('profile/edit', function() { return redirect()->route('profile.edit'); })->name('admin.profile.edit');
     
         // Goals Management
         Route::prefix('goals')->group(function () {
@@ -544,16 +538,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/testimonials', [ClientDashboardController::class, 'testimonials'])->name('client.testimonials');
         Route::get('/trainers', [ClientDashboardController::class, 'trainers'])->name('client.trainers');
         
-         Route::prefix('profile')->group(function () {
-            Route::get('/', [UserProfileController::class, 'index'])->name('client.profile');
-            Route::get('/edit', [UserProfileController::class, 'edit'])->name('client.profile.edit');
-            Route::post('/update', [UserProfileController::class, 'update'])->name('client.profile.update');
-            Route::get('/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('client.profile.change-password');
-            Route::post('/change-password', [UserProfileController::class, 'changePassword'])->name('client.profile.password.update');
-            Route::post('/delete-image', [UserProfileController::class, 'deleteProfileImage'])->name('client.profile.delete-image');
-            Route::get('/settings', [UserProfileController::class, 'settings'])->name('client.profile.settings');
-            Route::get('/activity-log', [UserProfileController::class, 'activityLog'])->name('client.profile.activity-log');
-        });
+         // Unified Profile Redirects
+        Route::get('profile', function() { return redirect()->route('profile.index'); })->name('client.profile');
+        Route::get('profile/edit', function() { return redirect()->route('profile.edit'); })->name('client.profile.edit');
 
         // Client Goals Management
         Route::prefix('goals')->group(function () {
@@ -597,16 +584,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/testimonials', [TrainerDashboardController::class, 'testimonials'])->name('trainer.testimonials');
         
         // Trainer Profile Routes
-        Route::prefix('profile')->group(function () {
-            Route::get('/', [TrainerDashboardController::class, 'profile'])->name('trainer.profile');
-            Route::get('/edit', [UserProfileController::class, 'edit'])->name('trainer.profile.edit');
-            Route::post('/update', [UserProfileController::class, 'update'])->name('trainer.profile.update');
-            Route::get('/change-password', [UserProfileController::class, 'showChangePasswordForm'])->name('trainer.profile.change-password');
-            Route::post('/change-password', [UserProfileController::class, 'changePassword'])->name('trainer.profile.password.update');
-            Route::post('/delete-image', [UserProfileController::class, 'deleteProfileImage'])->name('trainer.profile.delete-image');
-            Route::get('/settings', [UserProfileController::class, 'settings'])->name('trainer.profile.settings');
-            Route::get('/activity-log', [UserProfileController::class, 'activityLog'])->name('trainer.profile.activity-log');
-        });
+        // Unified Profile Redirects
+        Route::get('profile', function() { return redirect()->route('profile.index'); })->name('trainer.profile');
+        Route::get('profile/edit', function() { return redirect()->route('profile.edit'); })->name('trainer.profile.edit');
         
         // Chat
         Route::get('/chat', [\App\Http\Controllers\ChatController::class, 'index'])->name('trainer.chat.index');

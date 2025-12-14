@@ -293,6 +293,7 @@ class UsersController extends Controller
 
     /**
      * Display the specified user
+     * Redirects to unified profile view
      * 
      * @param  int  $id
      * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
@@ -315,7 +316,11 @@ class UsersController extends Controller
                 ]);
             }
             
-            return view('admin.users.show', compact('user'));
+            // Use unified profile view with admin context
+            $currentUser = Auth::user();
+            $isOwnProfile = ($user->id === $currentUser->id);
+            $canEdit = true; // Admins can always edit
+            return view('profile.index', compact('user', 'isOwnProfile', 'canEdit'));
             
         } catch (\Exception $e) {
             Log::error('Failed to load user details: ' . $e->getMessage());
@@ -333,6 +338,7 @@ class UsersController extends Controller
 
     /**
      * Show the form for editing the specified user
+     * Redirects to unified profile edit view
      * 
      * @param  int  $id
      * @return \Illuminate\View\View
@@ -341,9 +347,13 @@ class UsersController extends Controller
     {
         try {
             $user = User::findOrFail($id);
-            $roles = ['client', 'trainer', 'admin'];
             
-            return view('admin.users.edit', compact('user', 'roles'));
+            // Use unified profile edit view with admin context
+            $currentUser = Auth::user();
+            $isOwnProfile = ($user->id === $currentUser->id);
+            $canChangeRole = !$isOwnProfile; // Admins can change role for others
+            
+            return view('profile.edit', compact('user', 'isOwnProfile', 'canChangeRole'));
             
         } catch (\Exception $e) {
             Log::error('Failed to load user edit form: ' . $e->getMessage());
@@ -370,7 +380,9 @@ class UsersController extends Controller
                 'email' => 'required|email|unique:users,email,' . $user->id,
                 'phone' => 'nullable|string|max:20|unique:users,phone,' . $user->id,
                 'role' => 'required|in:client,trainer,admin',
-                'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+                'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'timezone' => 'nullable|string|max:50',
+                'status' => 'nullable|boolean'
             ];
             
             // Add password validation if provided
@@ -407,8 +419,14 @@ class UsersController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'phone' => $request->phone,
-                'role' => $request->role
+                'role' => $request->role,
+                'timezone' => $request->timezone,
             ];
+
+            // Admin can toggle active/inactive via email_verified_at
+            if ($request->has('status')) {
+                $userData['email_verified_at'] = $request->boolean('status') ? now() : null;
+            }
             
             // Update password if provided
             if ($request->filled('password')) {

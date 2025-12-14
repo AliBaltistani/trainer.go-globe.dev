@@ -39,22 +39,22 @@
 @endif
 
 <!-- Start::row-1 -->
-<div class="row">
-    <div class="col-xl-12">
+<div class="row justify-content-center">
+    <div class="col-xl-10">
         <div class="card custom-card">
             <div class="card-header">
                 <div class="card-title">
-                    Change Password
+                    <i class="ri-lock-password-line me-2"></i>Change Password
                 </div>
             </div>
             <div class="card-body">
-                <form method="POST" action="{{ route(Auth::user()->role.'.profile.password.update') }}">
+                <form method="POST" action="{{ route('profile.password.update') }}">
                     @csrf
                     <div class="row gy-3">
                         <div class="col-xl-12">
                             <label for="current-password" class="form-label text-default">Current Password</label>
                             <div class="position-relative">
-                                <input type="password" class="form-control form-control-lg @error('current_password') is-invalid @enderror" id="current-password" name="current_password" placeholder="current password">
+                                <input type="password" class="form-control form-control-lg @error('current_password') is-invalid @enderror" id="current-password" name="current_password" placeholder="Enter current password">
                                 <a href="javascript:void(0);" class="show-password-button text-muted" onclick="createpassword('current-password',this)" id="button-addon2"><i class="ri-eye-off-line align-middle"></i></a>
                             </div>
                             @error('current_password')
@@ -66,7 +66,7 @@
                         <div class="col-xl-12">
                             <label for="new-password" class="form-label text-default">New Password</label>
                             <div class="position-relative">
-                                <input type="password" class="form-control form-control-lg @error('password') is-invalid @enderror" id="new-password" name="password" placeholder="new password">
+                                <input type="password" class="form-control form-control-lg @error('password') is-invalid @enderror" id="new-password" name="password" placeholder="Enter new password">
                                 <a href="javascript:void(0);" class="show-password-button text-muted" onclick="createpassword('new-password',this)" id="button-addon21"><i class="ri-eye-off-line align-middle"></i></a>
                             </div>
                             @error('password')
@@ -78,7 +78,7 @@
                         <div class="col-xl-12">
                             <label for="confirm-password" class="form-label text-default">Confirm Password</label>
                             <div class="position-relative">
-                                <input type="password" class="form-control form-control-lg @error('password_confirmation') is-invalid @enderror" id="confirm-password" name="password_confirmation" placeholder="confirm password">
+                                <input type="password" class="form-control form-control-lg @error('password_confirmation') is-invalid @enderror" id="confirm-password" name="password_confirmation" placeholder="Confirm new password">
                                 <a href="javascript:void(0);" class="show-password-button text-muted" onclick="createpassword('confirm-password',this)" id="button-addon22"><i class="ri-eye-off-line align-middle"></i></a>
                             </div>
                             @error('password_confirmation')
@@ -88,15 +88,13 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="d-grid mt-3">
-                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="{{ route('profile.index') }}" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line me-1"></i>Change Password
+                        </button>
                     </div>
                 </form>
-            </div>
-            <div class="card-footer">
-                <div class="text-center">
-                    <a href="{{ route(Auth::user()->role.'.profile') }}" class="text-primary">Back to Profile</a>
-                </div>
             </div>
         </div>
     </div>

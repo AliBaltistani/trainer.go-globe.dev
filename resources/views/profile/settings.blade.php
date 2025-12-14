@@ -2,13 +2,6 @@
 
 @section('styles')
 <style>
-.settings-card {
-    background: white;
-    border-radius: 15px;
-    padding: 2rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-}
 .setting-item {
     display: flex;
     justify-content: space-between;
@@ -74,36 +67,23 @@ input:checked + .slider {
 input:checked + .slider:before {
     transform: translateX(26px);
 }
-.danger-zone {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-    color: white;
-    border-radius: 10px;
-    padding: 1.5rem;
-}
 </style>
 @endsection
 
 @section('content')
 
-<!-- Page Header -->
-<div class="d-flex align-items-center justify-content-between page-header-breadcrumb flex-wrap gap-2">
-    <div>
-        <nav>
-            <ol class="breadcrumb mb-1">
-                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('profile.index') }}">Profile</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Settings</li>
-            </ol>
-        </nav>
+<!-- Start::page-header -->
+<div class="page-header-breadcrumb mb-3">
+    <div class="d-flex align-center justify-content-between flex-wrap">
         <h1 class="page-title fw-medium fs-18 mb-0">Account Settings</h1>
-    </div>
-    <div class="btn-list">
-        <a href="{{ route('profile.index') }}" class="btn btn-outline-secondary">
-            <i class="ri-arrow-left-line me-1"></i>Back to Profile
-        </a>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('profile.index') }}">Profile</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Settings</li>
+        </ol>
     </div>
 </div>
-<!-- Page Header Close -->
+<!-- End::page-header -->
 
 <!-- Display Success Messages -->
 @if (session('success'))
@@ -113,11 +93,19 @@ input:checked + .slider:before {
     </div>
 @endif
 
-<div class="row">
-    <!-- Privacy & Security Settings -->
-    <div class="col-xl-6 col-lg-12">
-        <div class="settings-card">
-            <h5 class="mb-4"><i class="ri-shield-check-line me-2"></i>Privacy & Security</h5>
+<!-- Start::row-1 -->
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <div class="row">
+            <!-- Privacy & Security Settings -->
+            <div class="col-xl-6 col-lg-12">
+                <div class="card custom-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="ri-shield-check-line me-2"></i>Privacy & Security
+                        </div>
+                    </div>
+                    <div class="card-body">
             
             <div class="setting-item">
                 <div class="setting-info">
@@ -170,13 +158,19 @@ input:checked + .slider:before {
                     </select>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Notification Preferences -->
-    <div class="col-xl-6 col-lg-12">
-        <div class="settings-card">
-            <h5 class="mb-4"><i class="ri-notification-3-line me-2"></i>Notification Preferences</h5>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Notification Preferences -->
+            <div class="col-xl-6 col-lg-12">
+                <div class="card custom-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="ri-notification-3-line me-2"></i>Notification Preferences
+                        </div>
+                    </div>
+                    <div class="card-body">
             
             <div class="setting-item">
                 <div class="setting-info">
@@ -229,15 +223,21 @@ input:checked + .slider:before {
                     </label>
                 </div>
             </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-<div class="row">
-    <!-- Account Information -->
-    <div class="col-xl-6 col-lg-12">
-        <div class="settings-card">
-            <h5 class="mb-4"><i class="ri-user-settings-line me-2"></i>Account Information</h5>
+        <div class="row">
+            <!-- Account Information -->
+            <div class="col-xl-6 col-lg-12">
+                <div class="card custom-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="ri-user-settings-line me-2"></i>Account Information
+                        </div>
+                    </div>
+                    <div class="card-body">
             
             <div class="setting-item">
                 <div class="setting-info">
@@ -280,13 +280,19 @@ input:checked + .slider:before {
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Quick Actions -->
-    <div class="col-xl-6 col-lg-12">
-        <div class="settings-card">
-            <h5 class="mb-4"><i class="ri-tools-line me-2"></i>Quick Actions</h5>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="col-xl-6 col-lg-12">
+                <div class="card custom-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <i class="ri-tools-line me-2"></i>Quick Actions
+                        </div>
+                    </div>
+                    <div class="card-body">
             
             <div class="d-grid gap-2">
                 <a href="{{ route('profile.edit') }}" class="btn btn-outline-primary">
@@ -305,25 +311,26 @@ input:checked + .slider:before {
                     <i class="ri-history-line me-2"></i>View Activity Log
                 </a>
             </div>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
-</div>
 
-<!-- Danger Zone -->
-<div class="row">
-    <div class="col-12">
-        <div class="danger-zone">
-            <h5 class="mb-3"><i class="ri-error-warning-line me-2"></i>Danger Zone</h5>
-            <p class="mb-3">These actions are irreversible. Please proceed with caution.</p>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <button class="btn btn-outline-light" onclick="deactivateAccount()">
+        <!-- Danger Zone -->
+        <div class="card custom-card border-danger">
+            <div class="card-header bg-danger-transparent">
+                <div class="card-title text-danger">
+                    <i class="ri-error-warning-line me-2"></i>Danger Zone
+                </div>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">These actions are irreversible. Please proceed with caution.</p>
+                
+                <div class="d-flex flex-wrap gap-2">
+                    <button class="btn btn-outline-danger" onclick="deactivateAccount()">
                         <i class="ri-user-unfollow-line me-2"></i>Deactivate Account
                     </button>
-                </div>
-                <div class="col-md-6 mb-3">
-                    <button class="btn btn-light text-danger" onclick="deleteAccount()">
+                    <button class="btn btn-danger" onclick="deleteAccount()">
                         <i class="ri-delete-bin-line me-2"></i>Delete Account
                     </button>
                 </div>
@@ -331,6 +338,7 @@ input:checked + .slider:before {
         </div>
     </div>
 </div>
+<!--End::row-1 -->
 
 @endsection
 

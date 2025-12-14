@@ -2,13 +2,6 @@
 
 @section('styles')
 <style>
-.activity-card {
-    background: white;
-    border-radius: 15px;
-    padding: 2rem;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    margin-bottom: 2rem;
-}
 .activity-item {
     display: flex;
     align-items: flex-start;
@@ -50,121 +43,106 @@
     flex-shrink: 0;
     margin-left: 1rem;
 }
-.filter-tabs {
-    border-bottom: 1px solid #dee2e6;
-    margin-bottom: 1.5rem;
-}
-.filter-tab {
-    padding: 0.75rem 1rem;
-    border: none;
-    background: none;
-    color: #6c757d;
-    cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all 0.3s ease;
-}
-.filter-tab.active {
-    color: #007bff;
-    border-bottom-color: #007bff;
-}
-.filter-tab:hover {
-    color: #007bff;
-}
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
-}
-.stat-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 1.5rem;
-    border-radius: 10px;
-    text-align: center;
-}
-.stat-number {
-    font-size: 2rem;
-    font-weight: bold;
-    margin-bottom: 0.5rem;
-}
-.stat-label {
-    font-size: 0.9rem;
-    opacity: 0.9;
-}
 </style>
 @endsection
 
 @section('content')
 
-<!-- Page Header -->
-<div class="d-flex align-items-center justify-content-between page-header-breadcrumb flex-wrap gap-2">
-    <div>
-        <nav>
-            <ol class="breadcrumb mb-1">
-                <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="{{ route('profile.index') }}">Profile</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Activity Log</li>
-            </ol>
-        </nav>
+<!-- Start::page-header -->
+<div class="page-header-breadcrumb mb-3">
+    <div class="d-flex align-center justify-content-between flex-wrap">
         <h1 class="page-title fw-medium fs-18 mb-0">Activity Log</h1>
-    </div>
-    <div class="btn-list">
-        <button class="btn btn-outline-info" onclick="exportActivityLog()">
-            <i class="ri-download-line me-1"></i>Export Log
-        </button>
-        <a href="{{ route('profile.index') }}" class="btn btn-outline-secondary">
-            <i class="ri-arrow-left-line me-1"></i>Back to Profile
-        </a>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('profile.index') }}">Profile</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Activity Log</li>
+        </ol>
     </div>
 </div>
-<!-- Page Header Close -->
+<!-- End::page-header -->
 
-<!-- Activity Statistics -->
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-number">{{ \Carbon\Carbon::parse($user->created_at)->diffInDays() + 1 }}</div>
-        <div class="stat-label">Days Active</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">15</div>
-        <div class="stat-label">Total Logins</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">3</div>
-        <div class="stat-label">Profile Updates</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-number">1</div>
-        <div class="stat-label">Password Changes</div>
-    </div>
-</div>
-
-<!-- Activity Log -->
-<div class="activity-card">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h5 class="mb-0"><i class="ri-history-line me-2"></i>Recent Activity</h5>
-        <div class="btn-group" role="group">
-            <button class="btn btn-outline-secondary btn-sm" onclick="refreshLog()">
-                <i class="ri-refresh-line"></i>
-            </button>
-            <button class="btn btn-outline-secondary btn-sm" onclick="clearLog()">
-                <i class="ri-delete-bin-line"></i>
-            </button>
+<!-- Start::row-1 -->
+<div class="row justify-content-center">
+    <div class="col-xl-10">
+        <!-- Activity Statistics -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="card custom-card">
+                    <div class="card-body text-center">
+                        <h3 class="fw-semibold mb-1 text-primary">{{ \Carbon\Carbon::parse($user->created_at)->diffInDays() + 1 }}</h3>
+                        <span class="d-block text-muted">Days Active</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="card custom-card">
+                    <div class="card-body text-center">
+                        <h3 class="fw-semibold mb-1 text-success">15</h3>
+                        <span class="d-block text-muted">Total Logins</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="card custom-card">
+                    <div class="card-body text-center">
+                        <h3 class="fw-semibold mb-1 text-info">3</h3>
+                        <span class="d-block text-muted">Profile Updates</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-lg-6 col-md-6">
+                <div class="card custom-card">
+                    <div class="card-body text-center">
+                        <h3 class="fw-semibold mb-1 text-warning">1</h3>
+                        <span class="d-block text-muted">Password Changes</span>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+
+        <!-- Activity Log -->
+        <div class="card custom-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <i class="ri-history-line me-2"></i>Recent Activity
+                </div>
+                <div class="ms-auto">
+                    <div class="btn-list">
+                        <button class="btn btn-sm btn-outline-secondary" onclick="refreshLog()">
+                            <i class="ri-refresh-line me-1"></i>Refresh
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="clearLog()">
+                            <i class="ri-delete-bin-line me-1"></i>Clear
+                        </button>
+                        <button class="btn btn-sm btn-outline-info" onclick="exportActivityLog()">
+                            <i class="ri-download-line me-1"></i>Export
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
     
-    <!-- Filter Tabs -->
-    <div class="filter-tabs">
-        <button class="filter-tab active" onclick="filterActivities('all')">All Activities</button>
-        <button class="filter-tab" onclick="filterActivities('login')">Logins</button>
-        <button class="filter-tab" onclick="filterActivities('profile')">Profile Changes</button>
-        <button class="filter-tab" onclick="filterActivities('security')">Security</button>
-        <button class="filter-tab" onclick="filterActivities('settings')">Settings</button>
-    </div>
+                <!-- Filter Tabs -->
+                <ul class="nav nav-tabs tab-style-8 scaleX mb-3" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" onclick="filterActivities('all')" type="button">All Activities</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" onclick="filterActivities('login')" type="button">Logins</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" onclick="filterActivities('profile')" type="button">Profile Changes</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" onclick="filterActivities('security')" type="button">Security</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" onclick="filterActivities('settings')" type="button">Settings</button>
+                    </li>
+                </ul>
     
-    <!-- Activity Items -->
-    <div id="activityList">
+                <!-- Activity Items -->
+                <div id="activityList">
         <!-- Current Login -->
         <div class="activity-item" data-category="login">
             <div class="activity-icon" style="background-color: #28a745;">
@@ -286,24 +264,32 @@
         </div>
     </div>
     
-    <!-- Load More Button -->
-    <div class="text-center mt-4">
-        <button class="btn btn-outline-primary" onclick="loadMoreActivities()">
-            <i class="ri-arrow-down-line me-2"></i>Load More Activities
-        </button>
+                <!-- Load More Button -->
+                <div class="text-center mt-4">
+                    <button class="btn btn-outline-primary" onclick="loadMoreActivities()">
+                        <i class="ri-arrow-down-line me-2"></i>Load More Activities
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="card custom-card">
+            <div class="card-body">
+                <div class="alert alert-info mb-0">
+                    <h6 class="alert-heading"><i class="ri-information-line me-2"></i>Security Notice</h6>
+                    <p class="mb-2">We keep track of your account activities to help protect your security. If you notice any suspicious activity, please contact support immediately.</p>
+                    <hr>
+                    <p class="mb-0">
+                        <strong>IP Address:</strong> {{ request()->ip() }} | 
+                        <strong>Browser:</strong> {{ request()->userAgent() ? substr(request()->userAgent(), 0, 50) . '...' : 'Unknown' }}
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
-
-<!-- Security Notice -->
-<div class="alert alert-info">
-    <h6 class="alert-heading"><i class="ri-information-line me-2"></i>Security Notice</h6>
-    <p class="mb-2">We keep track of your account activities to help protect your security. If you notice any suspicious activity, please contact support immediately.</p>
-    <hr>
-    <p class="mb-0">
-        <strong>IP Address:</strong> {{ request()->ip() }} | 
-        <strong>Browser:</strong> {{ request()->userAgent() ? substr(request()->userAgent(), 0, 50) . '...' : 'Unknown' }}
-    </p>
-</div>
+<!--End::row-1 -->
 
 @endsection
 
@@ -312,10 +298,12 @@
 // Filter Activities
 function filterActivities(category) {
     // Update active tab
-    document.querySelectorAll('.filter-tab').forEach(tab => {
+    document.querySelectorAll('.nav-link').forEach(tab => {
         tab.classList.remove('active');
     });
-    event.target.classList.add('active');
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
     
     // Filter activity items
     const activities = document.querySelectorAll('.activity-item');

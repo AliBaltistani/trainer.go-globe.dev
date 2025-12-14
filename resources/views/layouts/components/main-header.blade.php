@@ -189,13 +189,19 @@
                         <li>
                             <ul class="list-unstyled mb-0 sub-list">
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center" href="{{ route(Auth::user()->role.'.profile') }}"><i class="ti ti-user-circle me-2 fs-18"></i>View Profile</a>
+                                    <a class="dropdown-item d-flex align-items-center" href="{{ route('profile.index') }}"><i class="ti ti-user-circle me-2 fs-18"></i>View Profile</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center" href="{{ route(Auth::user()->role.'.profile.edit') }}"><i class="ti ti-settings-cog me-2 fs-18"></i>Account Settings</a>
+                                    <a class="dropdown-item d-flex align-items-center" href="{{ route('profile.edit') }}"><i class="ti ti-settings-cog me-2 fs-18"></i>Account Settings</a>
                                 </li>
                                 <li>
-                                    <a class="dropdown-item d-flex align-items-center" href="{{ route(Auth::user()->role.'.profile.change-password') }}"><i class="ti ti-lock me-2 fs-18"></i>Change Password</a>
+                                    <a class="dropdown-item d-flex align-items-center" href="{{ route('profile.change-password') }}"><i class="ti ti-lock me-2 fs-18"></i>Change Password</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="{{ route('profile.settings') }}"><i class="ti ti-settings me-2 fs-18"></i>Settings</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center" href="{{ route('profile.activity-log') }}"><i class="ti ti-activity me-2 fs-18"></i>Activity Log</a>
                                 </li>
                             </ul>        
                         </li>

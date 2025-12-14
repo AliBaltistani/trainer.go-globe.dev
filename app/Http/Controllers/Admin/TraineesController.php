@@ -268,68 +268,27 @@ class TraineesController extends Controller
 
     /**
      * Display the specified trainee
+     * redirects to unified user profile
      * 
+     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
-     * @return \Illuminate\View\View|\Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function show(Request $request, $id)
     {
-        try {
-            // Find trainee with client role only
-            $trainee = User::with(['goals', 'receivedTestimonials.client', 'receivedTestimonials.trainer'])
-                          ->where('role', 'client')
-                          ->findOrFail($id);
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'trainee' => $trainee
-                ]);
-            }
-            
-            return view('admin.trainees.show', compact('trainee'));
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to load trainee details: ' . $e->getMessage(), [
-                'admin_id' => Auth::id(),
-                'trainee_id' => $id
-            ]);
-            
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Trainee not found'
-                ], 404);
-            }
-            
-            return redirect()->route('admin.trainees.index')
-                           ->with('error', 'Trainee not found');
-        }
+        return redirect()->route('admin.users.show', $id);
     }
 
     /**
      * Show the form for editing the specified trainee
+     * redirects to unified user edit
      * 
      * @param  int  $id
-     * @return \Illuminate\View\View
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function edit($id)
     {
-        try {
-            // Find trainee with client role only
-            $trainee = User::where('role', 'client')->findOrFail($id);
-            
-            return view('admin.trainees.edit', compact('trainee'));
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to load trainee edit form: ' . $e->getMessage(), [
-                'admin_id' => Auth::id(),
-                'trainee_id' => $id
-            ]);
-            
-            return redirect()->route('admin.trainees.index')
-                           ->with('error', 'Trainee not found');
-        }
+        return redirect()->route('admin.users.edit', $id);
     }
 
     /**

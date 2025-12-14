@@ -53,13 +53,13 @@
 						<li class="slide side-menu__label1">
 							<a href="javascript:void(0)">Profile Management</a>
 						</li>
-						<li class="slide {{ request()->is('trainer/profile*') || request()->is('trainers/'.Auth::id().'*') ? 'active' : '' }}">
-							<a href="{{route('trainer.profile')}}" class="side-menu__item">
+						<li class="slide {{ request()->is('profile') ? 'active' : '' }}">
+							<a href="{{route('profile.index')}}" class="side-menu__item">
 								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="128" cy="120" r="40" opacity="0.2"/><circle cx="128" cy="120" r="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M63.8,199.37a72,72,0,0,1,128.4,0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M198.1,197.85A96,96,0,1,0,57.9,58.15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="200" cy="56" r="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
 								My Profile</a>
 						</li>
-                        <li class="slide">
-							<a href="{{route('trainer.profile.edit')}}" class="side-menu__item">
+                        <li class="slide {{ request()->is('profile/edit') ? 'active' : '' }}">
+							<a href="{{route('profile.edit')}}" class="side-menu__item">
 								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M92.69,216H48a8,8,0,0,1-8-8V163.31a8,8,0,0,1,2.34-5.65L165.66,34.34a8,8,0,0,1,11.31,0L221.66,79a8,8,0,0,1,0,11.31L98.34,213.66A8,8,0,0,1,92.69,216Z" opacity="0.2"/><path d="M92.69,216H48a8,8,0,0,1-8-8V163.31a8,8,0,0,1,2.34-5.65L165.66,34.34a8,8,0,0,1,11.31,0L221.66,79a8,8,0,0,1,0,11.31L98.34,213.66A8,8,0,0,1,92.69,216Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><line x1="136" y1="64" x2="192" y2="120" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
 								Edit Profile</a>
 						</li>
