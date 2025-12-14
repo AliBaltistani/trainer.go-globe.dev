@@ -30,7 +30,7 @@ $(document).ready(function() {
             { 
                 data: 'name', 
                 name: 'name', 
-                width: '15%',
+                width: '25%',
                 render: function(data, type, row) {
                     let profileImage = '';
                     if (row.profile_image) {
@@ -42,11 +42,13 @@ $(document).ready(function() {
                     }
                     return `<div class="d-flex align-items-center">
                                 ${profileImage}
-                                <span class="fw-medium">${data}</span>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-medium">${data}</span>
+                                    <small class="text-muted">${row.email || ''}</small>
+                                </div>
                             </div>`;
                 }
             },
-            { data: 'email', name: 'email', width: '15%' },
             { data: 'phone', name: 'phone', width: '12%' },
             { 
                 data: 'role', 
@@ -588,7 +590,7 @@ function showAlert(type, message) {
 
             <x-tables.table 
                 id="usersTable"
-                :headers="['Sr.#', 'Profile', 'Email', 'Phone', 'Role', 'Status', 'Created At', 'Actions']"
+                :headers="['Sr.#', 'Profile', 'Phone', 'Role', 'Status', 'Created At', 'Actions']"
                 :bordered="true"
                 :striped="true"
                 :hover="true"

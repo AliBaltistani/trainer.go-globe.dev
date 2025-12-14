@@ -23,7 +23,7 @@
             { 
                 data: 'name', 
                 name: 'name', 
-                width: '20%',
+                width: '25%',
                 render: function(data, type, row) {
                     let avatar = '';
                     if (row.profile_image) {
@@ -35,11 +35,13 @@
                     }
                     return `<div class="d-flex align-items-center">
                                 ${avatar}
-                                <span class="fw-semibold">${data}</span>
+                                <div class="d-flex flex-column">
+                                    <span class="fw-semibold">${data}</span>
+                                    <small class="text-muted">${row.email || ''}</small>
+                                </div>
                             </div>`;
                 }
             },
-            { data: 'email', name: 'email', width: '15%' },
             { data: 'phone', name: 'phone', width: '10%' },
             { 
                 data: 'goals_count', 
@@ -302,7 +304,7 @@ function showAlert(type, message) {
 
             <x-tables.table 
                 id="traineesTable" 
-                :headers="['Sr.#', 'Name', 'Email', 'Phone', 'Goals', 'Reviews', 'Status', 'Created', 'Actions']"
+                :headers="['Sr.#', 'Profile', 'Phone', 'Goals', 'Reviews', 'Status', 'Created', 'Actions']"
                 :bordered="true"
                 :striped="true"
                 :hover="true"
