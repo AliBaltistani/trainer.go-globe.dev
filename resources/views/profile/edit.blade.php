@@ -490,14 +490,24 @@
             // Validate file type
             const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
             if (!allowedTypes.includes(file.type)) {
-                alert('Please select a valid image file (JPEG, PNG, JPG, or GIF)');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid File Type',
+                    text: 'Please select a valid image file (JPEG, PNG, JPG, or GIF)',
+                    confirmButtonText: 'OK'
+                });
                 this.value = '';
                 return;
             }
 
             // Validate file size (2MB = 2048KB)
             if (file.size > 2048 * 1024) {
-                alert('File size must be less than 2MB');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Too Large',
+                    text: 'File size must be less than 2MB',
+                    confirmButtonText: 'OK'
+                });
                 this.value = '';
                 return;
             }
@@ -565,12 +575,22 @@
             if (file) {
                 const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
                 if (!allowedTypes.includes(file.type)) {
-                    alert('Please select a valid image file (JPEG, PNG, JPG, GIF, or WEBP)');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid File Type',
+                        text: 'Please select a valid image file (JPEG, PNG, JPG, GIF, or WEBP)',
+                        confirmButtonText: 'OK'
+                    });
                     this.value = '';
                     return;
                 }
                 if (file.size > 2048 * 1024) {
-                    alert('File size must be less than 2MB');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'File Too Large',
+                        text: 'File size must be less than 2MB',
+                        confirmButtonText: 'OK'
+                    });
                     this.value = '';
                     return;
                 }
@@ -587,24 +607,46 @@
     }
 
     function deleteBusinessLogo() {
-        if (confirm('Are you sure you want to delete your business logo?')) {
-            const deleteForm = document.getElementById('deleteBusinessLogoForm');
-            if (deleteForm) {
-                deleteForm.submit();
+        Swal.fire({
+            title: 'Delete Business Logo?',
+            text: 'Are you sure you want to delete your business logo? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const deleteForm = document.getElementById('deleteBusinessLogoForm');
+                if (deleteForm) {
+                    deleteForm.submit();
+                }
             }
-        }
+        });
     }
 
     /**
      * Delete profile image function
      */
     function deleteProfileImage() {
-        if (confirm('Are you sure you want to delete your profile image?')) {
-            const deleteForm = document.getElementById('deleteImageForm');
-            if (deleteForm) {
-                deleteForm.submit();
+        Swal.fire({
+            title: 'Delete Profile Image?',
+            text: 'Are you sure you want to delete your profile image? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const deleteForm = document.getElementById('deleteImageForm');
+                if (deleteForm) {
+                    deleteForm.submit();
+                }
             }
-        }
+        });
     }
 
     /**
@@ -627,7 +669,12 @@
             roleSelect.addEventListener('change', function() {
                 if (this.value === 'trainer') {
                     // Show message that trainer fields will be available after save
-                    alert('After changing role to Trainer, please save and then edit again to add trainer-specific information.');
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Role Changed to Trainer',
+                        text: 'After changing role to Trainer, please save and then edit again to add trainer-specific information.',
+                        confirmButtonText: 'OK'
+                    });
                 }
             });
         }
@@ -756,27 +803,26 @@
     }
 
     /**
-     * Show alert message
+     * Show alert message using SweetAlert
      */
     function showAlert(type, message) {
-        const alertHtml = `
-            <div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                <i class="ri-${type === 'success' ? 'check-circle' : 'error-warning'}-line me-2"></i>${message}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        `;
-        const alertContainer = document.createElement('div');
-        alertContainer.innerHTML = alertHtml;
-        document.querySelector('.page-header-breadcrumb').after(alertContainer.firstElementChild);
+        const iconMap = {
+            'success': 'success',
+            'error': 'error',
+            'danger': 'error',
+            'warning': 'warning',
+            'info': 'info'
+        };
         
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-            const alert = document.querySelector('.alert');
-            if (alert) {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            }
-        }, 5000);
+        Swal.fire({
+            icon: iconMap[type] || 'info',
+            title: type === 'success' ? 'Success!' : type === 'error' || type === 'danger' ? 'Error!' : type === 'warning' ? 'Warning!' : 'Info',
+            text: message,
+            confirmButtonText: 'OK',
+            timer: 5000,
+            timerProgressBar: true,
+            showCloseButton: true
+        });
     }
 
     /**
