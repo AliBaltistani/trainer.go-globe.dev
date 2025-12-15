@@ -198,6 +198,74 @@
             </div>
         </div>
         
+        {{-- Goals Section --}}
+        <div class="col-xl-12">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        Fitness Goals (Optional)
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label">Assign Goals to Trainee</label>
+                        <p class="text-muted fs-12 mb-3">You can select existing goals or create new ones for this trainee.</p>
+                        
+                        {{-- Existing Goals Selection --}}
+                        <div class="mb-3">
+                            <label class="form-label">Select Existing Goals</label>
+                            <select class="form-control @error('existing_goals') is-invalid @enderror" id="existingGoalsSelect" data-trigger>
+                                <option value="">Select a goal to add</option>
+                                @php
+                                    $availableGoals = \App\Models\Goal::where('status', 1)
+                                        ->where(function($q) {
+                                            $q->whereHas('user', function($uq) {
+                                                $uq->where('role', 'client');
+                                            })
+                                            ->orWhereNull('user_id');
+                                        })
+                                        ->orderBy('name')
+                                        ->get();
+                                @endphp
+                                @if($availableGoals->count() > 0)
+                                    @foreach($availableGoals as $goal)
+                                        <option value="{{ $goal->name }}" data-goal-id="{{ $goal->id }}">{{ $goal->name }}</option>
+                                    @endforeach
+                                @else
+                                    <option disabled>No existing goals available</option>
+                                @endif
+                            </select>
+                            <small class="text-muted d-block mt-1">Select a goal and it will be added to the list below</small>
+                            @error('existing_goals')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        
+                        {{-- Selected Goals Display --}}
+                        <div id="selectedGoalsContainer" class="mb-3" style="display: none;">
+                            <label class="form-label">Selected Goals</label>
+                            <div id="selectedGoalsList" class="d-flex flex-wrap gap-2"></div>
+                        </div>
+                        
+                        {{-- Add New Goal Input --}}
+                        <div class="mb-3">
+                            <label class="form-label">Add New Goal</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="newGoalInput" placeholder="Enter goal name (e.g., Lose 10 pounds, Build muscle)">
+                                <button type="button" class="btn btn-primary" id="addGoalBtn">
+                                    <i class="ri-add-line me-1"></i>Add Goal
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-1">Enter a goal name and click Add to include it</small>
+                        </div>
+                        
+                        {{-- Hidden input to store selected goals --}}
+                        <input type="hidden" name="fitness_goals" id="fitnessGoalsInput" value="">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         {{-- Location Section --}}
         <div class="col-xl-12">
             <div class="card custom-card">
@@ -340,6 +408,97 @@
     }
 
     /**
+     * Goals Management
+     */
+    let selectedGoals = [];
+    
+    // Handle existing goals selection
+    const existingGoalsSelect = document.getElementById('existingGoalsSelect');
+    if (existingGoalsSelect) {
+        existingGoalsSelect.addEventListener('change', function() {
+            const selectedOptions = Array.from(this.selectedOptions);
+            selectedOptions.forEach(option => {
+                const goalName = option.value;
+                if (!selectedGoals.includes(goalName)) {
+                    selectedGoals.push(goalName);
+                }
+            });
+            updateSelectedGoalsDisplay();
+            updateFitnessGoalsInput();
+        });
+    }
+    
+    // Handle add new goal button
+    const addGoalBtn = document.getElementById('addGoalBtn');
+    const newGoalInput = document.getElementById('newGoalInput');
+    if (addGoalBtn && newGoalInput) {
+        addGoalBtn.addEventListener('click', function() {
+            const goalName = newGoalInput.value.trim();
+            if (goalName) {
+                if (!selectedGoals.includes(goalName)) {
+                    selectedGoals.push(goalName);
+                    updateSelectedGoalsDisplay();
+                    updateFitnessGoalsInput();
+                    newGoalInput.value = '';
+                } else {
+                    showAlert('warning', 'This goal is already added');
+                }
+            }
+        });
+        
+        // Allow Enter key to add goal
+        newGoalInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addGoalBtn.click();
+            }
+        });
+    }
+    
+    // Update selected goals display
+    function updateSelectedGoalsDisplay() {
+        const container = document.getElementById('selectedGoalsContainer');
+        const list = document.getElementById('selectedGoalsList');
+        
+        if (selectedGoals.length > 0) {
+            container.style.display = 'block';
+            list.innerHTML = selectedGoals.map((goal, index) => `
+                <span class="badge bg-primary-transparent d-inline-flex align-items-center gap-1">
+                    ${goal}
+                    <button type="button" class="btn-close btn-close-sm" onclick="removeGoal(${index})" aria-label="Remove"></button>
+                </span>
+            `).join('');
+        } else {
+            container.style.display = 'none';
+        }
+    }
+    
+    // Remove goal
+    function removeGoal(index) {
+        selectedGoals.splice(index, 1);
+        updateSelectedGoalsDisplay();
+        updateFitnessGoalsInput();
+        
+        // Also deselect from dropdown
+        if (existingGoalsSelect) {
+            const options = Array.from(existingGoalsSelect.options);
+            options.forEach(option => {
+                if (option.selected) {
+                    option.selected = false;
+                }
+            });
+        }
+    }
+    
+    // Update hidden input with selected goals
+    function updateFitnessGoalsInput() {
+        const input = document.getElementById('fitnessGoalsInput');
+        if (input) {
+            input.value = JSON.stringify(selectedGoals);
+        }
+    }
+    
+    /**
      * Auto-hide alerts after 5 seconds
      */
     document.addEventListener('DOMContentLoaded', function() {
@@ -404,6 +563,13 @@
      */
     function submitTraineeForm(form, submitBtn) {
         const formData = new FormData(form);
+        
+        // Add goals to form data
+        if (selectedGoals.length > 0) {
+            selectedGoals.forEach(goal => {
+                formData.append('fitness_goals[]', goal);
+            });
+        }
         
         // Add location fields to form data
         const locationFields = ['country', 'state', 'city', 'address', 'zipcode'];

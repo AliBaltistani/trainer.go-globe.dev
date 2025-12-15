@@ -458,6 +458,60 @@
                 </div>
             </div>
 
+        {{-- Goals Section - For Clients Only --}}
+        @if($user->role === 'client')
+            <div class="col-xl-12">
+                <div class="card custom-card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            Fitness Goals
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        {{-- Current Goals Display --}}
+                        @php
+                            $currentGoals = $user->goals;
+                        @endphp
+                        @if($currentGoals && $currentGoals->count() > 0)
+                            <div class="mb-3">
+                                <label class="form-label">Current Goals</label>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    @foreach($currentGoals as $goal)
+                                        <span class="badge bg-primary-transparent d-inline-flex align-items-center gap-1">
+                                            {{ $goal->name }}
+                                            <button type="button" class="btn-close btn-close-sm" onclick="removeExistingGoal({{ $goal->id }}, '{{ $goal->name }}')" aria-label="Remove"></button>
+                                        </span>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+                        
+                        {{-- Add New Goal --}}
+                        <div class="mb-3">
+                            <label class="form-label">Add New Goal</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="newGoalInput" placeholder="Enter goal name (e.g., Lose 10 pounds, Build muscle)">
+                                <button type="button" class="btn btn-primary" id="addGoalBtn">
+                                    <i class="ri-add-line me-1"></i>Add Goal
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-1">Enter a goal name and click Add to include it</small>
+                        </div>
+                        
+                        {{-- Selected Goals Display --}}
+                        <div id="selectedGoalsContainer" class="mb-3" style="display: none;">
+                            <label class="form-label">Goals to Add</label>
+                            <div id="selectedGoalsList" class="d-flex flex-wrap gap-2"></div>
+                        </div>
+                        
+                        {{-- Hidden input to store goals to add --}}
+                        <input type="hidden" name="fitness_goals" id="fitnessGoalsInput" value="">
+                        <input type="hidden" name="goals_to_remove" id="goalsToRemoveInput" value="">
+                    </div>
+                </div>
+            </div>
+        @endif
+
     </form>
 </div>
 <!--End::row-1 -->
@@ -714,6 +768,27 @@
     function submitProfileForm(form, submitBtn) {
         const formData = new FormData(form);
         const originalText = submitBtn.innerHTML;
+        
+        // Add goals to form data if client
+        const fitnessGoalsInput = document.getElementById('fitnessGoalsInput');
+        const goalsToRemoveInput = document.getElementById('goalsToRemoveInput');
+        
+        if (fitnessGoalsInput && fitnessGoalsInput.value) {
+            try {
+                const goals = JSON.parse(fitnessGoalsInput.value);
+                if (Array.isArray(goals)) {
+                    goals.forEach(goal => {
+                        formData.append('fitness_goals[]', goal);
+                    });
+                }
+            } catch (e) {
+                console.error('Error parsing goals:', e);
+            }
+        }
+        
+        if (goalsToRemoveInput && goalsToRemoveInput.value) {
+            formData.append('goals_to_remove', goalsToRemoveInput.value);
+        }
         
         // Disable button and show loading
         submitBtn.disabled = true;

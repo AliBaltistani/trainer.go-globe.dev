@@ -224,6 +224,62 @@
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                        @if($user->role === 'client' && $user->goals && $user->goals->count() > 0)
+                                                        <div class="col-xl-12">
+                                                            <div class="card custom-card overflow-hidden">
+                                                                <div class="card-header">
+                                                                    <div class="card-title">
+                                                                        Fitness Goals
+                                                                    </div>
+                                                                    <div class="ms-auto">
+                                                                        <span class="badge bg-primary-transparent">{{ $user->goals->count() }} Goals</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="card-body p-0">
+                                                                    <ul class="list-group list-group-flush">
+                                                                        @foreach($user->goals as $goal)
+                                                                        <li class="list-group-item">
+                                                                            <div class="d-flex align-items-center gap-3 flex-wrap">
+                                                                                <div>
+                                                                                    <span class="avatar avatar-md bg-primary-transparent">
+                                                                                        <i class="ri-target-line fs-4"></i>
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div class="flex-fill">
+                                                                                    <span class="d-block fw-medium">{{ $goal->name }}</span>
+                                                                                    <span class="text-muted fs-12">
+                                                                                        @if($goal->status)
+                                                                                            <span class="badge bg-success-transparent">Active</span>
+                                                                                        @else
+                                                                                            <span class="badge bg-secondary-transparent">Inactive</span>
+                                                                                        @endif
+                                                                                        @if($goal->target_value)
+                                                                                            - Target: {{ $goal->target_value }}{{ $goal->metric_unit ? ' ' . $goal->metric_unit : '' }}
+                                                                                        @endif
+                                                                                        @if($goal->deadline)
+                                                                                            - Deadline: {{ \Carbon\Carbon::parse($goal->deadline)->format('M d, Y') }}
+                                                                                        @endif
+                                                                                    </span>
+                                                                                </div>
+                                                                                @if($goal->current_value && $goal->target_value)
+                                                                                <div class="text-end">
+                                                                                    <div class="progress" style="width: 100px; height: 8px;">
+                                                                                        @php
+                                                                                            $progress = min(100, ($goal->current_value / $goal->target_value) * 100);
+                                                                                        @endphp
+                                                                                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $progress }}%"></div>
+                                                                                    </div>
+                                                                                    <small class="text-muted">{{ number_format($progress, 0) }}%</small>
+                                                                                </div>
+                                                                                @endif
+                                                                            </div>
+                                                                        </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        @endif
                                                         @if($user->role === 'trainer' && $user->specializations && $user->specializations->count() > 0)
                                                         <div class="col-xl-12">
                                                             <div class="card custom-card overflow-hidden">

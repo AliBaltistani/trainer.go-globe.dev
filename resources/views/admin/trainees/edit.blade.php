@@ -59,6 +59,127 @@ $(document).ready(function() {
         @endif
     }
 
+    /**
+     * Goals Management
+     */
+    let selectedGoals = [];
+    let goalsToRemove = [];
+    
+    // Handle existing goals selection
+    const existingGoalsSelect = document.getElementById('existingGoalsSelect');
+    if (existingGoalsSelect) {
+        existingGoalsSelect.addEventListener('change', function() {
+            const goalName = this.value;
+            if (goalName && goalName !== '') {
+                if (!selectedGoals.includes(goalName)) {
+                    selectedGoals.push(goalName);
+                    updateSelectedGoalsDisplay();
+                    updateFitnessGoalsInput();
+                    // Reset select to first option
+                    this.value = '';
+                } else {
+                    showAlert('warning', 'This goal is already added');
+                    this.value = '';
+                }
+            }
+        });
+    }
+    
+    // Handle add new goal button
+    const addGoalBtn = document.getElementById('addGoalBtn');
+    const newGoalInput = document.getElementById('newGoalInput');
+    if (addGoalBtn && newGoalInput) {
+        addGoalBtn.addEventListener('click', function() {
+            const goalName = newGoalInput.value.trim();
+            if (goalName) {
+                if (!selectedGoals.includes(goalName)) {
+                    selectedGoals.push(goalName);
+                    updateSelectedGoalsDisplay();
+                    updateFitnessGoalsInput();
+                    newGoalInput.value = '';
+                } else {
+                    showAlert('warning', 'This goal is already added');
+                }
+            }
+        });
+        
+        // Allow Enter key to add goal
+        newGoalInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addGoalBtn.click();
+            }
+        });
+    }
+    
+    // Update selected goals display
+    function updateSelectedGoalsDisplay() {
+        const container = document.getElementById('selectedGoalsContainer');
+        const list = document.getElementById('selectedGoalsList');
+        
+        if (selectedGoals.length > 0) {
+            container.style.display = 'block';
+            list.innerHTML = selectedGoals.map((goal, index) => `
+                <span class="badge bg-primary-transparent d-inline-flex align-items-center gap-1">
+                    ${goal}
+                    <button type="button" class="btn-close btn-close-sm" onclick="removeGoal(${index})" aria-label="Remove"></button>
+                </span>
+            `).join('');
+        } else {
+            container.style.display = 'none';
+        }
+    }
+    
+    // Remove goal from selected list
+    function removeGoal(index) {
+        selectedGoals.splice(index, 1);
+        updateSelectedGoalsDisplay();
+        updateFitnessGoalsInput();
+        
+        // Also deselect from dropdown
+        if (existingGoalsSelect) {
+            const options = Array.from(existingGoalsSelect.options);
+            options.forEach(option => {
+                if (option.selected) {
+                    option.selected = false;
+                }
+            });
+        }
+    }
+    
+    // Remove existing goal
+    function removeExistingGoal(goalId, goalName) {
+        Swal.fire({
+            title: 'Remove Goal?',
+            text: `Are you sure you want to remove "${goalName}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, remove it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                if (!goalsToRemove.includes(goalId)) {
+                    goalsToRemove.push(goalId);
+                }
+                document.getElementById('goalsToRemoveInput').value = JSON.stringify(goalsToRemove);
+                
+                // Hide the goal badge
+                event.target.closest('.badge').remove();
+                
+                showAlert('success', 'Goal will be removed on save');
+            }
+        });
+    }
+    
+    // Update hidden input with selected goals
+    function updateFitnessGoalsInput() {
+        const input = document.getElementById('fitnessGoalsInput');
+        if (input) {
+            input.value = JSON.stringify(selectedGoals);
+        }
+    }
+
     // Form validation
     $('#traineeForm').on('submit', function(e) {
         e.preventDefault();
@@ -75,6 +196,18 @@ $(document).ready(function() {
         // Submit form via AJAX
         const formData = new FormData(this);
         formData.append('_method', 'PUT');
+        
+        // Add goals to form data
+        if (selectedGoals.length > 0) {
+            selectedGoals.forEach(goal => {
+                formData.append('fitness_goals[]', goal);
+            });
+        }
+        
+        // Add goals to remove
+        if (goalsToRemove.length > 0) {
+            formData.append('goals_to_remove', JSON.stringify(goalsToRemove));
+        }
         
         $.ajax({
             url: $(this).attr('action'),
@@ -307,6 +440,91 @@ function showAlert(type, message) {
                                 <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password_confirmation')">
                                     <i class="ri-eye-line" id="password_confirmation-icon"></i>
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {{-- Goals Section --}}
+                    <div class="row">
+                        <div class="col-xl-12 mb-3">
+                            <div class="card border">
+                                <div class="card-header bg-light">
+                                    <div class="card-title mb-0">
+                                        <h6 class="mb-0">Fitness Goals</h6>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    {{-- Current Goals Display --}}
+                                    @php
+                                        $currentGoals = $trainee->goals;
+                                    @endphp
+                                    @if($currentGoals && $currentGoals->count() > 0)
+                                        <div class="mb-3">
+                                            <label class="form-label">Current Goals</label>
+                                            <div class="d-flex flex-wrap gap-2 mb-3">
+                                                @foreach($currentGoals as $goal)
+                                                    <span class="badge bg-primary-transparent d-inline-flex align-items-center gap-1">
+                                                        {{ $goal->name }}
+                                                        <button type="button" class="btn-close btn-close-sm" onclick="removeExistingGoal({{ $goal->id }}, '{{ $goal->name }}')" aria-label="Remove"></button>
+                                                    </span>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                    
+                                    {{-- Add New Goal --}}
+                                    <div class="mb-3">
+                                        <label class="form-label">Add New Goal</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="newGoalInput" placeholder="Enter goal name (e.g., Lose 10 pounds, Build muscle)">
+                                            <button type="button" class="btn btn-primary" id="addGoalBtn">
+                                                <i class="ri-add-line me-1"></i>Add Goal
+                                            </button>
+                                        </div>
+                                        <small class="text-muted d-block mt-1">Enter a goal name and click Add to include it</small>
+                                    </div>
+                                    
+                                    {{-- Select Existing Goals --}}
+                                    <div class="mb-3">
+                                        <label class="form-label">Select from Existing Goals</label>
+                                        <select class="form-control @error('existing_goals') is-invalid @enderror" id="existingGoalsSelect" data-trigger>
+                                            <option value="">Select a goal to add</option>
+                                            @php
+                                                $availableGoals = \App\Models\Goal::where('status', 1)
+                                                    ->where(function($q) use ($trainee) {
+                                                        $q->whereHas('user', function($uq) {
+                                                            $uq->where('role', 'client');
+                                                        })
+                                                        ->orWhereNull('user_id');
+                                                    })
+                                                    ->where('user_id', '!=', $trainee->id)
+                                                    ->orderBy('name')
+                                                    ->get();
+                                            @endphp
+                                            @if($availableGoals->count() > 0)
+                                                @foreach($availableGoals as $goal)
+                                                    <option value="{{ $goal->name }}" data-goal-id="{{ $goal->id }}">{{ $goal->name }}</option>
+                                                @endforeach
+                                            @else
+                                                <option disabled>No existing goals available</option>
+                                            @endif
+                                        </select>
+                                        <small class="text-muted d-block mt-1">Select a goal and it will be added to the list below</small>
+                                        @error('existing_goals')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                    
+                                    {{-- Selected Goals Display --}}
+                                    <div id="selectedGoalsContainer" class="mb-3" style="display: none;">
+                                        <label class="form-label">Goals to Add</label>
+                                        <div id="selectedGoalsList" class="d-flex flex-wrap gap-2"></div>
+                                    </div>
+                                    
+                                    {{-- Hidden input to store goals to add --}}
+                                    <input type="hidden" name="fitness_goals" id="fitnessGoalsInput" value="">
+                                    <input type="hidden" name="goals_to_remove" id="goalsToRemoveInput" value="">
+                                </div>
                             </div>
                         </div>
                     </div>

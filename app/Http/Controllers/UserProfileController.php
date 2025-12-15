@@ -59,6 +59,11 @@ class UserProfileController extends Controller
         $isOwnProfile = ($user->id === $currentUser->id);
         $canEdit = $isOwnProfile || $currentUser->role === 'admin';
         
+        // Load goals for clients
+        if ($user->role === 'client') {
+            $user->load('goals');
+        }
+        
         return view('profile.index', compact('user', 'isOwnProfile', 'canEdit'));
     }
 
@@ -85,6 +90,11 @@ class UserProfileController extends Controller
         // Determine if editing own profile and if can change role
         $isOwnProfile = ($user->id === $currentUser->id);
         $canChangeRole = !$isOwnProfile && $currentUser->role === 'admin';
+        
+        // Load goals for clients
+        if ($user->role === 'client') {
+            $user->load('goals');
+        }
         
         return view('profile.edit', compact('user', 'isOwnProfile', 'canChangeRole'));
     }
@@ -240,6 +250,73 @@ class UserProfileController extends Controller
             }
             
             $user->save();
+            
+            // Handle goals for clients
+            if ($user->role === 'client') {
+                // Handle goals removal
+                if ($request->filled('goals_to_remove')) {
+                    $goalsToRemove = $request->goals_to_remove;
+                    
+                    // Handle JSON string input
+                    if (is_string($goalsToRemove)) {
+                        $goalsToRemove = json_decode($goalsToRemove, true);
+                    }
+                    
+                    if (is_array($goalsToRemove)) {
+                        foreach ($goalsToRemove as $goalId) {
+                            $goal = \App\Models\Goal::where('user_id', $user->id)->find($goalId);
+                            if ($goal) {
+                                $goal->delete();
+                            }
+                        }
+                    }
+                }
+                
+                // Handle fitness goals assignment (add new goals)
+                if ($request->filled('fitness_goals')) {
+                    $goals = $request->fitness_goals;
+                    
+                    // Handle array input
+                    if (is_array($goals)) {
+                        foreach ($goals as $goalName) {
+                            if (!empty(trim($goalName))) {
+                                // Check if goal already exists for this user
+                                $existingGoal = \App\Models\Goal::where('user_id', $user->id)
+                                    ->where('name', trim($goalName))
+                                    ->first();
+                                
+                                if (!$existingGoal) {
+                                    \App\Models\Goal::create([
+                                        'name' => trim($goalName),
+                                        'user_id' => $user->id,
+                                        'status' => 1
+                                    ]);
+                                }
+                            }
+                        }
+                    } elseif (is_string($goals)) {
+                        // Handle JSON string input
+                        $decodedGoals = json_decode($goals, true);
+                        if (is_array($decodedGoals)) {
+                            foreach ($decodedGoals as $goalName) {
+                                if (!empty(trim($goalName))) {
+                                    $existingGoal = \App\Models\Goal::where('user_id', $user->id)
+                                        ->where('name', trim($goalName))
+                                        ->first();
+                                    
+                                    if (!$existingGoal) {
+                                        \App\Models\Goal::create([
+                                            'name' => trim($goalName),
+                                            'user_id' => $user->id,
+                                            'status' => 1
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             // Redirect based on who is updating
             if ($isOwnProfile) {

@@ -52,14 +52,6 @@
                 }
             },
             { 
-                data: 'testimonials_count', 
-                name: 'testimonials_count', 
-                width: '8%',
-                render: function(data, type, row) {
-                    return `<span class="badge bg-success-transparent">${data} Reviews</span>`;
-                }
-            },
-            { 
                 data: 'status', 
                 name: 'status', 
                 width: '8%',
@@ -119,12 +111,12 @@
 
 // View trainee function
 function viewTrainee(id) {
-    window.location.href = `{{ route('admin.trainees.index') }}/${id}`;
+    window.location.href = `{{ route('admin.users.index') }}/${id}`;
 }
 
 // Edit trainee function
 function editTrainee(id) {
-    window.location.href = `{{ route('admin.trainees.index') }}/${id}/edit`;
+    window.location.href = `{{ route('admin.users.index') }}/${id}/edit`;
 }
 
 // Toggle trainee status
@@ -140,23 +132,45 @@ function toggleTraineeStatus(id) {
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
-                url: `{{ route('admin.trainees.index') }}/${id}/toggle-status`,
-                type: 'PATCH',
+                url: `/admin/trainees/${id}/toggle-status`,
+                method: 'PATCH',
+                data: {
+                    _token: '{{ csrf_token() }}',
+                    _method: 'PATCH'
+                },
                 headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                    'X-Requested-With': 'XMLHttpRequest'
                 },
                 success: function(response) {
+                    console.log('Toggle status response:', response);
                     if (response.success) {
-                        $('#traineesTable').DataTable().ajax.reload();
-                        Swal.fire('Success!', response.message, 'success');
+                        // Reload DataTable and wait for it to complete
+                        $('#traineesTable').DataTable().ajax.reload(function(json) {
+                            console.log('DataTable reloaded, new data:', json);
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: response.message || 'Trainee status updated successfully',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        }, false); // false = don't reset pagination
                     } else {
-                        Swal.fire('Error!', response.message, 'error');
+                        Swal.fire('Error!', response.message || 'Failed to update status', 'error');
                     }
                 },
                 error: function(xhr) {
+                    console.error('Toggle status error:', xhr);
                     let message = 'Failed to update status';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         message = xhr.responseJSON.message;
+                    } else if (xhr.status === 404) {
+                        message = 'Route not found. Please check the route configuration.';
+                    } else if (xhr.status === 403) {
+                        message = 'You do not have permission to perform this action.';
+                    } else if (xhr.status === 500) {
+                        message = 'Server error. Please try again later.';
                     }
                     Swal.fire('Error!', message, 'error');
                 }
@@ -261,7 +275,7 @@ function showAlert(type, message) {
         <x-widgets.stat-card-style1
             title="Active Trainees"
             value="{{ $stats['active_trainees'] }}"
-            icon="ri-user-check-line"
+            icon="ri-user-follow-line"
             color="success"
         />
     </div>
@@ -277,7 +291,7 @@ function showAlert(type, message) {
         <x-widgets.stat-card-style1
             title="With Goals"
             value="{{ $stats['trainees_with_goals'] }}"
-            icon="ri-target-line"
+            icon="ri-flag-line"
             color="info"
         />
     </div>
@@ -304,7 +318,7 @@ function showAlert(type, message) {
 
             <x-tables.table 
                 id="traineesTable" 
-                :headers="['Sr.#', 'Profile', 'Phone', 'Goals', 'Reviews', 'Status', 'Created', 'Actions']"
+                :headers="['Sr.#', 'Profile', 'Phone', 'Goals', 'Status', 'Created', 'Actions']"
                 :bordered="true"
                 :striped="true"
                 :hover="true"

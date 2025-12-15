@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\UserLocation;
+use App\Models\Goal;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -126,8 +127,11 @@ class TraineesController extends Controller
             $totalRecords = User::where('role', 'client')->count();
             $filteredRecords = $query->count();
             
-            // Apply pagination
-            $trainees = $query->skip($start)->take($length)->latest()->get();
+            // Apply pagination - ensure we get fresh data from database
+            $trainees = $query->orderBy('created_at', 'desc')
+                             ->skip($start)
+                             ->take($length)
+                             ->get();
             
             // Format data for DataTables
             $data = $trainees->map(function($trainee) {
@@ -336,11 +340,53 @@ class TraineesController extends Controller
                 ]);
             }
             
+            // Handle fitness goals assignment
+            if ($request->filled('fitness_goals')) {
+                $goals = $request->fitness_goals;
+                
+                // Handle array input
+                if (is_array($goals)) {
+                    foreach ($goals as $goalName) {
+                        if (!empty(trim($goalName))) {
+                            \App\Models\Goal::create([
+                                'name' => trim($goalName),
+                                'user_id' => $trainee->id,
+                                'status' => 1
+                            ]);
+                        }
+                    }
+                } elseif (is_string($goals)) {
+                    // Handle JSON string input
+                    $decodedGoals = json_decode($goals, true);
+                    if (is_array($decodedGoals)) {
+                        foreach ($decodedGoals as $goalName) {
+                            if (!empty(trim($goalName))) {
+                                \App\Models\Goal::create([
+                                    'name' => trim($goalName),
+                                    'user_id' => $trainee->id,
+                                    'status' => 1
+                                ]);
+                            }
+                        }
+                    } else {
+                        // Single goal string
+                        if (!empty(trim($goals))) {
+                            \App\Models\Goal::create([
+                                'name' => trim($goals),
+                                'user_id' => $trainee->id,
+                                'status' => 1
+                            ]);
+                        }
+                    }
+                }
+            }
+            
             // Log trainee creation
             Log::info('New trainee created by admin', [
                 'admin_id' => Auth::id(),
                 'trainee_id' => $trainee->id,
-                'trainee_email' => $trainee->email
+                'trainee_email' => $trainee->email,
+                'goals_count' => $trainee->goals()->count()
             ]);
             
             if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
@@ -388,14 +434,23 @@ class TraineesController extends Controller
 
     /**
      * Show the form for editing the specified trainee
-     * redirects to unified user edit
      * 
      * @param  int  $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return \Illuminate\View\View
      */
     public function edit($id)
     {
-        return redirect()->route('admin.users.edit', $id);
+        try {
+            $trainee = User::where('role', 'client')
+                ->with('goals', 'location')
+                ->findOrFail($id);
+            
+            return view('admin.trainees.edit', compact('trainee'));
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to load trainee edit form: ' . $e->getMessage());
+            return redirect()->route('admin.trainees.index')->with('error', 'Trainee not found');
+        }
     }
 
     /**
@@ -460,11 +515,76 @@ class TraineesController extends Controller
                 $trainee->update(['profile_image' => $imagePath]);
             }
             
+            // Handle goals removal
+            if ($request->filled('goals_to_remove')) {
+                $goalsToRemove = $request->goals_to_remove;
+                
+                // Handle JSON string input
+                if (is_string($goalsToRemove)) {
+                    $goalsToRemove = json_decode($goalsToRemove, true);
+                }
+                
+                if (is_array($goalsToRemove)) {
+                    foreach ($goalsToRemove as $goalId) {
+                        $goal = Goal::where('user_id', $trainee->id)->find($goalId);
+                        if ($goal) {
+                            $goal->delete();
+                        }
+                    }
+                }
+            }
+            
+            // Handle fitness goals assignment (add new goals)
+            if ($request->filled('fitness_goals')) {
+                $goals = $request->fitness_goals;
+                
+                // Handle array input
+                if (is_array($goals)) {
+                    foreach ($goals as $goalName) {
+                        if (!empty(trim($goalName))) {
+                            // Check if goal already exists for this trainee
+                            $existingGoal = Goal::where('user_id', $trainee->id)
+                                ->where('name', trim($goalName))
+                                ->first();
+                            
+                            if (!$existingGoal) {
+                                Goal::create([
+                                    'name' => trim($goalName),
+                                    'user_id' => $trainee->id,
+                                    'status' => 1
+                                ]);
+                            }
+                        }
+                    }
+                } elseif (is_string($goals)) {
+                    // Handle JSON string input
+                    $decodedGoals = json_decode($goals, true);
+                    if (is_array($decodedGoals)) {
+                        foreach ($decodedGoals as $goalName) {
+                            if (!empty(trim($goalName))) {
+                                $existingGoal = Goal::where('user_id', $trainee->id)
+                                    ->where('name', trim($goalName))
+                                    ->first();
+                                
+                                if (!$existingGoal) {
+                                    Goal::create([
+                                        'name' => trim($goalName),
+                                        'user_id' => $trainee->id,
+                                        'status' => 1
+                                    ]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
             // Log trainee update
             Log::info('Trainee updated by admin', [
                 'admin_id' => Auth::id(),
                 'trainee_id' => $trainee->id,
-                'trainee_email' => $trainee->email
+                'trainee_email' => $trainee->email,
+                'goals_count' => $trainee->goals()->count()
             ]);
             
             if ($request->ajax()) {
@@ -566,26 +686,32 @@ class TraineesController extends Controller
             $trainee = User::where('role', 'client')->findOrFail($id);
             
             // Toggle email verification status
-            $newStatus = $trainee->email_verified_at ? null : now();
-            $trainee->update(['email_verified_at' => $newStatus]);
+            $trainee->email_verified_at = $trainee->email_verified_at ? null : now();
+            $trainee->save();
+            
+            // Refresh the model to ensure we have the latest data
+            $trainee->refresh();
             
             // Log status change
             Log::info('Trainee status toggled by admin', [
                 'admin_id' => Auth::id(),
                 'trainee_id' => $trainee->id,
-                'new_status' => $newStatus ? 'active' : 'inactive'
+                'new_status' => $trainee->email_verified_at ? 'active' : 'inactive',
+                'email_verified_at' => $trainee->email_verified_at
             ]);
             
             return response()->json([
                 'success' => true,
                 'message' => 'Trainee status updated successfully',
-                'status' => $newStatus ? 'Active' : 'Inactive'
+                'status' => $trainee->email_verified_at ? 'Active' : 'Inactive',
+                'email_verified_at' => $trainee->email_verified_at ? $trainee->email_verified_at->toDateTimeString() : null
             ]);
             
         } catch (\Exception $e) {
             Log::error('Failed to toggle trainee status: ' . $e->getMessage(), [
                 'admin_id' => Auth::id(),
-                'trainee_id' => $id
+                'trainee_id' => $id,
+                'trace' => $e->getTraceAsString()
             ]);
             
             return response()->json([
