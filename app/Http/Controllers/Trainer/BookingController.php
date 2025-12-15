@@ -611,7 +611,7 @@ class BookingController extends Controller
             $availableSlots = [];
             if ($googleService->isTrainerConnected($trainer)) {
                 try {
-                    $availableSlots = $googleService->getAvailableSlots($trainer, $request->start_date, $request->end_date);
+                    $availableSlots = $googleService->getAvailableSlots($trainer, $request->start_date, $request->end_date, $slotDuration);
                     $source = 'google_calendar';
                 } catch (\Exception $e) {
                     Log::warning('Google Calendar failed, falling back to local availability', ['trainer_id' => $trainer->id, 'error' => $e->getMessage()]);
