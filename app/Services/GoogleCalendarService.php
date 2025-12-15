@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Schedule;
+use App\Models\Availability;
 use Illuminate\Support\Facades\Log;
 use Google_Client;
 use Google_Service_Calendar;
@@ -14,6 +15,7 @@ use Google_Service_Calendar_CreateConferenceRequest;
 use Google_Service_Calendar_ConferenceSolutionKey;
 use Google_Service_Calendar_FreeBusyRequest;
 use Exception;
+use Carbon\Carbon;
 
 /**
  * Google Calendar Service
@@ -400,7 +402,7 @@ class GoogleCalendarService
      * @param string $endDate
      * @return array
      */
-    public function getAvailableSlots(User $trainer, string $startDate, string $endDate): array
+    public function getAvailableSlots(User $trainer, string $startDate, string $endDate, int $slotDuration = 60): array
     {
         try {
             if (!$trainer->google_token || $trainer->role !== 'trainer') {
@@ -424,12 +426,22 @@ class GoogleCalendarService
                 }
             }
 
+            // Get trainer's weekly availability settings
+            $weeklyAvailability = Availability::where('trainer_id', $trainer->id)
+                ->orderBy('day_of_week')
+                ->get()
+                ->keyBy('day_of_week');
+
+            if ($weeklyAvailability->isEmpty()) {
+                throw new Exception('Trainer has not configured their availability schedule yet');
+            }
+
             // Create Calendar service
             $calendarService = new Google_Service_Calendar($this->googleClient);
 
             // Set time range
-            $timeMin = \Carbon\Carbon::parse($startDate)->startOfDay()->toRfc3339String();
-            $timeMax = \Carbon\Carbon::parse($endDate)->endOfDay()->toRfc3339String();
+            $timeMin = Carbon::parse($startDate)->startOfDay()->toRfc3339String();
+            $timeMax = Carbon::parse($endDate)->endOfDay()->toRfc3339String();
 
             // Get busy times from Google Calendar
             $freebusy = new Google_Service_Calendar_FreeBusyRequest();
@@ -451,44 +463,91 @@ class GoogleCalendarService
                 ];
             }
 
-            // Generate available slots (example: 9 AM to 5 PM, 1-hour slots)
+            // Generate available slots based on trainer's availability settings
             $availableSlots = [];
-            $current = \Carbon\Carbon::parse($startDate);
-            $end = \Carbon\Carbon::parse($endDate);
+            $current = Carbon::parse($startDate);
+            $end = Carbon::parse($endDate);
 
             while ($current->lte($end)) {
-                // Skip weekends (optional)
-                if ($current->isWeekend()) {
+                $dayOfWeek = $current->dayOfWeek;
+                $dayAvailability = $weeklyAvailability->get($dayOfWeek);
+
+                // Skip if trainer is not available on this day
+                if (!$dayAvailability) {
                     $current->addDay();
                     continue;
                 }
 
-                // Generate hourly slots from 9 AM to 5 PM
-                for ($hour = 9; $hour < 17; $hour++) {
-                    $slotStart = $current->copy()->setTime($hour, 0, 0);
-                    $slotEnd = $slotStart->copy()->addHour();
+                $timeRanges = [];
 
-                    // Check if this slot conflicts with busy times
-                    $isAvailable = true;
-                    foreach ($busySlots as $busySlot) {
-                        $busyStart = \Carbon\Carbon::parse($busySlot['start']);
-                        $busyEnd = \Carbon\Carbon::parse($busySlot['end']);
+                // Add morning time range if available
+                if ($dayAvailability->morning_available && 
+                    $dayAvailability->morning_start_time && 
+                    $dayAvailability->morning_end_time) {
+                    $morningStart = $this->parseTime($dayAvailability->morning_start_time);
+                    $morningEnd = $this->parseTime($dayAvailability->morning_end_time);
+                    if ($morningStart && $morningEnd) {
+                        $timeRanges[] = [
+                            'start' => $morningStart,
+                            'end' => $morningEnd
+                        ];
+                    }
+                }
 
-                        if ($slotStart->lt($busyEnd) && $slotEnd->gt($busyStart)) {
-                            $isAvailable = false;
+                // Add evening time range if available
+                if ($dayAvailability->evening_available && 
+                    $dayAvailability->evening_start_time && 
+                    $dayAvailability->evening_end_time) {
+                    $eveningStart = $this->parseTime($dayAvailability->evening_start_time);
+                    $eveningEnd = $this->parseTime($dayAvailability->evening_end_time);
+                    if ($eveningStart && $eveningEnd) {
+                        $timeRanges[] = [
+                            'start' => $eveningStart,
+                            'end' => $eveningEnd
+                        ];
+                    }
+                }
+
+                // Generate slots for each time range
+                foreach ($timeRanges as $timeRange) {
+                    $slotStart = $current->copy()->setTime($timeRange['start']->hour, $timeRange['start']->minute, 0);
+                    
+                    while ($slotStart->lt($current->copy()->setTime($timeRange['end']->hour, $timeRange['end']->minute, 0))) {
+                        $slotEnd = $slotStart->copy()->addMinutes($slotDuration);
+                        
+                        // Make sure slot doesn't exceed the end time
+                        $rangeEnd = $current->copy()->setTime($timeRange['end']->hour, $timeRange['end']->minute, 0);
+                        if ($slotEnd->gt($rangeEnd)) {
                             break;
                         }
-                    }
 
-                    if ($isAvailable && $slotStart->gt(\Carbon\Carbon::now())) {
-                        $availableSlots[] = [
-                            'start' => $slotStart->toISOString(),
-                            'end' => $slotEnd->toISOString(),
-                            'start_time' => $slotStart->format('H:i'),
-                            'end_time' => $slotEnd->format('H:i'),
-                            'date' => $slotStart->format('Y-m-d'),
-                            'display' => $slotStart->format('g:i A') . ' - ' . $slotEnd->format('g:i A')
-                        ];
+                        // Check if this slot conflicts with busy times
+                        $isAvailable = true;
+                        foreach ($busySlots as $busySlot) {
+                            $busyStart = Carbon::parse($busySlot['start']);
+                            $busyEnd = Carbon::parse($busySlot['end']);
+
+                            if ($slotStart->lt($busyEnd) && $slotEnd->gt($busyStart)) {
+                                $isAvailable = false;
+                                break;
+                            }
+                        }
+
+                        // Only add slots that are in the future
+                        if ($isAvailable && $slotStart->gt(Carbon::now())) {
+                            $availableSlots[] = [
+                                'start' => $slotStart->toISOString(),
+                                'end' => $slotEnd->toISOString(),
+                                'start_time' => $slotStart->format('H:i'),
+                                'end_time' => $slotEnd->format('H:i'),
+                                'date' => $slotStart->format('Y-m-d'),
+                                'display' => $slotStart->format('g:i A') . ' - ' . $slotEnd->format('g:i A'),
+                                'duration_minutes' => $slotDuration
+                            ];
+                        }
+
+                        // Move to next slot (add duration + break time if needed)
+                        $slotStart->addMinutes($slotDuration);
                     }
                 }
 
@@ -513,6 +572,44 @@ class GoogleCalendarService
             ]);
 
             throw new Exception('Failed to get available slots: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Parse time string to Carbon instance
+     * Handles both H:i and H:i:s formats
+     */
+    private function parseTime($time): ?Carbon
+    {
+        try {
+            // Handle Carbon instances
+            if ($time instanceof Carbon) {
+                return $time;
+            }
+
+            // Handle string formats
+            if (is_string($time)) {
+                // Try H:i:s format first
+                try {
+                    return Carbon::createFromFormat('H:i:s', $time);
+                } catch (\Exception $e) {
+                    // Try H:i format
+                    try {
+                        return Carbon::createFromFormat('H:i', $time);
+                    } catch (\Exception $e2) {
+                        // Try parsing as full datetime
+                        return Carbon::parse($time);
+                    }
+                }
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            Log::warning('Failed to parse time', [
+                'time' => $time,
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
     }
 

@@ -73,7 +73,32 @@
         .time-label {
             font-size: 14px;
             /* color: #666; */
-            min-width: 120px;
+            min-width: 80px;
+        }
+        
+        .time-inputs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .time-inputs input[type="time"] {
+            padding: 6px 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 120px;
+        }
+        
+        .time-inputs input[type="time"]:disabled {
+            background: #f5f5f5;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .time-separator {
+            font-size: 14px;
+            margin: 0 4px;
         }
         
         .save-button {
@@ -196,24 +221,52 @@
                         <div class="time-slots">
                             <!-- Morning Slot -->
                             <div class="time-slot">
-                                <div class="time-label">Morning 9:00 – 5:00</div>
+                                <div class="time-label">Morning</div>
+                                <div class="time-inputs">
+                                    <input type="time" 
+                                           name="availability[{{ $dayNumber }}][morning_start_time]" 
+                                           value="{{ $availability && $availability->morning_start_time ? \Carbon\Carbon::parse($availability->morning_start_time)->format('H:i') : '09:00' }}"
+                                           id="morning_start_{{ $dayNumber }}"
+                                           {{ !($availability && $availability->morning_available) ? 'disabled' : '' }}>
+                                    <span class="time-separator">–</span>
+                                    <input type="time" 
+                                           name="availability[{{ $dayNumber }}][morning_end_time]" 
+                                           value="{{ $availability && $availability->morning_end_time ? \Carbon\Carbon::parse($availability->morning_end_time)->format('H:i') : '17:00' }}"
+                                           id="morning_end_{{ $dayNumber }}"
+                                           {{ !($availability && $availability->morning_available) ? 'disabled' : '' }}>
+                                </div>
                                 <div class="toggle-switch {{ $availability && $availability->morning_available ? 'active' : '' }}" 
                                      onclick="toggleAvailability(this, 'morning', {{ $dayNumber }})">
                                     <div class="toggle-slider"></div>
                                 </div>
                                 <input type="hidden" name="availability[{{ $dayNumber }}][morning_available]" 
-                                       value="{{ $availability && $availability->morning_available ? '1' : '0' }}">
+                                       value="{{ $availability && $availability->morning_available ? '1' : '0' }}"
+                                       id="morning_available_{{ $dayNumber }}">
                             </div>
                             
                             <!-- Evening Slot -->
                             <div class="time-slot">
-                                <div class="time-label">Evening 5:00 – 9:00</div>
+                                <div class="time-label">Evening</div>
+                                <div class="time-inputs">
+                                    <input type="time" 
+                                           name="availability[{{ $dayNumber }}][evening_start_time]" 
+                                           value="{{ $availability && $availability->evening_start_time ? \Carbon\Carbon::parse($availability->evening_start_time)->format('H:i') : '17:00' }}"
+                                           id="evening_start_{{ $dayNumber }}"
+                                           {{ !($availability && $availability->evening_available) ? 'disabled' : '' }}>
+                                    <span class="time-separator">–</span>
+                                    <input type="time" 
+                                           name="availability[{{ $dayNumber }}][evening_end_time]" 
+                                           value="{{ $availability && $availability->evening_end_time ? \Carbon\Carbon::parse($availability->evening_end_time)->format('H:i') : '21:00' }}"
+                                           id="evening_end_{{ $dayNumber }}"
+                                           {{ !($availability && $availability->evening_available) ? 'disabled' : '' }}>
+                                </div>
                                 <div class="toggle-switch {{ $availability && $availability->evening_available ? 'active' : '' }}" 
                                      onclick="toggleAvailability(this, 'evening', {{ $dayNumber }})">
                                     <div class="toggle-slider"></div>
                                 </div>
                                 <input type="hidden" name="availability[{{ $dayNumber }}][evening_available]" 
-                                       value="{{ $availability && $availability->evening_available ? '1' : '0' }}">
+                                       value="{{ $availability && $availability->evening_available ? '1' : '0' }}"
+                                       id="evening_available_{{ $dayNumber }}">
                             </div>
                         </div>
                     </div>
@@ -241,13 +294,19 @@
         function toggleAvailability(element, period, day) {
             const isActive = element.classList.contains('active');
             const input = element.parentElement.querySelector('input[type="hidden"]');
+            const startTimeInput = document.getElementById(period + '_start_' + day);
+            const endTimeInput = document.getElementById(period + '_end_' + day);
             
             if (isActive) {
                 element.classList.remove('active');
                 input.value = '0';
+                if (startTimeInput) startTimeInput.disabled = true;
+                if (endTimeInput) endTimeInput.disabled = true;
             } else {
                 element.classList.add('active');
                 input.value = '1';
+                if (startTimeInput) startTimeInput.disabled = false;
+                if (endTimeInput) endTimeInput.disabled = false;
             }
         }
 

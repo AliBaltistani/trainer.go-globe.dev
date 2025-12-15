@@ -736,6 +736,10 @@ class BookingController extends Controller
             'availability' => 'required|array',
             'availability.*.morning_available' => 'boolean',
             'availability.*.evening_available' => 'boolean',
+            'availability.*.morning_start_time' => 'nullable|date_format:H:i',
+            'availability.*.morning_end_time' => 'nullable|date_format:H:i',
+            'availability.*.evening_start_time' => 'nullable|date_format:H:i',
+            'availability.*.evening_end_time' => 'nullable|date_format:H:i',
         ]);
 
         if ($validator->fails()) {
@@ -752,10 +756,10 @@ class BookingController extends Controller
                     [
                         'morning_available' => $data['morning_available'] ?? false,
                         'evening_available' => $data['evening_available'] ?? false,
-                        'morning_start_time' => $data['morning_available'] ? '09:00:00' : null,
-                        'morning_end_time' => $data['morning_available'] ? '17:00:00' : null,
-                        'evening_start_time' => $data['evening_available'] ? '17:00:00' : null,
-                        'evening_end_time' => $data['evening_available'] ? '21:00:00' : null,
+                        'morning_start_time' => ($data['morning_available'] ?? false) && !empty($data['morning_start_time']) ? $data['morning_start_time'] : null,
+                        'morning_end_time' => ($data['morning_available'] ?? false) && !empty($data['morning_end_time']) ? $data['morning_end_time'] : null,
+                        'evening_start_time' => ($data['evening_available'] ?? false) && !empty($data['evening_start_time']) ? $data['evening_start_time'] : null,
+                        'evening_end_time' => ($data['evening_available'] ?? false) && !empty($data['evening_end_time']) ? $data['evening_end_time'] : null,
                     ]
                 );
             }

@@ -6,7 +6,9 @@ use App\Http\Controllers\ApiBaseController;
 use App\Models\Schedule;
 use App\Models\User;
 use App\Models\Program;
+use App\Models\Availability;
 use App\Services\GoogleCalendarService;
+use App\Services\AvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -36,13 +38,22 @@ class SessionBookingController extends ApiBaseController
     protected $googleCalendarService;
 
     /**
+     * Availability Service instance
+     * 
+     * @var AvailabilityService
+     */
+    protected $availabilityService;
+
+    /**
      * Constructor
      * 
      * @param GoogleCalendarService $googleCalendarService
+     * @param AvailabilityService $availabilityService
      */
-    public function __construct(GoogleCalendarService $googleCalendarService)
+    public function __construct(GoogleCalendarService $googleCalendarService, AvailabilityService $availabilityService)
     {
         $this->googleCalendarService = $googleCalendarService;
+        $this->availabilityService = $availabilityService;
     }
 
     /**
@@ -780,25 +791,44 @@ class SessionBookingController extends ApiBaseController
             $duration = $request->get('duration', 60); // Default 60 minutes
 
             // Verify trainer exists and has trainer role
-            $trainer = User::where('id', $trainerId)->where('role', 'trainer')->first();
+            $trainer = User::with(['availabilities', 'sessionCapacity'])->where('id', $trainerId)->where('role', 'trainer')->first();
             if (!$trainer) {
                 return $this->sendError('Validation Error', ['error' => 'Invalid trainer'], 422);
             }
 
-            // Get existing bookings for the date
-            $existingBookings = Schedule::where('trainer_id', $trainerId)
-                ->where('date', $date)
-                ->where('status', '!=', Schedule::STATUS_CANCELLED)
-                ->get(['start_time', 'end_time']);
+            // Check if trainer has availability settings
+            if ($trainer->availabilities->isEmpty()) {
+                return $this->sendError('Validation Error', [
+                    'error' => 'Trainer has not configured their availability schedule yet.'
+                ], 400);
+            }
 
-            // Generate available slots (simplified version - can be enhanced with trainer availability)
-            $availableSlots = $this->generateAvailableSlots($date, $duration, $existingBookings);
+            // Use session capacity duration if available
+            if ($trainer->sessionCapacity && $trainer->sessionCapacity->session_duration_minutes) {
+                $duration = $trainer->sessionCapacity->session_duration_minutes;
+            }
+
+            // Use AvailabilityService to get slots based on trainer availability settings
+            $availableSlots = $this->availabilityService->getAvailableSlots(
+                $trainer,
+                $date,
+                $date, // Same date for start and end
+                $duration
+            );
+
+            // Filter slots to only include the requested date
+            $filteredSlots = array_filter($availableSlots, function($slot) use ($date) {
+                return isset($slot['date']) && $slot['date'] === $date;
+            });
+
+            // Re-index array
+            $filteredSlots = array_values($filteredSlots);
 
             return $this->sendResponse([
                 'date' => $date,
                 'trainer_id' => $trainerId,
                 'duration_minutes' => $duration,
-                'available_slots' => $availableSlots
+                'available_slots' => $filteredSlots
             ], 'Available slots retrieved successfully');
 
         } catch (\Exception $e) {

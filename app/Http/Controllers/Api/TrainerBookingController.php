@@ -457,6 +457,7 @@ class TrainerBookingController extends Controller
             $validator = Validator::make($request->all(), [
                 'start_date' => 'required|date|after_or_equal:today',
                 'end_date' => 'required|date|after_or_equal:start_date',
+                'slot_duration' => 'nullable|integer|min:15|max:240'
             ]);
 
             if ($validator->fails()) {
@@ -467,13 +468,21 @@ class TrainerBookingController extends Controller
                 ], 422);
             }
 
+            $slotDuration = $request->slot_duration ?? 60;
+            
+            // Use session capacity duration if available
+            if ($trainer->sessionCapacity && $trainer->sessionCapacity->session_duration_minutes) {
+                $slotDuration = $trainer->sessionCapacity->session_duration_minutes;
+            }
+
             // Check if trainer is connected to Google Calendar
             if ($this->googleCalendarService->isTrainerConnected($trainer)) {
                 // Get available slots from Google Calendar
                 $availableSlots = $this->googleCalendarService->getAvailableSlots(
                     $trainer,
                     $request->start_date,
-                    $request->end_date
+                    $request->end_date,
+                    $slotDuration
                 );
             } else {
                 // Fallback to basic availability check

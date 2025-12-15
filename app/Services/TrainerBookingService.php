@@ -124,6 +124,10 @@ class TrainerBookingService
                         [
                             'morning_available' => $slots['morning_available'] ?? 0,
                             'evening_available' => $slots['evening_available'] ?? 0,
+                            'morning_start_time' => ($slots['morning_available'] ?? 0) && !empty($slots['morning_start_time']) ? $slots['morning_start_time'] : null,
+                            'morning_end_time' => ($slots['morning_available'] ?? 0) && !empty($slots['morning_end_time']) ? $slots['morning_end_time'] : null,
+                            'evening_start_time' => ($slots['evening_available'] ?? 0) && !empty($slots['evening_start_time']) ? $slots['evening_start_time'] : null,
+                            'evening_end_time' => ($slots['evening_available'] ?? 0) && !empty($slots['evening_end_time']) ? $slots['evening_end_time'] : null,
                         ]
                     );
                 }
