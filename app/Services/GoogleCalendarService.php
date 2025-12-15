@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\User;
 use App\Models\Schedule;
 use App\Models\Availability;
+use App\Models\BlockedTime;
 use Illuminate\Support\Facades\Log;
 use Google_Client;
 use Google_Service_Calendar;
@@ -463,6 +464,11 @@ class GoogleCalendarService
                 ];
             }
 
+            // Get blocked times from database for the date range
+            $blockedTimes = BlockedTime::where('trainer_id', $trainer->id)
+                ->whereBetween('date', [$startDate, $endDate])
+                ->get();
+
             // Generate available slots based on trainer's availability settings
             $availableSlots = [];
             $current = Carbon::parse($startDate);
@@ -521,7 +527,7 @@ class GoogleCalendarService
                             break;
                         }
 
-                        // Check if this slot conflicts with busy times
+                        // Check if this slot conflicts with busy times from Google Calendar
                         $isAvailable = true;
                         foreach ($busySlots as $busySlot) {
                             $busyStart = Carbon::parse($busySlot['start']);
@@ -530,6 +536,43 @@ class GoogleCalendarService
                             if ($slotStart->lt($busyEnd) && $slotEnd->gt($busyStart)) {
                                 $isAvailable = false;
                                 break;
+                            }
+                        }
+
+                        // Check if this slot conflicts with blocked times
+                        if ($isAvailable) {
+                            $dateString = $slotStart->format('Y-m-d');
+                            
+                            foreach ($blockedTimes as $blockedTime) {
+                                if ($blockedTime->date->format('Y-m-d') === $dateString) {
+                                    // Parse blocked time start and end - handle both string and Carbon formats
+                                    $blockedStartTime = $blockedTime->start_time;
+                                    $blockedEndTime = $blockedTime->end_time;
+                                    
+                                    // Convert to string format if Carbon instance
+                                    if ($blockedStartTime instanceof Carbon) {
+                                        $blockedStartTime = $blockedStartTime->format('H:i');
+                                    }
+                                    if ($blockedEndTime instanceof Carbon) {
+                                        $blockedEndTime = $blockedEndTime->format('H:i');
+                                    }
+                                    
+                                    // Parse the time strings
+                                    $blockedStart = $this->parseTime($blockedStartTime);
+                                    $blockedEnd = $this->parseTime($blockedEndTime);
+                                    
+                                    if ($blockedStart && $blockedEnd) {
+                                        // Create datetime objects for comparison on the same date
+                                        $blockedStartDateTime = $current->copy()->setTime($blockedStart->hour, $blockedStart->minute, 0);
+                                        $blockedEndDateTime = $current->copy()->setTime($blockedEnd->hour, $blockedEnd->minute, 0);
+
+                                        // Check if slot overlaps with blocked time
+                                        if ($slotStart->lt($blockedEndDateTime) && $slotEnd->gt($blockedStartDateTime)) {
+                                            $isAvailable = false;
+                                            break;
+                                        }
+                                    }
+                                }
                             }
                         }
 

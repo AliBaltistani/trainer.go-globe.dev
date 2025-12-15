@@ -791,7 +791,15 @@ class SessionBookingController extends ApiBaseController
             $duration = $request->get('duration', 60); // Default 60 minutes
 
             // Verify trainer exists and has trainer role
-            $trainer = User::with(['availabilities', 'sessionCapacity'])->where('id', $trainerId)->where('role', 'trainer')->first();
+            // Load trainer with availability settings, session capacity, and blocked times
+            $trainer = User::with([
+                'availabilities', 
+                'sessionCapacity',
+                'blockedTimes' => function($query) use ($date) {
+                    $query->where('date', $date);
+                }
+            ])->where('id', $trainerId)->where('role', 'trainer')->first();
+            
             if (!$trainer) {
                 return $this->sendError('Validation Error', ['error' => 'Invalid trainer'], 422);
             }
@@ -809,6 +817,12 @@ class SessionBookingController extends ApiBaseController
             }
 
             // Use AvailabilityService to get slots based on trainer availability settings
+            // AvailabilityService automatically filters:
+            // - Slots outside trainer's availability hours (morning/evening)
+            // - Blocked times
+            // - Existing bookings
+            // - Past time slots
+            // - Booking settings restrictions
             $availableSlots = $this->availabilityService->getAvailableSlots(
                 $trainer,
                 $date,
