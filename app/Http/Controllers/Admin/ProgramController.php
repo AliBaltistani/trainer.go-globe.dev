@@ -203,7 +203,19 @@ class ProgramController extends Controller
     public function create(): View
     {
         $trainers = User::where('role', 'trainer')->get();
-        $clients = User::where('role', 'client')->get();
+        // Get clients for the selected trainer (if any from old input)
+        $selectedTrainerId = old('trainer_id');
+        if ($selectedTrainerId) {
+            $clients = User::where('role', 'client')
+                ->whereHas('subscriptionsAsClient', function($query) use ($selectedTrainerId) {
+                    $query->where('trainer_id', $selectedTrainerId)
+                          ->where('status', 'active');
+                })
+                ->get();
+        } else {
+            // If no trainer selected, show empty or all subscribed clients
+            $clients = collect([]);
+        }
         
         return view('admin.programs.create', compact('trainers', 'clients'));
     }
@@ -291,9 +303,79 @@ class ProgramController extends Controller
     public function edit(Program $program): View
     {
         $trainers = User::where('role', 'trainer')->get();
-        $clients = User::where('role', 'client')->get();
+        // Get clients for the selected trainer (or all subscribed clients if no trainer selected)
+        // Also include the currently assigned client if they exist (even if not subscribed)
+        $selectedTrainerId = old('trainer_id', $program->trainer_id);
+        if ($selectedTrainerId) {
+            $clients = User::where('role', 'client')
+                ->where(function($query) use ($selectedTrainerId, $program) {
+                    $query->whereHas('subscriptionsAsClient', function($subQuery) use ($selectedTrainerId) {
+                        $subQuery->where('trainer_id', $selectedTrainerId)
+                                 ->where('status', 'active');
+                    })
+                    ->orWhere('id', $program->client_id);
+                })
+                ->get();
+        } else {
+            $clients = User::where('role', 'client')
+                ->where(function($query) use ($program) {
+                    $query->whereHas('subscriptionsAsClient', function($subQuery) {
+                        $subQuery->where('status', 'active');
+                    })
+                    ->orWhere('id', $program->client_id);
+                })
+                ->get();
+        }
         
         return view('admin.programs.edit', compact('program', 'trainers', 'clients'));
+    }
+
+    /**
+     * Get clients for a specific trainer (AJAX endpoint)
+     * 
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getClientsByTrainer(Request $request): JsonResponse
+    {
+        try {
+            $trainerId = $request->input('trainer_id');
+            
+            if (!$trainerId) {
+                return response()->json([
+                    'success' => true,
+                    'clients' => []
+                ]);
+            }
+
+            // Get clients subscribed to this trainer
+            $clients = User::where('role', 'client')
+                ->whereHas('subscriptionsAsClient', function($query) use ($trainerId) {
+                    $query->where('trainer_id', $trainerId)
+                          ->where('status', 'active');
+                })
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get()
+                ->map(function($client) {
+                    return [
+                        'id' => $client->id,
+                        'name' => $client->name
+                    ];
+                });
+
+            return response()->json([
+                'success' => true,
+                'clients' => $clients
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error fetching clients by trainer: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch clients'
+            ], 500);
+        }
     }
 
     /**

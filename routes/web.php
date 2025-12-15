@@ -312,6 +312,7 @@ Route::middleware('auth')->group(function () {
         
         // Programs Management - Additional routes MUST come before resource routes
         Route::get('programs/stats', [\App\Http\Controllers\Admin\ProgramController::class, 'getStats'])->name('programs.stats');
+        Route::get('programs/clients-by-trainer', [\App\Http\Controllers\Admin\ProgramController::class, 'getClientsByTrainer'])->name('programs.clients-by-trainer');
         Route::post('programs/{program}/duplicate', [\App\Http\Controllers\Admin\ProgramController::class, 'duplicate'])->name('programs.duplicate');
         Route::patch('programs/{program}/toggle-status', [\App\Http\Controllers\Admin\ProgramController::class, 'toggleStatus'])->name('programs.toggle-status');
         Route::get('programs/{program}/pdf-data', [\App\Http\Controllers\Admin\ProgramController::class, 'pdfData'])->name('programs.pdf-data');

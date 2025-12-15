@@ -10,8 +10,14 @@
                         <i class="bi bi-calendar-week me-2" style="color: rgb(255, 106, 0);"></i>Workout Program Builder
                     </h2>
                     <p class="text-muted mb-0">Design your perfect training program</p>
+                    <div id="weekCountIndicator" class="mt-2">
+                        <span class="badge" style="background-color: rgba(255, 106, 0, 0.1); color: rgb(255, 106, 0); border: 1px solid rgb(255, 106, 0);">
+                            <i class="bi bi-calendar-check me-1"></i>
+                            <span id="weekCountText">0</span> / {{ $program->duration }} weeks
+                        </span>
+                    </div>
                 </div>
-                <button class="btn btn-lg shadow" style="background-color: rgb(255, 106, 0) !important; border-color: rgba(255, 106, 0, 0.894) !important; color: white;" onclick="addWeek()">
+                <button class="btn btn-lg shadow" style="background-color: rgb(255, 106, 0) !important; border-color: rgba(255, 106, 0, 0.894) !important; color: white;" onclick="addWeek()" id="addWeekBtn">
                     <i class="bi bi-plus-circle me-2"></i>Add Week
                 </button>
             </div>
@@ -330,6 +336,7 @@
     // - CSRF token helper for AJAX requests
     // =====================================================================
     const PROGRAM_ID = '{{ $program->id }}';
+    const PROGRAM_DURATION = {{ $program->duration }};
     const BASE_PROGRAM_BUILDER_URL = "{{ url('/admin/program-builder') }}";
     const WORKOUTS = @json($workouts);
     // Suppress backend persistence during initial render to avoid duplicates
@@ -522,6 +529,19 @@
     // Render & CRUD: Week
     // =====================================================================
     function addWeek() {
+        // Validate week count against program duration
+        const existingWeeks = document.querySelectorAll('.week-container').length;
+        if (existingWeeks >= PROGRAM_DURATION) {
+            Swal.fire({
+                title: 'Week Limit Reached',
+                html: `You cannot add more than <strong>${PROGRAM_DURATION} week(s)</strong> for this program.<br><br>Current weeks: ${existingWeeks}/${PROGRAM_DURATION}<br><br>Please update the program duration in the program settings if you need more weeks.`,
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
         weekCounter++;
         dayCounter[weekCounter] = 0;
 
@@ -587,9 +607,21 @@
                 // Bind autosave for week title/description now that backend ID exists
                 bindWeekAutosave(weekCounter);
                 showNotification('success', 'Week added');
+                updateWeekCountIndicator();
             }
         }).catch(err => {
-            showAjaxError(err, 'Failed to add week');
+            // Check if it's a week limit error from server
+            if (err?.body?.message) {
+                Swal.fire({
+                    title: 'Week Limit Reached',
+                    html: err.body.message,
+                    icon: 'warning',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                showAjaxError(err, 'Failed to add week');
+            }
         });
     }
 
@@ -612,18 +644,33 @@
                         el.remove();
                         showNotification('success', 'Week removed');
                         reindexWeeksAndDays();
+                        updateWeekCountIndicator();
                     }).catch(err => {
                         showAjaxError(err, 'Failed to remove week');
                     });
                 } else {
                     el.remove();
                     reindexWeeksAndDays();
+                    updateWeekCountIndicator();
                 }
             }
         });
     }
 
     function duplicateWeek(weekId) {
+        // Validate week count against program duration
+        const existingWeeks = document.querySelectorAll('.week-container').length;
+        if (existingWeeks >= PROGRAM_DURATION) {
+            Swal.fire({
+                title: 'Week Limit Reached',
+                html: `You cannot add more than <strong>${PROGRAM_DURATION} week(s)</strong> for this program.<br><br>Current weeks: ${existingWeeks}/${PROGRAM_DURATION}<br><br>Please update the program duration in the program settings if you need more weeks.`,
+                icon: 'warning',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'OK'
+            });
+            return;
+        }
+        
         const weekElement = document.getElementById(`week-${weekId}`);
         const sourceBackendId = weekElement?.dataset?.weekId;
         const newNumber = weekCounter + 1;
@@ -649,9 +696,21 @@
                 collapseAllDaysExcept(weekCounter, lastDayId);
                 collapseAllCircuitsExcept(lastDayId);
                 showNotification('success', 'Week duplicated');
+                updateWeekCountIndicator();
             }
         }).catch(err => {
-            showAjaxError(err, 'Failed to duplicate week');
+            // Check if it's a week limit error from server
+            if (err?.body?.message) {
+                Swal.fire({
+                    title: 'Week Limit Reached',
+                    html: err.body.message,
+                    icon: 'warning',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                showAjaxError(err, 'Failed to duplicate week');
+            }
         });
     }
 
@@ -2048,6 +2107,9 @@ function renderDayIntoExisting(weekIndex, d, dayId) {
         // Initialize tooltips
         initTooltips();
 
+        // Update week count indicator on page load
+        updateWeekCountIndicator();
+
         // Default accordion state: collapse all, show latest week/day/circuit only
         try {
             if (weekCounter > 0) {
@@ -2061,6 +2123,40 @@ function renderDayIntoExisting(weekIndex, d, dayId) {
             console.warn('Accordion init warning:', e);
         }
     });
+
+    function updateWeekCountIndicator() {
+        const existingWeeks = document.querySelectorAll('.week-container').length;
+        const weekCountText = document.getElementById('weekCountText');
+        const addWeekBtn = document.getElementById('addWeekBtn');
+        
+        if (weekCountText) {
+            weekCountText.textContent = existingWeeks;
+            
+            // Update badge color based on limit
+            const badge = weekCountText.closest('.badge');
+            if (badge) {
+                if (existingWeeks >= PROGRAM_DURATION) {
+                    badge.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+                    badge.style.color = '#dc3545';
+                    badge.style.borderColor = '#dc3545';
+                    if (addWeekBtn) {
+                        addWeekBtn.disabled = true;
+                        addWeekBtn.style.opacity = '0.6';
+                        addWeekBtn.style.cursor = 'not-allowed';
+                    }
+                } else {
+                    badge.style.backgroundColor = 'rgba(255, 106, 0, 0.1)';
+                    badge.style.color = 'rgb(255, 106, 0)';
+                    badge.style.borderColor = 'rgb(255, 106, 0)';
+                    if (addWeekBtn) {
+                        addWeekBtn.disabled = false;
+                        addWeekBtn.style.opacity = '1';
+                        addWeekBtn.style.cursor = 'pointer';
+                    }
+                }
+            }
+        }
+    }
 
     function reindexWeeksAndDays() {
         const weeks = Array.from(document.querySelectorAll('.week-container'));
@@ -2081,6 +2177,7 @@ function renderDayIntoExisting(weekIndex, d, dayId) {
         });
         Promise.allSettled(promises).then(() => {
             showNotification('success', 'Weeks and days renumbered');
+            updateWeekCountIndicator();
         }).catch(() => {
             // silent
         });

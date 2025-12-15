@@ -197,6 +197,16 @@ class ProgramBuilderController extends Controller
     {
         $this->ensureTrainerOwnsModel($program);
         try {
+            // Validate week count against program duration
+            $existingWeeksCount = Week::where('program_id', $program->id)->count();
+            if ($existingWeeksCount >= $program->duration) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Cannot add more weeks. Program duration is {$program->duration} week(s) and you already have {$existingWeeksCount} week(s). Please update the program duration in program settings if you need more weeks.",
+                    'errors' => ['week_limit' => ['Week limit reached']]
+                ], 422);
+            }
+
             $validated = $request->validated();
 
             $week = Week::create([
@@ -633,6 +643,17 @@ class ProgramBuilderController extends Controller
                     'success' => false,
                     'message' => 'Validation failed',
                     'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Validate week count against program duration
+            $program = Program::find($week->program_id);
+            $existingWeeksCount = Week::where('program_id', $week->program_id)->count();
+            if ($existingWeeksCount >= $program->duration) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Cannot duplicate week. Program duration is {$program->duration} week(s) and you already have {$existingWeeksCount} week(s). Please update the program duration in program settings if you need more weeks.",
+                    'errors' => ['week_limit' => ['Week limit reached']]
                 ], 422);
             }
 

@@ -68,8 +68,8 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="trainer_id" class="form-label">Trainer <span class="text-danger">*</span></label>
-                                    <select class="form-select @error('trainer_id') is-invalid @enderror" 
-                                            id="trainer_id" name="trainer_id" required>
+                                    <select class="form-control @error('trainer_id') is-invalid @enderror" 
+                                            id="trainer_id" name="trainer_id" data-trigger required>
                                         <option value="">Select Trainer</option>
                                         @foreach($trainers as $trainer)
                                             <option value="{{ $trainer->id }}" {{ old('trainer_id', $program->trainer_id) == $trainer->id ? 'selected' : '' }}>
@@ -86,8 +86,8 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="client_id" class="form-label">Client (Optional)</label>
-                                    <select class="form-select @error('client_id') is-invalid @enderror" 
-                                            id="client_id" name="client_id">
+                                    <select class="form-control @error('client_id') is-invalid @enderror" 
+                                            id="client_id" name="client_id" data-trigger>
                                         <option value="">Select Client (Leave empty for template)</option>
                                         @foreach($clients as $client)
                                             <option value="{{ $client->id }}" {{ old('client_id', $program->client_id) == $client->id ? 'selected' : '' }}>
@@ -258,6 +258,96 @@
             $('#name, #duration, #trainer_id').on('input change', function() {
                 $(this).removeClass('is-invalid');
             });
+
+            // Load clients when trainer is selected
+            $('#trainer_id').on('change', function() {
+                const trainerId = $(this).val();
+                const clientSelect = $('#client_id');
+                const currentClientId = '{{ old("client_id", $program->client_id) }}';
+                
+                if (!trainerId) {
+                    // If no trainer selected, clear client options except current
+                    clientSelect.find('option:not(:first)').remove();
+                    if (currentClientId) {
+                        // Keep current client if exists
+                        const currentClient = clientSelect.find('option[value="' + currentClientId + '"]');
+                        if (currentClient.length) {
+                            clientSelect.append(currentClient.clone());
+                            clientSelect.val(currentClientId);
+                        }
+                    }
+                    return;
+                }
+
+                // Show loading state
+                clientSelect.prop('disabled', true);
+                const originalHtml = clientSelect.html();
+                clientSelect.html('<option value="">Loading clients...</option>');
+
+                // Fetch clients for selected trainer
+                $.ajax({
+                    url: '{{ route("programs.clients-by-trainer") }}',
+                    type: 'GET',
+                    data: {
+                        trainer_id: trainerId
+                    },
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Clear existing options except the first one
+                            clientSelect.html('<option value="">Select Client (Leave empty for template)</option>');
+                            
+                            // Add clients
+                            if (response.clients && response.clients.length > 0) {
+                                $.each(response.clients, function(index, client) {
+                                    const isSelected = currentClientId == client.id;
+                                    clientSelect.append(
+                                        $('<option></option>')
+                                            .attr('value', client.id)
+                                            .text(client.name)
+                                            .prop('selected', isSelected)
+                                    );
+                                });
+                            } else {
+                                // If current client exists but not in list, add it
+                                if (currentClientId) {
+                                    const currentClientName = originalHtml.match(new RegExp('<option[^>]*value="' + currentClientId + '"[^>]*>([^<]+)</option>'));
+                                    if (currentClientName) {
+                                        clientSelect.append(
+                                            $('<option></option>')
+                                                .attr('value', currentClientId)
+                                                .text(currentClientName[1])
+                                                .prop('selected', true)
+                                        );
+                                    }
+                                }
+                                clientSelect.append(
+                                    $('<option></option>')
+                                        .attr('value', '')
+                                        .text('No subscribed clients found for this trainer')
+                                        .prop('disabled', true)
+                                );
+                            }
+                        } else {
+                            clientSelect.html('<option value="">Error loading clients</option>');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('Error loading clients:', xhr);
+                        clientSelect.html('<option value="">Error loading clients. Please try again.</option>');
+                    },
+                    complete: function() {
+                        clientSelect.prop('disabled', false);
+                    }
+                });
+            });
+
+            // Trigger change on page load if trainer is already selected
+            @if(old('trainer_id', $program->trainer_id))
+                $('#trainer_id').trigger('change');
+            @endif
         });
 
         function duplicateAsTemplate() {
