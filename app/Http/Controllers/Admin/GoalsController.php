@@ -162,9 +162,7 @@ class GoalsController extends Controller
         return '
             <div class="d-flex justify-content-end">
             <div class="btn-group" role="group">
-                <button type="button" class="btn btn-sm btn-info" onclick="window.location.href=\'/admin/goals/' . $goalId . '\'" title="View">
-                    <i class="ri-eye-line"></i>
-                </button>
+               
                 <button type="button" class="btn btn-sm btn-success" onclick="window.location.href=\'/admin/goals/' . $goalId . '/edit\'" title="Edit">
                     <i class="ri-edit-line"></i>
                 </button>
@@ -239,9 +237,24 @@ class GoalsController extends Controller
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * Toggle goal status (active/inactive)
+     * Admin only
+     * 
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function toggleStatus($id)
     {
         try {
+            // Ensure user is admin
+            if (Auth::user()->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Admin access required.'
+                ], 403);
+            }
+
             $goal = Goal::findOrFail($id);
             $goal->status = !$goal->status;
             $goal->save();
@@ -262,11 +275,21 @@ class GoalsController extends Controller
         }
     }
 
+    /**
+     * Show the form for creating a new goal
+     * Admin only
+     * 
+     * @return \Illuminate\View\View
+     */
     public function create()
     {
-         // Get the authenticated user
+        // Ensure user is admin
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->route('admin.dashboard')->with('error', 'Unauthorized. Admin access required.');
+        }
+
+        // Get the authenticated user
         $user = Auth::user();
-        
 
         // Prepare dashboard data
         $dashboardData = [
@@ -278,23 +301,34 @@ class GoalsController extends Controller
         return view('admin.goals.create', $dashboardData);
     }
 
+    /**
+     * Store a newly created goal
+     * Admin only
+     * 
+     * @param Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function store(Request $request)
     {
+        // Ensure user is admin
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->route('admin.dashboard')->with('error', 'Unauthorized. Admin access required.');
+        }
+
         $data = $request->all();
 
-            // Validate the goal data
-            $this->validator($data)->validate();
+        // Validate the goal data
+        $this->validator($data)->validate();
 
-            // Create the goal
-            Goal::create([
-                'name' => $data['name'],
-                'user_id' => Auth::id(),
-                'status' => $data['status']
-            ]);
+        // Create the goal
+        Goal::create([
+            'name' => $data['name'],
+            'user_id' => Auth::id(),
+            'status' => $data['status']
+        ]);
 
-            // Redirect to the goals index with success message
-            return redirect()->route('goals.index')->with('success', 'Goal created successfully.');
-
+        // Redirect to the goals index with success message
+        return redirect()->route('goals.index')->with('success', 'Goal created successfully.');
     }
 
     public function show($id)
@@ -303,12 +337,23 @@ class GoalsController extends Controller
     }
 
 
+    /**
+     * Show the form for editing a goal
+     * Admin only
+     * 
+     * @param int $id
+     * @return \Illuminate\View\View
+     */
     public function edit($id)
     {
-        $user = Auth::user();
-        
+        // Ensure user is admin
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->route('admin.dashboard')->with('error', 'Unauthorized. Admin access required.');
+        }
 
+        $user = Auth::user();
         $goal = Goal::findOrFail($id);
+        
         // Prepare dashboard data
         $dashboardData = [
             'user' => $user,
@@ -320,25 +365,39 @@ class GoalsController extends Controller
         return view('admin.goals.edit', $dashboardData);
     }
 
+    /**
+     * Update a goal
+     * Admin only
+     * 
+     * @param Request $request
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function update(Request $request, $id)
     {
-            $data = $request->all();
-    
-                // Validate the goal data
-                $this->validator($data)->validate();
-    
-                $goal = Goal::findOrFail($id);
-                $goal->update([
-                    'name' => $data['name'],
-                    'status' => $data['status']
-                ]);
-    
-                // Redirect to the goals index with success message
-                return redirect()->route('goals.index')->with('success', 'Goal updated successfully.');
+        // Ensure user is admin
+        if (Auth::user()->role !== 'admin') {
+            return redirect()->route('admin.dashboard')->with('error', 'Unauthorized. Admin access required.');
+        }
+
+        $data = $request->all();
+
+        // Validate the goal data
+        $this->validator($data)->validate();
+
+        $goal = Goal::findOrFail($id);
+        $goal->update([
+            'name' => $data['name'],
+            'status' => $data['status']
+        ]);
+
+        // Redirect to the goals index with success message
+        return redirect()->route('goals.index')->with('success', 'Goal updated successfully.');
     }
 
     /**
      * Delete a goal (AJAX endpoint)
+     * Admin only
      * 
      * @param int $id
      * @return \Illuminate\Http\JsonResponse
@@ -346,6 +405,14 @@ class GoalsController extends Controller
     public function delete($id)
     {
         try {
+            // Ensure user is admin
+            if (Auth::user()->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Admin access required.'
+                ], 403);
+            }
+
             $goal = Goal::findOrFail($id);
             $goal->delete();
 

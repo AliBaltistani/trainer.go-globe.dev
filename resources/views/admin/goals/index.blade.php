@@ -8,7 +8,7 @@
         <div class="">
             <nav>
                 <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{route('dashboard')}}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{route('admin.dashboard')}}">Dashboard</a></li>
                     <li class="breadcrumb-item active" aria-current="page">Goals</li>
                 </ol>
             </nav>
@@ -36,7 +36,7 @@
         <x-widgets.stat-card-style1
             title="Active Goals"
             value="{{ $stats['active_goals'] }}"
-            icon="ti ti-check-circle"
+            icon="ri-check-line"
             color="success"
         />
     </div>
@@ -44,7 +44,7 @@
         <x-widgets.stat-card-style1
             title="Inactive Goals"
             value="{{ $stats['inactive_goals'] }}"
-            icon="ti ti-pause-circle"
+            icon="ri-pause-line"
             color="warning"
         />
     </div>
@@ -57,6 +57,21 @@
         />
     </div>
 </div>
+
+<!-- Success/Error Messages -->
+@if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="ri-check-line me-2"></i>{{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="ri-error-warning-line me-2"></i>{{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 
 <!-- Main Content -->
 <div class="row">
@@ -89,10 +104,10 @@
                 id="goalsTable"
                 :headers="['Sr.#', 'Goal Name', 'User', 'Status', 'Created Date', 'Updated Date', 'Actions']"
                 :bordered="true"
+                :striped="true"
+                :hover="true"
             >
-                <tbody>
-                    <!-- Data will be loaded via AJAX -->
-                </tbody>
+                <!-- Data will be loaded via AJAX -->
             </x-tables.table>
         </x-tables.card>
     </div>
@@ -205,24 +220,21 @@ $(document).ready(function() {
         table.search(this.value).draw();
     });
 
-    // Filter functionality
-    $('.filter-status').on('click', function(e) {
-        e.preventDefault();
-        var status = $(this).data('status');
-        $('#statusFilter').val(status);
+    // Status filter change handler
+    $('#statusFilter').on('change', function() {
         table.ajax.reload();
     });
 
+    // Filter functionality
     $('.filter-user').on('click', function(e) {
         e.preventDefault();
         var user = $(this).data('user');
+        if (!$('#userFilter').length) {
+            $('body').append('<input type="hidden" id="userFilter">');
+        }
         $('#userFilter').val(user);
         table.ajax.reload();
     });
-
-    // Hidden filter inputs
-    $('body').append('<input type="hidden" id="statusFilter">');
-    $('body').append('<input type="hidden" id="userFilter">');
 });
 
 // Action Functions
@@ -238,7 +250,7 @@ function toggleStatus(goalId) {
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
-                url: '/admin/goals/' + goalId + '/toggle-status',
+                url: '{{ route("goals.toggle-status", ":id") }}'.replace(':id', goalId),
                 type: 'PATCH',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -252,7 +264,11 @@ function toggleStatus(goalId) {
                     }
                 },
                 error: function(xhr) {
-                    Swal.fire('Error!', 'Failed to toggle goal status', 'error');
+                    var message = 'Failed to toggle goal status';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Error!', message, 'error');
                 }
             });
         }
@@ -271,7 +287,7 @@ function deleteGoal(goalId) {
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
-                url: '/admin/goals/' + goalId,
+                url: '{{ route("goals.destroy", ":id") }}'.replace(':id', goalId),
                 type: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
@@ -285,7 +301,11 @@ function deleteGoal(goalId) {
                     }
                 },
                 error: function(xhr) {
-                    Swal.fire('Error!', 'Failed to delete goal', 'error');
+                    var message = 'Failed to delete goal';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        message = xhr.responseJSON.message;
+                    }
+                    Swal.fire('Error!', message, 'error');
                 }
             });
         }

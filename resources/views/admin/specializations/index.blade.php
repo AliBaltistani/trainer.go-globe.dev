@@ -87,10 +87,10 @@
                 id="specializationsTable"
                 :headers="['Sr.#', 'Name', 'Description', 'Status', 'Trainers Count', 'Created At', 'Actions']"
                 :bordered="true"
+                :striped="true"
+                :hover="true"
             >
-                <tbody>
-                    <!-- Data will be loaded via AJAX -->
-                </tbody>
+                <!-- Data will be loaded via AJAX -->
             </x-tables.table>
         </x-tables.card>
     </div>

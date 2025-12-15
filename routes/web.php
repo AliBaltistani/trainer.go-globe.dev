@@ -243,8 +243,10 @@ Route::middleware('auth')->group(function () {
             Route::get('/create', [GoalsController::class, 'create'])->name('goals.create');
             Route::post('/store', [GoalsController::class, 'store'])->name('goals.store');
             Route::get('/show/{id}', [GoalsController::class, 'show'])->name('goals.show');
-            Route::get('/edit/{id}', [GoalsController::class, 'edit'])->name('goals.edit');
+            Route::get('/{id}/edit', [GoalsController::class, 'edit'])->name('goals.edit');
+            Route::get('/{id}', [GoalsController::class, 'show'])->name('goals.show.id');
             Route::post('/update/{id}', [GoalsController::class, 'update'])->name('goals.update');
+            Route::patch('/{id}/toggle-status', [GoalsController::class, 'toggleStatus'])->name('goals.toggle-status');
             Route::delete('/destroy/{id}', [GoalsController::class, 'delete'])->name('goals.destroy');
         });
 

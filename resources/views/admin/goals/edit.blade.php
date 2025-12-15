@@ -3,6 +3,7 @@
 @section('content')
 <form method="POST" action="{{ route('goals.update', $goal->id) }}">
                     @csrf
+                    @method('PUT')
                     
   <div class="row">
                         <div class="col-xl-12">

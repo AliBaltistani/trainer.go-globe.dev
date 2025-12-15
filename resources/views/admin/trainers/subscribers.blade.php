@@ -3,7 +3,13 @@
 @section('content')
 <div class="container">
     <x-tables.card title="Subscribers for {{ $trainer->name }}">
-        <x-tables.table :headers="['Client', 'Email', 'Phone', 'Subscribed At']" :striped="true">
+        <x-tables.table 
+            id="subscribersTable"
+            :headers="['Client', 'Email', 'Phone', 'Subscribed At']"
+            :bordered="true"
+            :striped="true"
+            :hover="true"
+        >
             @foreach ($subscriptions as $sub)
                 <tr>
                     <td>{{ optional($sub->client)->name }}</td>
