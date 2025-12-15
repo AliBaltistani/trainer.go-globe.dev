@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserLocation;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -192,58 +193,115 @@ class UsersController extends Controller
     public function store(Request $request)
     {
         try {
-            // Define validation rules based on role
+            // Define base validation rules
             $rules = [
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
-                'password' => 'required|string|min:8|confirmed',
-                'phone' => 'nullable|string|max:20|unique:users,phone',
-                'role' => 'required|in:client,trainer,admin',
-                'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+                'password' => ['required', 'string', 'min:8', 'confirmed'],
+                'phone' => ['nullable', 'string', 'max:20', 'regex:/^[\+]?[0-9\s\-\(\)]+$/', 'unique:users,phone'],
+                'role' => ['required', 'string', 'in:client,trainer,admin'],
+                'timezone' => ['nullable', 'string', 'max:50'],
+                'status' => ['nullable', 'boolean'],
+                'profile_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+                'business_logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+                // Location fields
+                'country' => ['nullable', 'string', 'max:100'],
+                'state' => ['nullable', 'string', 'max:100'],
+                'city' => ['nullable', 'string', 'max:100'],
+                'address' => ['nullable', 'string', 'max:255'],
+                'zipcode' => ['nullable', 'string', 'max:20', 'regex:/^[A-Z0-9\s\-]+$/i'],
             ];
             
             // Add trainer-specific validation rules
             if ($request->role === 'trainer') {
                 $rules = array_merge($rules, [
-                    'designation' => 'nullable|string|max:255',
-                    'experience' => 'nullable|integer|min:0|max:50',
-                    'about' => 'nullable|string|max:1000',
-                    'training_philosophy' => 'nullable|string|max:1000'
+                    'designation' => ['nullable', 'string', 'max:255'],
+                    'experience' => ['nullable', 'string', 'in:less_than_1_year,1_year,2_years,3_years,4_years,5_years,6_years,7_years,8_years,9_years,10_years,more_than_10_years'],
+                    'about' => ['nullable', 'string', 'max:1000'],
+                    'training_philosophy' => ['nullable', 'string', 'max:1000']
                 ]);
             }
             
+            // Custom validation messages
+            $messages = [
+                'name.required' => 'The user name field is required.',
+                'name.max' => 'The user name may not be greater than 255 characters.',
+                'email.required' => 'The email address field is required.',
+                'email.email' => 'Please provide a valid email address.',
+                'email.unique' => 'This email address is already registered.',
+                'password.required' => 'The password field is required.',
+                'password.min' => 'The password must be at least 8 characters.',
+                'password.confirmed' => 'The password confirmation does not match.',
+                'phone.regex' => 'Please provide a valid phone number.',
+                'phone.unique' => 'This phone number is already registered.',
+                'role.required' => 'Please select a user role.',
+                'role.in' => 'Please select a valid user role.',
+                'profile_image.image' => 'The profile image must be an image file.',
+                'profile_image.mimes' => 'The profile image must be a JPEG, PNG, JPG, GIF, or WEBP file.',
+                'profile_image.max' => 'The profile image size must not exceed 5MB.',
+                'business_logo.image' => 'The business logo must be an image file.',
+                'business_logo.mimes' => 'The business logo must be a JPEG, PNG, JPG, GIF, or WEBP file.',
+                'business_logo.max' => 'The business logo size must not exceed 5MB.',
+                'zipcode.regex' => 'Please provide a valid zip/postal code.',
+            ];
+            
             // Validate input
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->all(), $rules, $messages);
             
             if ($validator->fails()) {
-                if ($request->ajax()) {
+                if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Validation failed',
+                        'message' => 'Validation failed. Please check the form for errors.',
                         'errors' => $validator->errors()
                     ], 422);
                 }
                 return back()->withErrors($validator)->withInput();
             }
             
-            // Create new user
+            // Prepare user data - only include fields that have values
             $userData = [
-                'name' => $request->name,
-                'email' => $request->email,
+                'name' => trim($request->name),
+                'email' => strtolower(trim($request->email)),
                 'password' => Hash::make($request->password),
-                'phone' => $request->phone,
                 'role' => $request->role,
-                'email_verified_at' => now(), // Auto-verify admin created users
+                'timezone' => $request->filled('timezone') ? $request->timezone : 'UTC',
             ];
             
-            // Add trainer-specific fields
+            // Handle phone - generate unique placeholder if not provided (database requires unique phone)
+            if ($request->filled('phone') && trim($request->phone) !== '') {
+                $userData['phone'] = trim($request->phone);
+            } else {
+                // Generate a unique placeholder phone number
+                do {
+                    $placeholderPhone = '+000' . rand(1000000000, 9999999999);
+                } while (User::where('phone', $placeholderPhone)->exists());
+                
+                $userData['phone'] = $placeholderPhone;
+            }
+            
+            // Handle account status (email_verified_at)
+            if ($request->has('status')) {
+                $userData['email_verified_at'] = $request->boolean('status') ? now() : null;
+            } else {
+                // Default to active for admin-created users
+                $userData['email_verified_at'] = now();
+            }
+            
+            // Add trainer-specific fields only if role is trainer and fields are provided
             if ($request->role === 'trainer') {
-                $userData = array_merge($userData, [
-                    'designation' => $request->designation,
-                    'experience' => $request->experience,
-                    'about' => $request->about,
-                    'training_philosophy' => $request->training_philosophy
-                ]);
+                if ($request->filled('designation')) {
+                    $userData['designation'] = trim($request->designation);
+                }
+                if ($request->filled('experience')) {
+                    $userData['experience'] = $request->experience;
+                }
+                if ($request->filled('about')) {
+                    $userData['about'] = trim($request->about);
+                }
+                if ($request->filled('training_philosophy')) {
+                    $userData['training_philosophy'] = trim($request->training_philosophy);
+                }
             }
             
             $user = User::create($userData);
@@ -254,6 +312,28 @@ class UsersController extends Controller
                 $user->update(['profile_image' => $imagePath]);
             }
             
+            // Handle business logo upload (trainers only)
+            if ($request->role === 'trainer' && $request->hasFile('business_logo')) {
+                $logoPath = $request->file('business_logo')->store('business-logos', 'public');
+                $user->update(['business_logo' => $logoPath]);
+            }
+            
+            // Handle location information - only create if at least one field is provided
+            $hasLocationData = $request->filled('country') || $request->filled('state') || 
+                              $request->filled('city') || $request->filled('address') || 
+                              $request->filled('zipcode');
+            
+            if ($hasLocationData) {
+                UserLocation::create([
+                    'user_id' => $user->id,
+                    'country' => $request->filled('country') ? trim($request->country) : null,
+                    'state' => $request->filled('state') ? trim($request->state) : null,
+                    'city' => $request->filled('city') ? trim($request->city) : null,
+                    'address' => $request->filled('address') ? trim($request->address) : null,
+                    'zipcode' => $request->filled('zipcode') ? trim($request->zipcode) : null,
+                ]);
+            }
+            
             // Log user creation
             Log::info('New user created by admin', [
                 'admin_id' => Auth::id(),
@@ -262,11 +342,12 @@ class UsersController extends Controller
                 'user_role' => $user->role
             ]);
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => true,
                     'message' => 'User created successfully',
-                    'user' => $user
+                    'redirect' => route('admin.users.index'),
+                    'user' => $user->load('location')
                 ]);
             }
             
@@ -280,7 +361,7 @@ class UsersController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to create user: ' . $e->getMessage()
