@@ -641,4 +641,103 @@ class NutritionPlansController extends Controller
             return response()->json(['success'=>false,'message'=>'Failed to load calculator data'],500);
         }
     }
+
+    /**
+     * Show nutrition recommendations management page
+     * 
+     * @param int $id Plan ID
+     * @return View|RedirectResponse
+     */
+    public function recommendations(int $id): View|RedirectResponse
+    {
+        try {
+            $trainerId = Auth::id();
+            $plan = NutritionPlan::with(['client', 'trainer', 'recommendations'])
+                ->where('trainer_id', $trainerId)
+                ->findOrFail($id);
+            
+            return view('trainer.nutrition-plans.recommendations', compact('plan'));
+            
+        } catch (\Exception $e) {
+            Log::error('Trainer failed to load nutrition recommendations: ' . $e->getMessage());
+            return redirect()->route('trainer.nutrition-plans.index')->with('error', 'Nutrition plan not found');
+        }
+    }
+
+    /**
+     * Update nutrition recommendations for a plan
+     * 
+     * @param Request $request
+     * @param int $id Plan ID
+     * @return RedirectResponse|JsonResponse
+     */
+    public function updateRecommendations(Request $request, int $id)
+    {
+        try {
+            $trainerId = Auth::id();
+            $plan = NutritionPlan::where('trainer_id', $trainerId)->findOrFail($id);
+            
+            // Validation rules
+            $rules = [
+                'target_calories' => 'required|numeric|min:800|max:5000',
+                'protein' => 'required|numeric|min:0|max:500',
+                'carbs' => 'required|numeric|min:0|max:800',
+                'fats' => 'required|numeric|min:0|max:300'
+            ];
+            
+            $validator = Validator::make($request->all(), $rules);
+            
+            if ($validator->fails()) {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
+                
+                return back()->withErrors($validator)->withInput();
+            }
+            
+            // Update or create recommendations
+            NutritionRecommendation::updateOrCreate(
+                ['plan_id' => $plan->id],
+                [
+                    'target_calories' => $request->target_calories,
+                    'protein' => $request->protein,
+                    'carbs' => $request->carbs,
+                    'fats' => $request->fats
+                ]
+            );
+            
+            // Log the update
+            Log::info('Trainer updated nutrition recommendations', [
+                'trainer_id' => $trainerId,
+                'plan_id' => $plan->id,
+                'recommendations' => $request->only(['target_calories', 'protein', 'carbs', 'fats'])
+            ]);
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Nutrition recommendations updated successfully'
+                ]);
+            }
+            
+            return redirect()->route('trainer.nutrition-plans.recommendations', $plan->id)
+                           ->with('success', 'Nutrition recommendations updated successfully');
+            
+        } catch (\Exception $e) {
+            Log::error('Trainer failed to update nutrition recommendations: ' . $e->getMessage());
+            
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to update recommendations'
+                ], 500);
+            }
+            
+            return back()->with('error', 'Failed to update recommendations');
+        }
+    }
 }

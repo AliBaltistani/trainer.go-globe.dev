@@ -10,6 +10,9 @@ use App\Models\ClientActivityLog;
 use App\Models\ClientProgress;
 use App\Models\Goal;
 use App\Models\Program;
+use App\Models\NutritionPlan;
+use App\Models\FoodDiary;
+use App\Models\ClientNutritionTarget;
 use Carbon\Carbon;
 use App\Mail\ClientInvitation;
 use Illuminate\Http\Request;
@@ -325,5 +328,96 @@ class ClientController extends Controller
         }
 
         return back()->with('success', 'Health profile updated.');
+    }
+
+    /**
+     * Display client nutrition progress and food diary
+     * 
+     * @param int $id Client ID
+     * @param Request $request
+     * @return \Illuminate\View\View
+     */
+    public function nutritionProgress($id, Request $request)
+    {
+        $trainer = Auth::user();
+        
+        // Verify trainer has access to this client
+        if (!$trainer->hasActiveClient($id)) {
+            abort(403, 'Access denied');
+        }
+        
+        $client = User::findOrFail($id);
+        
+        // Get date range from request (default to last 7 days)
+        $startDate = $request->get('start_date', Carbon::now()->subDays(7)->format('Y-m-d'));
+        $endDate = $request->get('end_date', Carbon::now()->format('Y-m-d'));
+        
+        try {
+            $startDateCarbon = Carbon::parse($startDate)->startOfDay();
+            $endDateCarbon = Carbon::parse($endDate)->endOfDay();
+        } catch (\Exception $e) {
+            $startDateCarbon = Carbon::now()->subDays(7)->startOfDay();
+            $endDateCarbon = Carbon::now()->endOfDay();
+        }
+        
+        // Get active nutrition plan
+        $plan = NutritionPlan::where('client_id', $id)
+            ->where('trainer_id', $trainer->id)
+            ->where('status', 'active')
+            ->with(['recommendations'])
+            ->first();
+        
+        // Get trainer recommendations
+        $trainerRecommendations = $plan ? $plan->recommendations : null;
+        
+        // Get client's own targets
+        $clientTargets = ClientNutritionTarget::where('client_id', $id)->first();
+        
+        // Get food diary entries
+        $foodDiaryEntries = FoodDiary::where('client_id', $id)
+            ->whereBetween('logged_at', [$startDateCarbon, $endDateCarbon])
+            ->orderBy('logged_at', 'desc')
+            ->get();
+        
+        // Group entries by date
+        $entriesByDate = $foodDiaryEntries->groupBy(function($entry) {
+            return Carbon::parse($entry->logged_at)->format('Y-m-d');
+        });
+        
+        // Calculate daily summaries
+        $dailySummaries = [];
+        foreach ($entriesByDate as $date => $entries) {
+            $dailySummaries[$date] = [
+                'date' => Carbon::parse($date)->format('M d, Y'),
+                'total_calories' => $entries->sum('calories'),
+                'total_protein' => $entries->sum('protein'),
+                'total_carbs' => $entries->sum('carbs'),
+                'total_fats' => $entries->sum('fats'),
+                'entry_count' => $entries->count(),
+                'entries' => $entries
+            ];
+        }
+        
+        // Calculate overall statistics
+        $stats = [
+            'total_entries' => $foodDiaryEntries->count(),
+            'avg_daily_calories' => $dailySummaries ? round(collect($dailySummaries)->avg('total_calories')) : 0,
+            'avg_daily_protein' => $dailySummaries ? round(collect($dailySummaries)->avg('total_protein'), 1) : 0,
+            'avg_daily_carbs' => $dailySummaries ? round(collect($dailySummaries)->avg('total_carbs'), 1) : 0,
+            'avg_daily_fats' => $dailySummaries ? round(collect($dailySummaries)->avg('total_fats'), 1) : 0,
+        ];
+        
+        return view('trainer.clients.nutrition-progress', compact(
+            'client',
+            'plan',
+            'trainerRecommendations',
+            'clientTargets',
+            'foodDiaryEntries',
+            'entriesByDate',
+            'dailySummaries',
+            'stats',
+            'startDate',
+            'endDate'
+        ));
     }
 }

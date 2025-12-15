@@ -85,6 +85,9 @@
         <a href="{{ route('trainer.nutrition-plans.pdf-data', $plan->id) }}" class="btn btn-outline-dark btn-wave waves-effect waves-light me-2" id="downloadPdfBtn">
             <i class="ri-download-2-line me-1"></i> Download PDF
         </a>
+        <a href="{{route('trainer.nutrition-plans.recommendations', $plan->id)}}" class="btn btn-primary btn-wave waves-effect waves-light me-2">
+            <i class="ri-target-line me-1"></i> Recommendations
+        </a>
         <a href="{{route('trainer.nutrition-plans.calculator', $plan->id)}}" class="btn btn-info btn-wave waves-effect waves-light me-2">
             <i class="ri-calculator-line me-1"></i> Calculator
         </a>

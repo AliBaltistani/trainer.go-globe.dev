@@ -545,6 +545,16 @@ Route::middleware('auth')->group(function () {
         Route::get('profile', function() { return redirect()->route('profile.index'); })->name('client.profile');
         Route::get('profile/edit', function() { return redirect()->route('profile.edit'); })->name('client.profile.edit');
 
+        // Client Nutrition Management
+        Route::prefix('nutrition')->name('nutrition.')->group(function () {
+            Route::get('/plans', [\App\Http\Controllers\Client\NutritionController::class, 'index'])->name('plans.index');
+            Route::get('/plans/{id}', [\App\Http\Controllers\Client\NutritionController::class, 'show'])->name('plans.show');
+            Route::get('/targets', [\App\Http\Controllers\Client\NutritionController::class, 'targets'])->name('targets');
+            Route::post('/targets', [\App\Http\Controllers\Client\NutritionController::class, 'updateTargets'])->name('targets.update');
+            Route::put('/targets', [\App\Http\Controllers\Client\NutritionController::class, 'updateTargets'])->name('targets.update');
+            Route::delete('/targets', [\App\Http\Controllers\Client\NutritionController::class, 'deleteTargets'])->name('targets.delete');
+        });
+
         // Client Goals Management
         Route::prefix('goals')->group(function () {
             Route::get('/create', [GoalsController::class, 'create'])->name('client.goals.create');
@@ -578,6 +588,7 @@ Route::middleware('auth')->group(function () {
             Route::post('/weight', [\App\Http\Controllers\Trainer\ClientController::class, 'storeWeight'])->name('weight.store');
             Route::post('/notes', [\App\Http\Controllers\Trainer\ClientController::class, 'storeNote'])->name('notes.store');
             Route::put('/health-profile', [\App\Http\Controllers\Trainer\ClientController::class, 'updateHealthProfile'])->name('health-profile.update');
+            Route::get('/nutrition-progress', [\App\Http\Controllers\Trainer\ClientController::class, 'nutritionProgress'])->name('nutrition-progress');
         });
         Route::resource('clients', \App\Http\Controllers\Trainer\ClientController::class, ['names' => 'trainer.clients']);
 
@@ -722,6 +733,10 @@ Route::middleware('auth')->group(function () {
             Route::post('/calculate-nutrition', [TrainerNutritionPlansController::class, 'calculateNutrition'])->name('calculate-nutrition');
             Route::post('/{id}/save-calculated-nutrition', [TrainerNutritionPlansController::class, 'saveCalculatedNutrition'])->name('save-calculated-nutrition');
             Route::get('/{id}/calculator-data', [TrainerNutritionPlansController::class, 'getCalculatorData'])->name('calculator-data');
+            
+            // Nutrition Recommendations Management
+            Route::get('/{id}/recommendations', [TrainerNutritionPlansController::class, 'recommendations'])->name('recommendations');
+            Route::put('/{id}/recommendations', [TrainerNutritionPlansController::class, 'updateRecommendations'])->name('update-recommendations');
 
             // Nutrition Meals Management (Trainer)
             Route::prefix('{planId}/meals')->name('meals.')->group(function () {
