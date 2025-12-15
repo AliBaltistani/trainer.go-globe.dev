@@ -34,12 +34,12 @@
 				<!-- End::slide -->
 
 				<!-- Start::slide -->
-				<li class="slide {{ request()->is('admin/chat*') ? 'active' : '' }}">
+				{{-- <li class="slide {{ request()->is('admin/chat*') ? 'active' : '' }}">
 					<a href="{{route('admin.chat.index')}}" class="side-menu__item">
 						<svg xmlns="http://www.w3.org/2000/svg" class="side-menu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M216,48H40A16,16,0,0,0,24,64V224a15.84,15.84,0,0,0,9.25,14.5A16.05,16.05,0,0,0,40,240a15.89,15.89,0,0,0,10.25-3.78l42.6-36.22H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48Z" opacity="0.2"/><path d="M216,48H40A16,16,0,0,0,24,64V224a15.84,15.84,0,0,0,9.25,14.5A16.05,16.05,0,0,0,40,240a15.89,15.89,0,0,0,10.25-3.78l42.6-36.22H216a16,16,0,0,0,16-16V64A16,16,0,0,0,216,48ZM40,224V64H216V200H92.85a8,8,0,0,0-5.24,1.94L40,240.22Z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
 						<span class="side-menu__label">Chats</span>
 					</a>
-				</li>
+				</li> --}}
 				<!-- End::slide -->
 
 				<!-- Start::slide User Management -->
