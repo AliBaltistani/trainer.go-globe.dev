@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserLocation;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 
 /**
  * Admin Trainees Controller
@@ -191,36 +193,127 @@ class TraineesController extends Controller
         try {
             // Define validation rules for trainee
             $rules = [
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
-                'password' => 'required|string|min:8|confirmed',
-                'phone' => 'nullable|string|max:20|unique:users,phone',
-                'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+                'name' => ['required', 'string', 'min:2', 'max:255'],
+                'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+                'password' => ['required', 'string', 'min:8', 'max:255', 'confirmed'],
+                'password_confirmation' => ['required', 'string', 'min:8'],
+                'phone' => [
+                    'nullable',
+                    'string',
+                    'max:20',
+                    'regex:/^[\+]?[0-9\s\-\(\)]+$/',
+                    Rule::unique('users', 'phone')->where(function ($query) {
+                        return $query->whereNotNull('phone');
+                    }),
+                ],
+                'profile_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+                'timezone' => ['nullable', 'string', 'max:50'],
+                'status' => ['nullable', 'boolean', 'in:0,1'],
+                // Location fields
+                'country' => ['nullable', 'string', 'max:100'],
+                'state' => ['nullable', 'string', 'max:100'],
+                'city' => ['nullable', 'string', 'max:100'],
+                'address' => ['nullable', 'string', 'max:255'],
+                'zipcode' => ['nullable', 'string', 'max:20', 'regex:/^[A-Z0-9\s\-]+$/i'],
+            ];
+            
+            // Custom validation messages
+            $messages = [
+                'name.required' => 'The trainee name field is required.',
+                'name.min' => 'The trainee name must be at least 2 characters.',
+                'name.max' => 'The trainee name may not be greater than 255 characters.',
+                'name.string' => 'The trainee name must be a valid text.',
+                'email.required' => 'The email address field is required.',
+                'email.email' => 'Please provide a valid email address.',
+                'email.max' => 'The email address may not be greater than 255 characters.',
+                'email.unique' => 'This email address is already registered.',
+                'password.required' => 'The password field is required.',
+                'password.min' => 'The password must be at least 8 characters.',
+                'password.max' => 'The password may not be greater than 255 characters.',
+                'password.confirmed' => 'The password confirmation does not match.',
+                'password_confirmation.required' => 'The password confirmation field is required.',
+                'password_confirmation.min' => 'The password confirmation must be at least 8 characters.',
+                'phone.string' => 'The phone number must be a valid text.',
+                'phone.max' => 'The phone number may not be greater than 20 characters.',
+                'phone.regex' => 'Please provide a valid phone number format.',
+                'phone.unique' => 'This phone number is already registered.',
+                'profile_image.image' => 'The profile image must be an image file.',
+                'profile_image.mimes' => 'The profile image must be a JPEG, PNG, JPG, GIF, or WEBP file.',
+                'profile_image.max' => 'The profile image size must not exceed 5MB.',
+                'timezone.string' => 'The timezone must be a valid text.',
+                'timezone.max' => 'The timezone may not be greater than 50 characters.',
+                'status.boolean' => 'The status must be either active or inactive.',
+                'status.in' => 'The status must be either active (1) or inactive (0).',
+                'country.string' => 'The country must be a valid text.',
+                'country.max' => 'The country may not be greater than 100 characters.',
+                'state.string' => 'The state must be a valid text.',
+                'state.max' => 'The state may not be greater than 100 characters.',
+                'city.string' => 'The city must be a valid text.',
+                'city.max' => 'The city may not be greater than 100 characters.',
+                'address.string' => 'The address must be a valid text.',
+                'address.max' => 'The address may not be greater than 255 characters.',
+                'zipcode.string' => 'The zip code must be a valid text.',
+                'zipcode.max' => 'The zip code may not be greater than 20 characters.',
+                'zipcode.regex' => 'Please provide a valid zip/postal code format.',
             ];
             
             // Validate input
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->all(), $rules, $messages);
             
             if ($validator->fails()) {
-                if ($request->ajax()) {
+                if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Validation failed',
+                        'message' => 'Validation failed. Please check the form for errors.',
                         'errors' => $validator->errors()
                     ], 422);
                 }
                 return back()->withErrors($validator)->withInput();
             }
             
-            // Create new trainee with client role
+            // Double-check phone uniqueness before insertion (safety measure)
+            $phoneValue = $request->filled('phone') ? trim($request->phone) : null;
+            if (!empty($phoneValue)) {
+                if (User::where('phone', $phoneValue)->exists()) {
+                    if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Validation failed. Please check the form for errors.',
+                            'errors' => ['phone' => ['This phone number is already registered.']]
+                        ], 422);
+                    }
+                    return back()->withErrors(['phone' => 'This phone number is already registered.'])->withInput();
+                }
+            }
+            
+            // Prepare trainee data
             $traineeData = [
-                'name' => $request->name,
-                'email' => $request->email,
+                'name' => trim($request->name),
+                'email' => strtolower(trim($request->email)),
                 'password' => Hash::make($request->password),
-                'phone' => $request->phone,
                 'role' => 'client', // Force client role for trainees
-                'email_verified_at' => now(), // Auto-verify admin created users
+                'timezone' => $request->filled('timezone') ? $request->timezone : 'UTC',
             ];
+            
+            // Handle phone - generate unique placeholder if not provided
+            if (!empty($phoneValue)) {
+                $traineeData['phone'] = $phoneValue;
+            } else {
+                // Generate a unique placeholder phone number
+                do {
+                    $placeholderPhone = '+000' . rand(1000000000, 9999999999);
+                } while (User::where('phone', $placeholderPhone)->exists());
+                
+                $traineeData['phone'] = $placeholderPhone;
+            }
+            
+            // Handle account status (email_verified_at)
+            if ($request->has('status')) {
+                $traineeData['email_verified_at'] = $request->boolean('status') ? now() : null;
+            } else {
+                // Default to active for admin-created trainees
+                $traineeData['email_verified_at'] = now();
+            }
             
             $trainee = User::create($traineeData);
             
@@ -230,6 +323,19 @@ class TraineesController extends Controller
                 $trainee->update(['profile_image' => $imagePath]);
             }
             
+            // Handle location information
+            if ($request->filled('country') || $request->filled('state') || $request->filled('city') || 
+                $request->filled('address') || $request->filled('zipcode')) {
+                UserLocation::create([
+                    'user_id' => $trainee->id,
+                    'country' => $request->country,
+                    'state' => $request->state,
+                    'city' => $request->city,
+                    'address' => $request->address,
+                    'zipcode' => $request->zipcode,
+                ]);
+            }
+            
             // Log trainee creation
             Log::info('New trainee created by admin', [
                 'admin_id' => Auth::id(),
@@ -237,11 +343,12 @@ class TraineesController extends Controller
                 'trainee_email' => $trainee->email
             ]);
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => true,
                     'message' => 'Trainee created successfully',
-                    'trainee' => $trainee
+                    'redirect' => route('admin.trainees.index'),
+                    'trainee' => $trainee->load('location')
                 ]);
             }
             
@@ -255,7 +362,7 @@ class TraineesController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to create trainee: ' . $e->getMessage()

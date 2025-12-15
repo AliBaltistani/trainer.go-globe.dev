@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserLocation;
 use App\Models\UserCertification;
 use App\Models\Testimonial;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Unique;
 
 /**
  * Admin Trainers Controller
@@ -243,45 +245,125 @@ class TrainersController extends Controller
         try {
             // Define validation rules for trainer
             $rules = [
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email',
-                'password' => 'required|string|min:8|confirmed',
-                'phone' => 'nullable|string|max:20|unique:users,phone',
-                'designation' => 'required|string|max:255',
-                'experience' => 'required|in:less_than_1_year,1_year,2_years,3_years,4_years,5_years,6_years,7_years,8_years,9_years,10_years,more_than_10_years',
-                'about' => 'required|string|max:1000',
-                'training_philosophy' => 'nullable|string|max:1000',
-                'profile_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'specializations' => 'nullable|exists:specializations,id'
+                'name' => ['required', 'string', 'max:255'],
+                'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+                'password' => ['required', 'string', 'min:8', 'confirmed'],
+                'phone' => [
+                    'nullable',
+                    'string',
+                    'max:20',
+                    'regex:/^[\+]?[0-9\s\-\(\)]+$/',
+                    Rule::unique('users', 'phone')->where(function ($query) {
+                        return $query->whereNotNull('phone');
+                    }),
+                ],
+                'designation' => ['required', 'string', 'max:255'],
+                'experience' => ['required', 'in:less_than_1_year,1_year,2_years,3_years,4_years,5_years,6_years,7_years,8_years,9_years,10_years,more_than_10_years'],
+                'about' => ['required', 'string', 'max:1000'],
+                'training_philosophy' => ['nullable', 'string', 'max:1000'],
+                'profile_image' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+                'business_logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif,webp', 'max:5120'],
+                'timezone' => ['nullable', 'string', 'max:50'],
+                'status' => ['nullable', 'boolean'],
+                'specializations' => ['nullable', 'exists:specializations,id'],
+                // Location fields
+                'country' => ['nullable', 'string', 'max:100'],
+                'state' => ['nullable', 'string', 'max:100'],
+                'city' => ['nullable', 'string', 'max:100'],
+                'address' => ['nullable', 'string', 'max:255'],
+                'zipcode' => ['nullable', 'string', 'max:20', 'regex:/^[A-Z0-9\s\-]+$/i'],
+            ];
+            
+            // Custom validation messages
+            $messages = [
+                'name.required' => 'The trainer name field is required.',
+                'name.max' => 'The trainer name may not be greater than 255 characters.',
+                'email.required' => 'The email address field is required.',
+                'email.email' => 'Please provide a valid email address.',
+                'email.unique' => 'This email address is already registered.',
+                'password.required' => 'The password field is required.',
+                'password.min' => 'The password must be at least 8 characters.',
+                'password.confirmed' => 'The password confirmation does not match.',
+                'phone.regex' => 'Please provide a valid phone number.',
+                'phone.unique' => 'This phone number is already registered.',
+                'designation.required' => 'The designation field is required.',
+                'designation.max' => 'The designation may not be greater than 255 characters.',
+                'experience.required' => 'Please select an experience level.',
+                'experience.in' => 'Please select a valid experience level.',
+                'about.required' => 'The about field is required.',
+                'about.max' => 'The about field may not be greater than 1000 characters.',
+                'training_philosophy.max' => 'The training philosophy may not be greater than 1000 characters.',
+                'profile_image.image' => 'The profile image must be an image file.',
+                'profile_image.mimes' => 'The profile image must be a JPEG, PNG, JPG, GIF, or WEBP file.',
+                'profile_image.max' => 'The profile image size must not exceed 5MB.',
+                'business_logo.image' => 'The business logo must be an image file.',
+                'business_logo.mimes' => 'The business logo must be a JPEG, PNG, JPG, GIF, or WEBP file.',
+                'business_logo.max' => 'The business logo size must not exceed 5MB.',
+                'specializations.exists' => 'The selected specialization is invalid.',
+                'zipcode.regex' => 'Please provide a valid zip/postal code.',
             ];
             
             // Validate input
-            $validator = Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->all(), $rules, $messages);
             
             if ($validator->fails()) {
-                if ($request->ajax()) {
+                if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Validation failed',
+                        'message' => 'Validation failed. Please check the form for errors.',
                         'errors' => $validator->errors()
                     ], 422);
                 }
                 return back()->withErrors($validator)->withInput();
             }
             
-            // Create new trainer
+            // Double-check phone uniqueness before insertion (safety measure)
+            $phoneValue = $request->filled('phone') ? trim($request->phone) : null;
+            if (!empty($phoneValue)) {
+                if (User::where('phone', $phoneValue)->exists()) {
+                    if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Validation failed. Please check the form for errors.',
+                            'errors' => ['phone' => ['This phone number is already registered.']]
+                        ], 422);
+                    }
+                    return back()->withErrors(['phone' => 'This phone number is already registered.'])->withInput();
+                }
+            }
+            
+            // Prepare trainer data
             $trainerData = [
-                'name' => $request->name,
-                'email' => $request->email,
+                'name' => trim($request->name),
+                'email' => strtolower(trim($request->email)),
                 'password' => Hash::make($request->password),
-                'phone' => $request->phone,
                 'role' => 'trainer',
-                'designation' => $request->designation,
+                'designation' => trim($request->designation),
                 'experience' => $request->experience,
-                'about' => $request->about,
-                'training_philosophy' => $request->training_philosophy,
-                'email_verified_at' => now(), // Auto-verify admin created trainers
+                'about' => trim($request->about),
+                'training_philosophy' => $request->filled('training_philosophy') ? trim($request->training_philosophy) : null,
+                'timezone' => $request->filled('timezone') ? $request->timezone : 'UTC',
             ];
+            
+            // Handle phone - generate unique placeholder if not provided
+            if (!empty($phoneValue)) {
+                $trainerData['phone'] = $phoneValue;
+            } else {
+                // Generate a unique placeholder phone number
+                do {
+                    $placeholderPhone = '+000' . rand(1000000000, 9999999999);
+                } while (User::where('phone', $placeholderPhone)->exists());
+                
+                $trainerData['phone'] = $placeholderPhone;
+            }
+            
+            // Handle account status (email_verified_at)
+            if ($request->has('status')) {
+                $trainerData['email_verified_at'] = $request->boolean('status') ? now() : null;
+            } else {
+                // Default to active for admin-created trainers
+                $trainerData['email_verified_at'] = now();
+            }
             
             $trainer = User::create($trainerData);
             
@@ -291,9 +373,28 @@ class TrainersController extends Controller
                 $trainer->update(['profile_image' => $imagePath]);
             }
             
+            // Handle business logo upload
+            if ($request->hasFile('business_logo')) {
+                $logoPath = $request->file('business_logo')->store('business-logos', 'public');
+                $trainer->update(['business_logo' => $logoPath]);
+            }
+            
             // Handle specialization assignment
             if ($request->filled('specializations')) {
                 $trainer->specializations()->sync([$request->specializations]);
+            }
+            
+            // Handle location information
+            if ($request->filled('country') || $request->filled('state') || $request->filled('city') || 
+                $request->filled('address') || $request->filled('zipcode')) {
+                UserLocation::create([
+                    'user_id' => $trainer->id,
+                    'country' => $request->country,
+                    'state' => $request->state,
+                    'city' => $request->city,
+                    'address' => $request->address,
+                    'zipcode' => $request->zipcode,
+                ]);
             }
             
             // Log trainer creation
@@ -304,11 +405,12 @@ class TrainersController extends Controller
                 'specialization_id' => $request->specializations
             ]);
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => true,
                     'message' => 'Trainer created successfully',
-                    'trainer' => $trainer
+                    'redirect' => route('admin.trainers.index'),
+                    'trainer' => $trainer->load('location', 'specializations')
                 ]);
             }
             
@@ -322,7 +424,7 @@ class TrainersController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 return response()->json([
                     'success' => false,
                     'message' => 'Failed to create trainer: ' . $e->getMessage()

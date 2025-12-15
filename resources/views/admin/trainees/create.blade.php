@@ -1,270 +1,531 @@
 @extends('layouts.master')
 
 @section('styles')
-<!-- Filepond CSS -->
-<link rel="stylesheet" href="{{asset('build/assets/libs/filepond/filepond.min.css')}}">
-<link rel="stylesheet" href="{{asset('build/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.css')}}">
-@endsection
 
-@section('scripts')
-<!-- Filepond JS -->
-<script src="{{asset('build/assets/libs/filepond/filepond.min.js')}}"></script>
-<script src="{{asset('build/assets/libs/filepond-plugin-image-preview/filepond-plugin-image-preview.min.js')}}"></script>
-<script src="{{asset('build/assets/libs/filepond-plugin-image-exif-orientation/filepond-plugin-image-exif-orientation.min.js')}}"></script>
-<script src="{{asset('build/assets/libs/filepond-plugin-file-validate-size/filepond-plugin-file-validate-size.min.js')}}"></script>
-<script src="{{asset('build/assets/libs/filepond-plugin-file-encode/filepond-plugin-file-encode.min.js')}}"></script>
-<script src="{{asset('build/assets/libs/filepond-plugin-image-edit/filepond-plugin-image-edit.min.js')}}"></script>
-<script src="{{asset('build/assets/libs/filepond-plugin-file-validate-type/filepond-plugin-file-validate-type.min.js')}}"></script>
-<script src="{{asset('build/assets/libs/filepond-plugin-image-crop/filepond-plugin-image-crop.min.js')}}"></script>
-<script src="{{asset('build/assets/libs/filepond-plugin-image-resize/filepond-plugin-image-resize.min.js')}}"></script>
-<script src="{{asset('build/assets/libs/filepond-plugin-image-transform/filepond-plugin-image-transform.min.js')}}"></script>
-
-<script>
-$(document).ready(function() {
-    // Register FilePond plugins
-    FilePond.registerPlugin(
-        FilePondPluginImagePreview,
-        FilePondPluginImageExifOrientation,
-        FilePondPluginFileValidateSize,
-        FilePondPluginFileEncode,
-        FilePondPluginImageEdit,
-        FilePondPluginFileValidateType,
-        FilePondPluginImageCrop,
-        FilePondPluginImageResize,
-        FilePondPluginImageTransform
-    );
-
-    // Initialize FilePond for profile image
-    const profileImageInput = document.querySelector('#profile_image');
-    if (profileImageInput) {
-        FilePond.create(profileImageInput, {
-            acceptedFileTypes: ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'],
-            maxFileSize: '2MB',
-            imagePreviewHeight: 120,
-            imageCropAspectRatio: '1:1',
-            imageResizeTargetWidth: 200,
-            imageResizeTargetHeight: 200,
-            stylePanelLayout: 'compact',
-            styleLoadIndicatorPosition: 'center bottom',
-            styleProgressIndicatorPosition: 'right bottom',
-            styleButtonRemoveItemPosition: 'left bottom',
-            styleButtonProcessItemPosition: 'right bottom',
-            labelIdle: 'Drag & Drop profile image or <span class="filepond--label-action">Browse</span>',
-        });
-    }
-
-    // Form validation
-    $('#traineeForm').on('submit', function(e) {
-        e.preventDefault();
-        
-        // Clear previous errors
-        $('.is-invalid').removeClass('is-invalid');
-        $('.invalid-feedback').remove();
-        
-        // Show loading state
-        const submitBtn = $('#submitBtn');
-        const originalText = submitBtn.html();
-        submitBtn.html('<span class="spinner-border spinner-border-sm me-2"></span>Creating...').prop('disabled', true);
-        
-        // Submit form via AJAX
-        const formData = new FormData(this);
-        
-        $.ajax({
-            url: $(this).attr('action'),
-            type: 'POST',
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function(response) {
-                if (response.success) {
-                    // Show success message
-                    showAlert('success', response.message);
-                    
-                    // Redirect after 2 seconds
-                    setTimeout(function() {
-                        window.location.href = '{{ route("admin.trainees.index") }}';
-                    }, 2000);
-                } else {
-                    showAlert('error', response.message || 'Failed to create trainee');
-                    submitBtn.html(originalText).prop('disabled', false);
-                }
-            },
-            error: function(xhr) {
-                submitBtn.html(originalText).prop('disabled', false);
-                
-                if (xhr.status === 422) {
-                    // Validation errors
-                    const errors = xhr.responseJSON.errors;
-                    $.each(errors, function(field, messages) {
-                        const input = $(`[name="${field}"]`);
-                        input.addClass('is-invalid');
-                        input.after(`<div class="invalid-feedback">${messages[0]}</div>`);
-                    });
-                    showAlert('error', 'Please fix the validation errors below.');
-                } else {
-                    const message = xhr.responseJSON?.message || 'Failed to create trainee';
-                    showAlert('error', message);
-                }
-            }
-        });
-    });
-
-    // Password confirmation validation
-    $('#password_confirmation').on('keyup', function() {
-        const password = $('#password').val();
-        const confirmation = $(this).val();
-        
-        if (confirmation && password !== confirmation) {
-            $(this).addClass('is-invalid');
-            if (!$(this).next('.invalid-feedback').length) {
-                $(this).after('<div class="invalid-feedback">Passwords do not match</div>');
-            }
-        } else {
-            $(this).removeClass('is-invalid');
-            $(this).next('.invalid-feedback').remove();
-        }
-    });
-});
-
-// Show alert function
-function showAlert(type, message) {
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-    const alertHtml = `
-        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    `;
-    $('#alertContainer').html(alertHtml);
-    
-    // Auto hide after 5 seconds
-    setTimeout(function() {
-        $('.alert').alert('close');
-    }, 5000);
-}
-</script>
 @endsection
 
 @section('content')
-<!-- Page Header -->
-<div class="d-md-flex d-block align-items-center justify-content-between my-4 page-header-breadcrumb">
-    <div>
-        <h1 class="page-title fw-semibold fs-18 mb-0">Add New Trainee</h1>
-        <div class="">
-            <nav>
-                <ol class="breadcrumb mb-0">
-                    <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('admin.trainees.index') }}">Trainees</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Add New</li>
-                </ol>
-            </nav>
-        </div>
-    </div>
-    <div class="ms-auto pageheader-btn">
-        <a href="{{ route('admin.trainees.index') }}" class="btn btn-outline-primary btn-wave">
-            <i class="ri-arrow-left-line fw-semibold align-middle me-1"></i> Back to List
-        </a>
+
+<!-- Start::page-header -->
+<div class="page-header-breadcrumb mb-3">
+    <div class="d-flex align-center justify-content-between flex-wrap">
+        <h1 class="page-title fw-medium fs-18 mb-0">
+            Create New Trainee
+        </h1>
+        <ol class="breadcrumb mb-0">
+            <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{{ route('admin.trainees.index') }}">Trainees</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Create Trainee</li>
+        </ol>
     </div>
 </div>
-<!-- Page Header Close -->
+<!-- End::page-header -->
 
-<!-- Alert Container -->
-<div id="alertContainer"></div>
+<!-- Display Success Messages -->
+@if (session('success'))
+<div class="alert alert-success alert-dismissible fade show" role="alert">
+    <i class="ri-check-circle-line me-2"></i>{{ session('success') }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
 
-<!-- Main Content -->
+<!-- Display Error Messages -->
+@if ($errors->any())
+<div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <ul class="mb-0">
+        @foreach ($errors->all() as $error)
+        <li>{{ $error }}</li>
+        @endforeach
+    </ul>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
+
+<!-- Start::row-1 -->
 <div class="row">
-    <div class="col-xl-12">
-        <div class="card custom-card">
-            <div class="card-header">
-                <div class="card-title">
-                    Trainee Information
+    <form method="POST" action="{{ route('admin.trainees.store') }}" enctype="multipart/form-data" id="traineeForm">
+        @csrf
+        <input type="hidden" name="role" value="client">
+
+        <div class="col-xl-12">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        Account Information
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row gy-3">
+                        <div class="col-xl-6">
+                            <div class="d-flex align-items-start flex-wrap gap-3">
+                                <div>
+                                    <span class="avatar avatar-xxl" id="profileAvatarContainer">
+                                        <span class="avatar avatar-xxl bg-primary text-white d-flex align-items-center justify-content-center" id="profileAvatarImage" style="font-size:2rem;">
+                                            <i class="ri-user-3-line"></i>
+                                        </span>
+                                    </span>
+                                </div>
+                                <div>
+                                    <span class="fw-medium d-block mb-2">Profile Picture</span>
+                                    <div class="btn-list mb-1">
+                                        <input type="file" id="profileImage" name="profile_image" accept="image/*" style="display: none;">
+                                        <button type="button" class="btn btn-sm btn-primary btn-wave" onclick="document.getElementById('profileImage').click()"><i class="ri-upload-2-line me-1"></i>Upload Image</button>
+                                        <button type="button" class="btn btn-sm btn-light btn-wave" onclick="clearProfileImage()" id="clearImageBtn" style="display: none;"><i class="ri-close-line me-1"></i>Clear</button>
+                                    </div>
+                                    <span class="d-block fs-12 text-muted">Use JPEG, PNG, or GIF. Best size: 200x200 pixels. Keep it under 5MB</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-6">
+                            <label for="profile-user-name" class="form-label">Full Name <span class="text-danger">*</span>:</label>
+                            <input type="text" class="form-control @error('name') is-invalid @enderror" id="profile-user-name" name="name" value="{{ old('name') }}" placeholder="Enter Full Name" required>
+                            @error('name')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                            @enderror
+                        </div>
+                        <div class="col-xl-6">
+                            <label for="profile-email" class="form-label">Email <span class="text-danger">*</span>:</label>
+                            <input type="email" class="form-control @error('email') is-invalid @enderror" id="profile-email" name="email" value="{{ old('email') }}" placeholder="Enter Email" required>
+                            @error('email')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                            @enderror
+                        </div>
+                        <div class="col-xl-6">
+                            <label for="profile-phn-no" class="form-label">Phone No :</label>
+                            <input type="text" class="form-control @error('phone') is-invalid @enderror" id="profile-phn-no" name="phone" value="{{ old('phone') }}" placeholder="Enter Phone Number">
+                            @error('phone')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                            @enderror
+                        </div>
+                        <div class="col-xl-6">
+                            <label for="profile-timezone" class="form-label">Timezone :</label>
+                            <select class="form-control @error('timezone') is-invalid @enderror" id="profile-timezone" name="timezone" data-trigger>
+                                <option value="UTC" {{ old('timezone', 'UTC') === 'UTC' ? 'selected' : '' }}>UTC (Coordinated Universal Time)</option>
+                                <optgroup label="UTC Positive Offsets">
+                                    <option value="UTC+1" {{ old('timezone') === 'UTC+1' ? 'selected' : '' }}>UTC+1 (Central European Time)</option>
+                                    <option value="UTC+2" {{ old('timezone') === 'UTC+2' ? 'selected' : '' }}>UTC+2 (Eastern European Time)</option>
+                                    <option value="UTC+3" {{ old('timezone') === 'UTC+3' ? 'selected' : '' }}>UTC+3 (Moscow Time)</option>
+                                    <option value="UTC+3:30" {{ old('timezone') === 'UTC+3:30' ? 'selected' : '' }}>UTC+3:30 (Iran Time)</option>
+                                    <option value="UTC+4" {{ old('timezone') === 'UTC+4' ? 'selected' : '' }}>UTC+4 (Gulf Standard Time)</option>
+                                    <option value="UTC+4:30" {{ old('timezone') === 'UTC+4:30' ? 'selected' : '' }}>UTC+4:30 (Afghanistan Time)</option>
+                                    <option value="UTC+5" {{ old('timezone') === 'UTC+5' ? 'selected' : '' }}>UTC+5 (Pakistan Standard Time)</option>
+                                    <option value="UTC+5:30" {{ old('timezone') === 'UTC+5:30' ? 'selected' : '' }}>UTC+5:30 (India Standard Time)</option>
+                                    <option value="UTC+5:45" {{ old('timezone') === 'UTC+5:45' ? 'selected' : '' }}>UTC+5:45 (Nepal Time)</option>
+                                    <option value="UTC+6" {{ old('timezone') === 'UTC+6' ? 'selected' : '' }}>UTC+6 (Bangladesh Time)</option>
+                                    <option value="UTC+6:30" {{ old('timezone') === 'UTC+6:30' ? 'selected' : '' }}>UTC+6:30 (Myanmar Time)</option>
+                                    <option value="UTC+7" {{ old('timezone') === 'UTC+7' ? 'selected' : '' }}>UTC+7 (Indochina Time)</option>
+                                    <option value="UTC+8" {{ old('timezone') === 'UTC+8' ? 'selected' : '' }}>UTC+8 (China/Singapore Time)</option>
+                                    <option value="UTC+9" {{ old('timezone') === 'UTC+9' ? 'selected' : '' }}>UTC+9 (Japan/Korea Time)</option>
+                                    <option value="UTC+9:30" {{ old('timezone') === 'UTC+9:30' ? 'selected' : '' }}>UTC+9:30 (Australian Central Time)</option>
+                                    <option value="UTC+10" {{ old('timezone') === 'UTC+10' ? 'selected' : '' }}>UTC+10 (Australian Eastern Time)</option>
+                                    <option value="UTC+11" {{ old('timezone') === 'UTC+11' ? 'selected' : '' }}>UTC+11 (Solomon Islands Time)</option>
+                                    <option value="UTC+12" {{ old('timezone') === 'UTC+12' ? 'selected' : '' }}>UTC+12 (New Zealand Time)</option>
+                                    <option value="UTC+13" {{ old('timezone') === 'UTC+13' ? 'selected' : '' }}>UTC+13 (Tonga Time)</option>
+                                    <option value="UTC+14" {{ old('timezone') === 'UTC+14' ? 'selected' : '' }}>UTC+14 (Line Islands Time)</option>
+                                </optgroup>
+                                <optgroup label="UTC Negative Offsets">
+                                    <option value="UTC-1" {{ old('timezone') === 'UTC-1' ? 'selected' : '' }}>UTC-1 (Azores Time)</option>
+                                    <option value="UTC-2" {{ old('timezone') === 'UTC-2' ? 'selected' : '' }}>UTC-2 (South Georgia Time)</option>
+                                    <option value="UTC-3" {{ old('timezone') === 'UTC-3' ? 'selected' : '' }}>UTC-3 (Argentina Time)</option>
+                                    <option value="UTC-3:30" {{ old('timezone') === 'UTC-3:30' ? 'selected' : '' }}>UTC-3:30 (Newfoundland Time)</option>
+                                    <option value="UTC-4" {{ old('timezone') === 'UTC-4' ? 'selected' : '' }}>UTC-4 (Atlantic Time)</option>
+                                    <option value="UTC-5" {{ old('timezone') === 'UTC-5' ? 'selected' : '' }}>UTC-5 (Eastern Time)</option>
+                                    <option value="UTC-6" {{ old('timezone') === 'UTC-6' ? 'selected' : '' }}>UTC-6 (Central Time)</option>
+                                    <option value="UTC-7" {{ old('timezone') === 'UTC-7' ? 'selected' : '' }}>UTC-7 (Mountain Time)</option>
+                                    <option value="UTC-8" {{ old('timezone') === 'UTC-8' ? 'selected' : '' }}>UTC-8 (Pacific Time)</option>
+                                    <option value="UTC-9" {{ old('timezone') === 'UTC-9' ? 'selected' : '' }}>UTC-9 (Alaska Time)</option>
+                                    <option value="UTC-10" {{ old('timezone') === 'UTC-10' ? 'selected' : '' }}>UTC-10 (Hawaii Time)</option>
+                                    <option value="UTC-11" {{ old('timezone') === 'UTC-11' ? 'selected' : '' }}>UTC-11 (Samoa Time)</option>
+                                    <option value="UTC-12" {{ old('timezone') === 'UTC-12' ? 'selected' : '' }}>UTC-12 (Baker Island Time)</option>
+                                </optgroup>
+                            </select>
+                            @error('timezone')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                            @enderror
+                        </div>
+
+                        <div class="col-xl-6">
+                            <label for="profile-status" class="form-label">Account Status :</label>
+                            <select class="form-control @error('status') is-invalid @enderror" id="profile-status" name="status">
+                                <option value="1" {{ old('status', '1') == '1' ? 'selected' : '' }}>Active</option>
+                                <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>Inactive</option>
+                            </select>
+                            @error('status')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                            @enderror
+                        </div>
+                        
+                        <div class="col-xl-12">
+                            <div class="border-top pt-3 mt-3">
+                                <h6 class="fw-semibold mb-3">Password <span class="text-danger">*</span></h6>
+                                <div class="row gy-3">
+                                    <div class="col-xl-6">
+                                        <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control @error('password') is-invalid @enderror" id="password" name="password" placeholder="Enter Password" required>
+                                        @error('password')
+                                        <div class="invalid-feedback">
+                                            {{ $message }}
+                                        </div>
+                                        @enderror
+                                        <small class="text-muted">Minimum 8 characters required.</small>
+                                    </div>
+                                    <div class="col-xl-6">
+                                        <label for="password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                                        <input type="password" class="form-control @error('password_confirmation') is-invalid @enderror" id="password_confirmation" name="password_confirmation" placeholder="Confirm Password" required>
+                                        @error('password_confirmation')
+                                        <div class="invalid-feedback">
+                                            {{ $message }}
+                                        </div>
+                                        @enderror
+                                        <small class="text-muted">Re-enter the password to confirm.</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="card-body">
-                <form id="traineeForm" action="{{ route('admin.trainees.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    
-                    <div class="row">
-                        <!-- Profile Image -->
-                        <div class="col-xl-12 mb-4">
-                            <div class="text-center">
-                                <label class="form-label">Profile Image</label>
-                                <input type="file" id="profile_image" name="profile_image" accept="image/*">
-                                <small class="text-muted d-block mt-2">Upload a profile image (JPEG, PNG, JPG, GIF). Max size: 2MB</small>
-                            </div>
-                        </div>
-                        
-                        <!-- Basic Information -->
-                        <div class="col-xl-6 mb-3">
-                            <label for="name" class="form-label">Full Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="name" name="name" placeholder="Enter full name" required>
-                        </div>
-                        
-                        <div class="col-xl-6 mb-3">
-                            <label for="email" class="form-label">Email Address <span class="text-danger">*</span></label>
-                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter email address" required>
-                        </div>
-                        
-                        <div class="col-xl-6 mb-3">
-                            <label for="phone" class="form-label">Phone Number</label>
-                            <input type="tel" class="form-control" id="phone" name="phone" placeholder="Enter phone number">
-                        </div>
-                        
-                        <!-- Password Fields -->
-                        <div class="col-xl-6 mb-3">
-                            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="password" name="password" placeholder="Enter password" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password')">
-                                    <i class="ri-eye-line" id="password-icon"></i>
-                                </button>
-                            </div>
-                            <small class="text-muted">Minimum 8 characters required</small>
-                        </div>
-                        
-                        <div class="col-xl-6 mb-3">
-                            <label for="password_confirmation" class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                            <div class="input-group">
-                                <input type="password" class="form-control" id="password_confirmation" name="password_confirmation" placeholder="Confirm password" required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password_confirmation')">
-                                    <i class="ri-eye-line" id="password_confirmation-icon"></i>
-                                </button>
-                            </div>
-                        </div>
+        </div>
+        
+        {{-- Location Section --}}
+        <div class="col-xl-12">
+            <div class="card custom-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        Location Information (Optional)
                     </div>
-                    
-                    <!-- Form Actions -->
-                    <div class="row">
+                </div>
+                <div class="card-body p-4">
+                    <div class="row gy-3">
+                        <div class="col-xl-6">
+                            <label for="location-country" class="form-label">Country</label>
+                            <input type="text" class="form-control @error('country') is-invalid @enderror" id="location-country" name="country" value="{{ old('country') }}" placeholder="Enter country name" maxlength="100">
+                            @error('country')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-xl-6">
+                            <label for="location-state" class="form-label">State/Province</label>
+                            <input type="text" class="form-control @error('state') is-invalid @enderror" id="location-state" name="state" value="{{ old('state') }}" placeholder="Enter state or province" maxlength="100">
+                            @error('state')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-xl-6">
+                            <label for="location-city" class="form-label">City</label>
+                            <input type="text" class="form-control @error('city') is-invalid @enderror" id="location-city" name="city" value="{{ old('city') }}" placeholder="Enter city name" maxlength="100">
+                            @error('city')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="col-xl-6">
+                            <label for="location-zipcode" class="form-label">Zip/Postal Code</label>
+                            <input type="text" class="form-control @error('zipcode') is-invalid @enderror" id="location-zipcode" name="zipcode" value="{{ old('zipcode') }}" placeholder="Enter zip/postal code" maxlength="20">
+                            @error('zipcode')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
                         <div class="col-xl-12">
-                            <div class="d-flex justify-content-end gap-2 mt-4">
-                                <a href="{{ route('admin.trainees.index') }}" class="btn btn-light btn-wave">
-                                    <i class="ri-close-line fw-semibold align-middle me-1"></i> Cancel
-                                </a>
-                                <button type="submit" class="btn btn-primary btn-wave" id="submitBtn">
-                                    <i class="ri-save-line fw-semibold align-middle me-1"></i> Create Trainee
-                                </button>
-                            </div>
+                            <label for="location-address" class="form-label">Street Address</label>
+                            <textarea class="form-control @error('address') is-invalid @enderror" id="location-address" name="address" rows="2" placeholder="Enter street address" maxlength="255">{{ old('address') }}</textarea>
+                            @error('address')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
                     </div>
-                </form>
+                </div>
             </div>
         </div>
-    </div>
+        <div class="col-xl-12">
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <a href="{{ route('admin.trainees.index') }}" class="btn btn-light btn-wave">Cancel</a>
+                <button type="button" id="saveTraineeBtn" class="btn btn-primary btn-wave float-end">Create Trainee</button>
+            </div>
+        </div>
+    </form>
 </div>
+<!--End::row-1 -->
 
+@endsection
+
+@section('scripts')
 <script>
-// Toggle password visibility
-function togglePassword(fieldId) {
-    const field = document.getElementById(fieldId);
-    const icon = document.getElementById(fieldId + '-icon');
-    
-    if (field.type === 'password') {
-        field.type = 'text';
-        icon.className = 'ri-eye-off-line';
-    } else {
-        field.type = 'password';
-        icon.className = 'ri-eye-line';
+    /**
+     * Handle profile image preview and update avatar display
+     */
+    document.getElementById('profileImage').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+            if (!allowedTypes.includes(file.type)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid File Type',
+                    text: 'Please select a valid image file (JPEG, PNG, JPG, or GIF)',
+                    confirmButtonText: 'OK'
+                });
+                this.value = '';
+                return;
+            }
+
+            // Validate file size (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'File Too Large',
+                    text: 'File size must be less than 5MB',
+                    confirmButtonText: 'OK'
+                });
+                this.value = '';
+                return;
+            }
+
+            // Preview the selected image
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const avatarContainer = document.getElementById('profileAvatarContainer');
+                let avatarImg = document.getElementById('profileAvatarImage');
+                
+                if (avatarContainer) {
+                    if (avatarImg && avatarImg.tagName === 'SPAN') {
+                        const newImg = document.createElement('img');
+                        newImg.id = 'profileAvatarImage';
+                        newImg.src = e.target.result;
+                        newImg.alt = 'Profile Image';
+                        avatarContainer.replaceChild(newImg, avatarImg);
+                        avatarImg = newImg;
+                    } else if (avatarImg && avatarImg.tagName === 'IMG') {
+                        avatarImg.src = e.target.result;
+                    }
+                }
+
+                document.getElementById('clearImageBtn').style.display = 'inline-block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    /**
+     * Clear profile image
+     */
+    function clearProfileImage() {
+        const fileInput = document.getElementById('profileImage');
+        const avatarContainer = document.getElementById('profileAvatarContainer');
+        const avatarImg = document.getElementById('profileAvatarImage');
+        
+        fileInput.value = '';
+        
+        if (avatarImg && avatarImg.tagName === 'IMG') {
+            const defaultSpan = document.createElement('span');
+            defaultSpan.className = 'avatar avatar-xxl bg-primary text-white d-flex align-items-center justify-content-center';
+            defaultSpan.id = 'profileAvatarImage';
+            defaultSpan.style.fontSize = '2rem';
+            defaultSpan.innerHTML = '<i class="ri-user-3-line"></i>';
+            avatarContainer.replaceChild(defaultSpan, avatarImg);
+        }
+        
+        document.getElementById('clearImageBtn').style.display = 'none';
     }
-}
+
+    /**
+     * Auto-hide alerts after 5 seconds
+     */
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(function(alert) {
+            setTimeout(function() {
+                if (alert && alert.classList.contains('show')) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }
+            }, 5000);
+        });
+
+        // Handle Create Trainee button
+        const saveTraineeBtn = document.getElementById('saveTraineeBtn');
+        if (saveTraineeBtn) {
+            saveTraineeBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const form = document.getElementById('traineeForm');
+                
+                // Basic validation
+                const name = document.getElementById('profile-user-name').value.trim();
+                const email = document.getElementById('profile-email').value.trim();
+                const password = document.getElementById('password').value;
+                const passwordConfirmation = document.getElementById('password_confirmation').value;
+                
+                if (!name) {
+                    showAlert('error', 'Please enter trainee name');
+                    return;
+                }
+                
+                if (!email) {
+                    showAlert('error', 'Please enter email address');
+                    return;
+                }
+                
+                if (!password) {
+                    showAlert('error', 'Please enter a password');
+                    return;
+                }
+                
+                if (password.length < 8) {
+                    showAlert('error', 'Password must be at least 8 characters');
+                    return;
+                }
+                
+                if (password !== passwordConfirmation) {
+                    showAlert('error', 'Password and confirmation do not match');
+                    return;
+                }
+                
+                // Submit the form
+                if (form) {
+                    submitTraineeForm(form, saveTraineeBtn);
+                }
+            });
+        }
+    });
+
+    /**
+     * Submit trainee form via AJAX
+     */
+    function submitTraineeForm(form, submitBtn) {
+        const formData = new FormData(form);
+        
+        // Add location fields to form data
+        const locationFields = ['country', 'state', 'city', 'address', 'zipcode'];
+        locationFields.forEach(field => {
+            const input = document.getElementById(`location-${field}`);
+            if (input && input.value.trim()) {
+                formData.append(field, input.value.trim());
+            }
+        });
+        
+        const originalText = submitBtn.innerHTML;
+        
+        // Disable button and show loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="ri-loader-4-line me-1"></i>Creating...';
+        
+        // Clear previous errors
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || formData.get('_token')
+            },
+            redirect: 'follow'
+        })
+        .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+                return { success: true };
+            }
+            
+            const contentType = response.headers.get('content-type') || '';
+            
+            if (contentType.includes('text/html')) {
+                window.location.href = '{{ route("admin.trainees.index") }}';
+                return { success: true };
+            }
+            
+            if (contentType.includes('application/json')) {
+                return response.json();
+            }
+            
+            return response.text().then(text => {
+                try {
+                    return JSON.parse(text);
+                } catch (e) {
+                    window.location.href = '{{ route("admin.trainees.index") }}';
+                    return { success: true };
+                }
+            });
+        })
+        .then(data => {
+            if (data && data.success !== false) {
+                showAlert('success', data.message || 'Trainee created successfully!');
+                setTimeout(() => {
+                    window.location.href = data.redirect || '{{ route("admin.trainees.index") }}';
+                }, 1500);
+            } else {
+                showAlert('danger', data.message || 'Failed to create trainee');
+                
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        if (['country', 'state', 'city', 'address', 'zipcode'].includes(field)) {
+                            const input = document.getElementById(`location-${field}`);
+                            if (input) {
+                                input.classList.add('is-invalid');
+                                const errorDiv = document.createElement('div');
+                                errorDiv.className = 'invalid-feedback';
+                                errorDiv.textContent = data.errors[field][0];
+                                input.parentNode.appendChild(errorDiv);
+                            }
+                        } else {
+                            const input = form.querySelector(`[name="${field}"]`);
+                            if (input) {
+                                input.classList.add('is-invalid');
+                                const errorDiv = document.createElement('div');
+                                errorDiv.className = 'invalid-feedback';
+                                errorDiv.textContent = data.errors[field][0];
+                                input.parentNode.appendChild(errorDiv);
+                            }
+                        }
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showAlert('danger', error.message || 'An error occurred. Please try again.');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    }
+
+    /**
+     * Show alert message using SweetAlert
+     */
+    function showAlert(type, message) {
+        const iconMap = {
+            'success': 'success',
+            'error': 'error',
+            'danger': 'error',
+            'warning': 'warning',
+            'info': 'info'
+        };
+        
+        Swal.fire({
+            icon: iconMap[type] || 'info',
+            title: type === 'success' ? 'Success!' : type === 'error' || type === 'danger' ? 'Error!' : type === 'warning' ? 'Warning!' : 'Info',
+            text: message,
+            confirmButtonText: 'OK',
+            timer: 5000,
+            timerProgressBar: true,
+            showCloseButton: true
+        });
+    }
+
 </script>
+
 @endsection

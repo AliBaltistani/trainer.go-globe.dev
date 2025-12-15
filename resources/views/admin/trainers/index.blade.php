@@ -19,9 +19,12 @@
         </div>
     </div>
     <div class="ms-auto pageheader-btn">
-        <button type="button" class="btn btn-primary btn-wave waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#createTrainerModal">
+        <a href="{{ route('admin.trainers.create') }}" class="btn btn-primary btn-wave">
+            <i class="ri-add-line fw-semibold align-middle me-1"></i> Add New Trainer
+        </a>
+        {{-- <button type="button" class="btn btn-primary btn-wave waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#createTrainerModal">
             <i class="ri-add-line align-middle me-1"></i>Add New Trainer
-        </button>
+        </button> --}}
     </div>
 </div>
 

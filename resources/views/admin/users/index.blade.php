@@ -504,9 +504,12 @@ function showAlert(type, message) {
         </div>
     </div>
     <div class="ms-auto pageheader-btn">
-        <button type="button" class="btn btn-primary btn-wave waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#createUserModal">
+        <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-wave">
+            <i class="ri-add-line fw-semibold align-middle me-1"></i> Add New User
+        </a>
+        {{-- <button type="button" class="btn btn-primary btn-wave waves-effect waves-light" data-bs-toggle="modal" data-bs-target="#createUserModal">
             <i class="ri-add-line align-middle me-1"></i>Add New User
-        </button>
+        </button> --}}
     </div>
 </div>
 

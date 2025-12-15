@@ -53,20 +53,74 @@
 						<li class="slide side-menu__label1">
 							<a href="javascript:void(0)">User Management</a>
 						</li>
-						<li class="slide {{ request()->is('admin/users*') ? 'active' : '' }}">
-							<a href="{{route('admin.users.index')}}" class="side-menu__item">
+						
+						<!-- All Users Nested Menu -->
+						<li class="slide has-sub {{ request()->is('admin/users*') ? 'open' : '' }}">
+							<a href="javascript:void(0);" class="side-menu__item">
 								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="128" cy="120" r="40" opacity="0.2"/><circle cx="128" cy="120" r="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M63.8,199.37a72,72,0,0,1,128.4,0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M198.1,197.85A96,96,0,1,0,57.9,58.15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="200" cy="56" r="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-								All Users</a>
+								All Users
+								<i class="ri-arrow-right-s-line side-menu__angle"></i>
+							</a>
+							<ul class="slide-menu child2">
+								<li class="slide {{ request()->routeIs('admin.users.index') ? 'active' : '' }}">
+									<a href="{{route('admin.users.index')}}" class="side-menu__item">
+										<i class="ri-list-check side-menu-doublemenu__icon"></i>
+										View All
+									</a>
+								</li>
+								<li class="slide {{ request()->routeIs('admin.users.create') ? 'active' : '' }}">
+									<a href="{{route('admin.users.create')}}" class="side-menu__item">
+										<i class="ri-add-circle-line side-menu-doublemenu__icon"></i>
+										Add New
+									</a>
+								</li>
+							</ul>
 						</li>
-						<li class="slide {{ request()->is('admin/trainers*') ? 'active' : '' }}">
-							<a href="{{route('admin.trainers.index')}}" class="side-menu__item">
+						
+						<!-- Trainers Nested Menu -->
+						<li class="slide has-sub {{ request()->is('admin/trainers*') ? 'open' : '' }}">
+							<a href="javascript:void(0);" class="side-menu__item">
 								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><path d="M104,128a24,24,0,1,1,24,24A24,24,0,0,1,104,128Z" opacity="0.2"/><circle cx="128" cy="128" r="24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="m104,128-48,48a24,24,0,0,1-34-34l48-48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="m152,128,48-48a24,24,0,0,1,34,34l-48,48" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-								Trainers</a>
+								Trainers
+								<i class="ri-arrow-right-s-line side-menu__angle"></i>
+							</a>
+							<ul class="slide-menu child2">
+								<li class="slide {{ request()->routeIs('admin.trainers.index') ? 'active' : '' }}">
+									<a href="{{route('admin.trainers.index')}}" class="side-menu__item">
+										<i class="ri-list-check side-menu-doublemenu__icon"></i>
+										View All
+									</a>
+								</li>
+								<li class="slide {{ request()->routeIs('admin.trainers.create') ? 'active' : '' }}">
+									<a href="{{route('admin.trainers.create')}}" class="side-menu__item">
+										<i class="ri-add-circle-line side-menu-doublemenu__icon"></i>
+										Add New
+									</a>
+								</li>
+							</ul>
 						</li>
-						<li class="slide {{ request()->is('admin/trainees*') ? 'active' : '' }}">
-							<a href="{{route('admin.trainees.index')}}" class="side-menu__item">
+						
+						<!-- Trainees Nested Menu -->
+						<li class="slide has-sub {{ request()->is('admin/trainees*') ? 'open' : '' }}">
+							<a href="javascript:void(0);" class="side-menu__item">
 								<svg xmlns="http://www.w3.org/2000/svg" class="side-menu-doublemenu__icon" viewBox="0 0 256 256"><rect width="256" height="256" fill="none"/><circle cx="128" cy="120" r="40" opacity="0.2"/><circle cx="128" cy="120" r="40" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M63.8,199.37a72,72,0,0,1,128.4,0" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><path d="M198.1,197.85A96,96,0,1,0,57.9,58.15" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/><circle cx="200" cy="56" r="16" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="16"/></svg>
-								Trainees</a>
+								Trainees
+								<i class="ri-arrow-right-s-line side-menu__angle"></i>
+							</a>
+							<ul class="slide-menu child2">
+								<li class="slide {{ request()->routeIs('admin.trainees.index') ? 'active' : '' }}">
+									<a href="{{route('admin.trainees.index')}}" class="side-menu__item">
+										<i class="ri-list-check side-menu-doublemenu__icon"></i>
+										View All
+									</a>
+								</li>
+								<li class="slide {{ request()->routeIs('admin.trainees.create') ? 'active' : '' }}">
+									<a href="{{route('admin.trainees.create')}}" class="side-menu__item">
+										<i class="ri-add-circle-line side-menu-doublemenu__icon"></i>
+										Add New
+									</a>
+								</li>
+							</ul>
 						</li>
 					</ul>
 				</li>
