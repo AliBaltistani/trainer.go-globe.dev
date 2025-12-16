@@ -234,6 +234,28 @@ class ClientBookingController extends ApiBaseController
                 return $this->sendError('Invalid trainer or client selected', [], 404);
             }
 
+            // Get booking settings for the trainer
+            $bookingSettings = BookingSetting::where('trainer_id', $request->trainer_id)->first();
+            
+            // Check if client is subscribed to trainer
+            $subscription = \App\Models\TrainerSubscription::where('client_id', $request->client_id)
+                ->where('trainer_id', $request->trainer_id)
+                ->where('status', 'active')
+                ->first();
+            
+            if (!$subscription) {
+                return $this->sendError('Unauthorized', [
+                    'error' => 'You are not subscribed to this trainer. Please subscribe first.'
+                ], 403);
+            }
+            
+            // Check if self-booking is enabled
+            if ($bookingSettings && !$bookingSettings->allow_self_booking) {
+                return $this->sendError('Booking Disabled', [
+                    'error' => 'This trainer has disabled self-booking. Please contact the trainer directly.'
+                ], 403);
+            }
+
             // Check for conflicts (unless admin override)
             if (!$request->has('override_conflicts')) {
                 $conflictingBooking = Schedule::where('trainer_id', $request->trainer_id)
@@ -254,6 +276,17 @@ class ClientBookingController extends ApiBaseController
                 }
             }
 
+            // Determine booking status based on booking settings
+            $status = $request->status;
+            
+            // If require_approval is enabled, status must be pending
+            if ($bookingSettings && $bookingSettings->require_approval) {
+                $status = Schedule::STATUS_PENDING;
+            } else {
+                // If no approval required, default to confirmed
+                $status = $status ?? Schedule::STATUS_CONFIRMED;
+            }
+
             // Create the booking (mirror Admin store)
             $schedule = Schedule::create([
                 'trainer_id' => $request->trainer_id,
@@ -261,7 +294,7 @@ class ClientBookingController extends ApiBaseController
                 'date' => $request->date,
                 'start_time' => $request->start_time,
                 'end_time' => $request->end_time,
-                'status' => $request->status,
+                'status' => $status,
                 'notes' => $request->notes,
             ]);
 

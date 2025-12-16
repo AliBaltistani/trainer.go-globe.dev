@@ -340,6 +340,31 @@ class SessionBookingController extends ApiBaseController
                 return $this->sendError('Validation Error', ['error' => 'Invalid trainer or client'], 422);
             }
 
+            // Get booking settings for the trainer
+            $bookingSettings = \App\Models\BookingSetting::where('trainer_id', $trainerId)->first();
+            
+            // If request is from client, check booking-approval settings
+            if ($user->role === 'client') {
+                // Check if client is subscribed to trainer
+                $subscription = \App\Models\TrainerSubscription::where('client_id', $clientId)
+                    ->where('trainer_id', $trainerId)
+                    ->where('status', 'active')
+                    ->first();
+                
+                if (!$subscription) {
+                    return $this->sendError('Unauthorized', [
+                        'error' => 'You are not subscribed to this trainer. Please subscribe first.'
+                    ], 403);
+                }
+                
+                // Check if self-booking is enabled
+                if ($bookingSettings && !$bookingSettings->allow_self_booking) {
+                    return $this->sendError('Booking Disabled', [
+                        'error' => 'This trainer has disabled self-booking. Please contact the trainer directly.'
+                    ], 403);
+                }
+            }
+
             // Check for conflicts (unless override flag provided)
             if (!$request->has('override_conflicts')) {
                 $conflictingBooking = Schedule::where('trainer_id', $trainerId)
@@ -360,8 +385,22 @@ class SessionBookingController extends ApiBaseController
                 }
             }
 
-            // Create the booking (default to pending if status not provided)
-            $status = $request->get('status', Schedule::STATUS_PENDING);
+            // Determine booking status based on booking settings and user role
+            $status = $request->get('status');
+            
+            // If request is from client, enforce booking approval settings
+            if ($user->role === 'client') {
+                // If require_approval is enabled, status must be pending
+                if ($bookingSettings && $bookingSettings->require_approval) {
+                    $status = Schedule::STATUS_PENDING;
+                } else {
+                    // If no approval required, allow client to set status (default to confirmed)
+                    $status = $status ?? Schedule::STATUS_CONFIRMED;
+                }
+            } else {
+                // Trainers can set status, default to confirmed
+                $status = $status ?? Schedule::STATUS_CONFIRMED;
+            }
 
             $schedule = Schedule::create([
                 'trainer_id' => $trainerId,

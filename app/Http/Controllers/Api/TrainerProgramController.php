@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\ApiBaseController;
 use App\Models\Program;
 use App\Models\User;
+use App\Models\TrainerSubscription;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -91,6 +92,16 @@ class TrainerProgramController extends ApiBaseController
                 if (!$client || $client->role !== 'client') {
                     return $this->sendError('Validation Error', ['client_id' => ['Selected user is not a client']], 422);
                 }
+                
+                // Check if client is subscribed to this trainer
+                $subscription = TrainerSubscription::where('trainer_id', $trainerId)
+                    ->where('client_id', $clientId)
+                    ->where('status', 'active')
+                    ->first();
+                
+                if (!$subscription) {
+                    return $this->sendError('Validation Error', ['client_id' => ['Client is not subscribed to you. Only subscribed clients can be assigned programs.']], 422);
+                }
             }
 
             $program = Program::create([
@@ -172,6 +183,16 @@ class TrainerProgramController extends ApiBaseController
                 $client = User::find($clientId);
                 if (!$client || $client->role !== 'client') {
                     return $this->sendError('Validation Error', ['client_id' => ['Selected user is not a client']], 422);
+                }
+                
+                // Check if client is subscribed to this trainer
+                $subscription = TrainerSubscription::where('trainer_id', Auth::id())
+                    ->where('client_id', $clientId)
+                    ->where('status', 'active')
+                    ->first();
+                
+                if (!$subscription) {
+                    return $this->sendError('Validation Error', ['client_id' => ['Client is not subscribed to you. Only subscribed clients can be assigned programs.']], 422);
                 }
             }
 
@@ -322,6 +343,16 @@ class TrainerProgramController extends ApiBaseController
             $client = User::findOrFail($request->input('client_id'));
             if ($client->role !== 'client') {
                 return $this->sendError('Validation Error', ['client_id' => ['Selected user is not a client']], 422);
+            }
+
+            // Check if client is subscribed to this trainer
+            $subscription = \App\Models\TrainerSubscription::where('trainer_id', Auth::id())
+                ->where('client_id', $client->id)
+                ->where('status', 'active')
+                ->first();
+            
+            if (!$subscription) {
+                return $this->sendError('Validation Error', ['client_id' => ['Client is not subscribed to you. Only subscribed clients can be assigned programs.']], 422);
             }
 
             DB::beginTransaction();

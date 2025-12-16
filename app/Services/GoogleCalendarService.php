@@ -465,8 +465,28 @@ class GoogleCalendarService
             }
 
             // Get blocked times from database for the date range
+            // Include both non-recurring blocked times in the date range AND recurring blocked times that are active
             $blockedTimes = BlockedTime::where('trainer_id', $trainer->id)
-                ->whereBetween('date', [$startDate, $endDate])
+                ->where(function ($query) use ($startDate, $endDate) {
+                    // Non-recurring blocked times within the date range
+                    $query->where(function ($q) use ($startDate, $endDate) {
+                        $q->where('is_recurring', false)
+                          ->whereBetween('date', [$startDate, $endDate]);
+                    })
+                    // OR recurring blocked times that are active and could apply to dates in the range
+                    ->orWhere(function ($q) use ($startDate, $endDate) {
+                        $q->where('is_recurring', true)
+                          ->where(function ($recurQ) use ($startDate, $endDate) {
+                              // Recurring blocked time is active if:
+                              // - recurring_end_date is null (no end date), OR
+                              // - recurring_end_date is >= startDate (still active during the range)
+                              $recurQ->whereNull('recurring_end_date')
+                                     ->orWhere('recurring_end_date', '>=', $startDate);
+                          })
+                          // Only include if the original date is <= endDate (to avoid fetching too old recurring entries)
+                          ->where('date', '<=', $endDate);
+                    });
+                })
                 ->get();
 
             // Generate available slots based on trainer's availability settings
@@ -542,9 +562,46 @@ class GoogleCalendarService
                         // Check if this slot conflicts with blocked times
                         if ($isAvailable) {
                             $dateString = $slotStart->format('Y-m-d');
+                            $currentDate = Carbon::parse($dateString);
                             
                             foreach ($blockedTimes as $blockedTime) {
-                                if ($blockedTime->date->format('Y-m-d') === $dateString) {
+                                $appliesToDate = false;
+                                
+                                if (!$blockedTime->is_recurring) {
+                                    // Non-recurring: check if date matches exactly
+                                    $appliesToDate = ($blockedTime->date->format('Y-m-d') === $dateString);
+                                } else {
+                                    // Recurring: check if the current date matches the recurring pattern
+                                    $blockedDate = Carbon::parse($blockedTime->date);
+                                    
+                                    // Check if recurring_end_date hasn't passed
+                                    if ($blockedTime->recurring_end_date && 
+                                        Carbon::parse($blockedTime->recurring_end_date)->lt($currentDate)) {
+                                        continue; // Recurring pattern has ended
+                                    }
+                                    
+                                    // Check if current date matches the recurring pattern
+                                    switch ($blockedTime->recurring_type) {
+                                        case BlockedTime::RECURRING_DAILY:
+                                            // Daily: applies to all dates >= original date
+                                            $appliesToDate = ($currentDate->gte($blockedDate));
+                                            break;
+                                            
+                                        case BlockedTime::RECURRING_WEEKLY:
+                                            // Weekly: applies if same day of week and >= original date
+                                            $appliesToDate = ($currentDate->dayOfWeek === $blockedDate->dayOfWeek && 
+                                                             $currentDate->gte($blockedDate));
+                                            break;
+                                            
+                                        case BlockedTime::RECURRING_MONTHLY:
+                                            // Monthly: applies if same day of month and >= original date
+                                            $appliesToDate = ($currentDate->day === $blockedDate->day && 
+                                                             $currentDate->gte($blockedDate));
+                                            break;
+                                    }
+                                }
+                                
+                                if ($appliesToDate) {
                                     // Parse blocked time start and end - handle both string and Carbon formats
                                     $blockedStartTime = $blockedTime->start_time;
                                     $blockedEndTime = $blockedTime->end_time;

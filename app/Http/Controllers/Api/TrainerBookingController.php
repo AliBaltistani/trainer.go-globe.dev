@@ -186,6 +186,19 @@ class TrainerBookingController extends Controller
                 ], 422);
             }
 
+            // Check if client is subscribed to trainer
+            $subscription = \App\Models\TrainerSubscription::where('client_id', $request->client_id)
+                ->where('trainer_id', $trainer->id)
+                ->where('status', 'active')
+                ->first();
+            
+            if (!$subscription) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Client is not subscribed to you. Only subscribed clients can be booked.'
+                ], 403);
+            }
+
             // Check for conflicts
             $conflictingBooking = Schedule::where('trainer_id', $trainer->id)
                 ->where('date', $request->date)

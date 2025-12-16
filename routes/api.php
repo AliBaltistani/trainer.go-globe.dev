@@ -18,6 +18,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Models\Week;
+use App\Models\ProgramVideo;
 
 // Import API Controllers
 use App\Http\Controllers\ApiAuthController;
@@ -60,6 +61,7 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
  */
 
 Route::model('week', Week::class);
+Route::model('video', ProgramVideo::class);
 Route::middleware('auth:sanctum')->group(function () {
 
     /**
@@ -369,6 +371,13 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/plan', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'getProgramPlan'])->name('plan');
                 Route::prefix('videos')->name('videos.')->group(function () {
                     Route::get('/', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'getVideos'])->name('index');
+                    Route::post('/', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'store'])->name('store');
+                    Route::patch('/reorder', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'reorder'])->name('reorder');
+
+                    Route::prefix('{video}')->group(function () {
+                        Route::put('/', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'update'])->name('update');
+                        Route::delete('/', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'destroy'])->name('destroy');
+                    });
                 });
 
                 Route::prefix('builder')->name('builder.')->group(function () {
@@ -465,26 +474,83 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::prefix('programs')->name('programs.')->group(function () {
+            // Client Program CRUD (for self-created programs)
+            Route::get('/', [\App\Http\Controllers\Api\ClientProgramController::class, 'index'])->name('index');
+            Route::post('/', [\App\Http\Controllers\Api\ClientProgramController::class, 'store'])->name('store');
+            Route::get('/stats', [\App\Http\Controllers\Api\ClientProgramController::class, 'stats'])->name('stats');
+            
+            // Assigned programs (read-only, from trainers)
             Route::get('/assigned', [\App\Http\Controllers\Api\ClientProgramController::class, 'getAssignedPrograms'])->name('assigned');
-            Route::get('/{program}/plan', [\App\Http\Controllers\Api\ClientProgramController::class, 'plan'])->name('plan');
-            Route::get('/{program}/pdf-data', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfData'])->name('pdf-data');
-            Route::get('/{program}/pdf-view', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfView'])->name('pdf-view');
-            Route::get('/{program}/pdf-download', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfDownload'])->name('pdf-download');
 
-            Route::prefix('{program}/builder')->name('builder.')->group(function () {
-                Route::get('/weeks', [\App\Http\Controllers\Api\ClientProgramController::class, 'weeks'])->name('weeks.index');
-                Route::get('/weeks/{week}', [\App\Http\Controllers\Api\ClientProgramController::class, 'showWeek'])->name('weeks.show');
+            Route::prefix('{program}')->group(function () {
+                Route::get('/', [\App\Http\Controllers\Api\ClientProgramController::class, 'show'])->name('show');
+                Route::put('/', [\App\Http\Controllers\Api\ClientProgramController::class, 'update'])->name('update');
+                Route::delete('/', [\App\Http\Controllers\Api\ClientProgramController::class, 'destroy'])->name('destroy');
+                Route::post('/duplicate', [\App\Http\Controllers\Api\ClientProgramController::class, 'duplicate'])->name('duplicate');
+                Route::get('/plan', [\App\Http\Controllers\Api\ClientProgramController::class, 'plan'])->name('plan');
+                Route::get('/pdf-data', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfData'])->name('pdf-data');
+                Route::get('/pdf-view', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfView'])->name('pdf-view');
+                Route::get('/pdf-download', [\App\Http\Controllers\Api\ClientProgramController::class, 'pdfDownload'])->name('pdf-download');
 
-                Route::get('/weeks/{week}/days', [\App\Http\Controllers\Api\ClientProgramController::class, 'days'])->name('days.index');
-                Route::get('/weeks/{week}/days/{day}', [\App\Http\Controllers\Api\ClientProgramController::class, 'showDay'])->name('days.show');
+                // Program Videos Routes
+                Route::get('/plan', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'getProgramPlan'])->name('plan');
+                Route::prefix('videos')->name('videos.')->group(function () {
+                    Route::get('/', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'getVideos'])->name('index');
+                    Route::post('/', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'store'])->name('store');
+                    Route::patch('/reorder', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'reorder'])->name('reorder');
 
-                Route::get('/weeks/{week}/days/{day}/circuits', [\App\Http\Controllers\Api\ClientProgramController::class, 'circuits'])->name('circuits.index');
-                Route::get('/weeks/{week}/days/{day}/circuits/{circuit}', [\App\Http\Controllers\Api\ClientProgramController::class, 'showCircuit'])->name('circuits.show');
+                    Route::prefix('{video}')->group(function () {
+                        Route::put('/', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'update'])->name('update');
+                        Route::delete('/', [\App\Http\Controllers\Api\ApiProgramVideoController::class, 'destroy'])->name('destroy');
+                    });
+                });
 
-                Route::get('/weeks/{week}/days/{day}/circuits/{circuit}/exercises', [\App\Http\Controllers\Api\ClientProgramController::class, 'exercises'])->name('exercises.index');
-                Route::get('/weeks/{week}/days/{day}/circuits/{circuit}/exercises/{exercise}', [\App\Http\Controllers\Api\ClientProgramController::class, 'showExercise'])->name('exercises.show');
+                Route::prefix('builder')->name('builder.')->group(function () {
+                    // Column configuration
+                    Route::get('/columns', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'getColumnConfig'])->name('columns.get');
+                   // Route::put('/columns', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'updateColumnConfig'])->name('columns.update');
 
-                Route::get('/exercises/{exercise}/sets', [\App\Http\Controllers\Api\ClientProgramController::class, 'exerciseSets'])->name('exercises.sets');
+                    // =========================================================================
+                    // NESTED RESTful CRUD ROUTES
+                    // Dynamic routes following pattern: /programs/{program}/builder/weeks/{week}/...
+                    // =========================================================================
+
+                    // Week CRUD
+                    Route::prefix('weeks')->name('weeks.')->group(function () {
+                        Route::post('/', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'storeWeek'])->name('store');
+                        Route::get('/{week}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'showWeek'])->name('show');
+                        Route::put('/{week}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'putWeek'])->name('update');
+                        Route::delete('/{week}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'destroyWeek'])->name('destroy');
+
+                        // Day CRUD (nested under Week)
+                        Route::prefix('{week}/days')->name('days.')->group(function () {
+                            Route::post('/', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'storeDay'])->name('store');
+                            Route::get('/{day}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'showDay'])->name('show');
+                            Route::put('/{day}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'putDay'])->name('update');
+                            Route::delete('/{day}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'destroyDay'])->name('destroy');
+                            
+                            // Day special fields (cool_down, custom_rows)
+                            Route::put('/{day}/cool-down', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'updateDayCoolDown'])->name('cool-down');
+                            Route::put('/{day}/custom-rows', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'updateDayCustomRows'])->name('custom-rows');
+
+                            // Circuit CRUD (nested under Day)
+                            Route::prefix('{day}/circuits')->name('circuits.')->group(function () {
+                                Route::post('/', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'storeCircuit'])->name('store');
+                                Route::get('/{circuit}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'showCircuit'])->name('show');
+                                Route::put('/{circuit}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'putCircuit'])->name('update');
+                                Route::delete('/{circuit}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'destroyCircuit'])->name('destroy');
+
+                                // Exercise CRUD (nested under Circuit)
+                                Route::prefix('{circuit}/exercises')->name('exercises.')->group(function () {
+                                    Route::post('/', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'storeExercise'])->name('store');
+                                    Route::get('/{exercise}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'showExercise'])->name('show');
+                                    Route::put('/{exercise}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'putExercise'])->name('update');
+                                    Route::delete('/{exercise}', [\App\Http\Controllers\Api\ClientProgramBuilderController::class, 'destroyExercise'])->name('destroy');
+                                });
+                            });
+                        });
+                    });
+                });
             });
         });
 
@@ -669,6 +735,23 @@ Route::prefix('system')->name('api.system.')->group(function () {
 
 /**
  * =============================================================================
+ * UNIFIED SUBSCRIPTION ROUTES
+ * =============================================================================
+ */
+
+/**
+ * Subscription Routes (Both Trainers and Clients)
+ * Unified API for subscription management
+ * - Trainers: Get subscribed clients
+ * - Clients: Get subscribed trainers with booking settings
+ */
+Route::middleware(['auth:sanctum'])->prefix('subscriptions')->name('api.subscriptions.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\Api\SubscriptionController::class, 'index'])->name('index');
+    Route::post('/check', [\App\Http\Controllers\Api\SubscriptionController::class, 'checkSubscription'])->name('check');
+});
+
+/**
+ * =============================================================================
  * UNIFIED SESSION BOOKING ROUTES
  * =============================================================================
  */
@@ -677,6 +760,7 @@ Route::prefix('system')->name('api.system.')->group(function () {
  * Session Booking Routes (Both Trainers and Clients)
  * Unified API for session booking management with role-based access control
  * Supports both client-initiated and trainer-initiated bookings with Google Calendar integration
+ * Enforces booking-approval settings when clients create bookings
  */
 Route::middleware(['auth:sanctum'])->prefix('appointment')->name('api.appointment.')->group(function () {
     // Availability and scheduling
