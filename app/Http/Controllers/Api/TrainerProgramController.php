@@ -29,13 +29,45 @@ class TrainerProgramController extends ApiBaseController
     {
         try {
             $trainerId = Auth::id();
-            $query = Program::query()->where('trainer_id', $trainerId)->withCount(['weeks']);
+            
+            // Get subscribed client IDs for this trainer
+            $subscribedClientIds = TrainerSubscription::where('trainer_id', $trainerId)
+                ->where('status', 'active')
+                ->pluck('client_id')
+                ->toArray();
+            
+            // Query for both self-created programs and assigned programs
+            // Self-created: trainer_id = $trainerId (regardless of client_id)
+            // Assigned: trainer_id = $trainerId AND client_id IN (subscribed clients)
+            $query = Program::query()
+                ->where('trainer_id', $trainerId)
+                ->with(['client:id,name,email', 'trainer:id,name,email'])
+                ->withCount(['weeks']);
+
+            // Optional: Filter by type (self or assigned)
+            if ($request->filled('type')) {
+                $type = $request->input('type');
+                if ($type === 'self') {
+                    // Self-created programs (no client assigned or client is not in subscribed list)
+                    $query->where(function ($q) use ($subscribedClientIds) {
+                        $q->whereNull('client_id')
+                          ->orWhereNotIn('client_id', $subscribedClientIds);
+                    });
+                } elseif ($type === 'assigned') {
+                    // Assigned programs (client_id is in subscribed clients list)
+                    $query->whereIn('client_id', $subscribedClientIds);
+                }
+            }
 
             if ($request->filled('search')) {
                 $s = trim((string) $request->input('search'));
                 $query->where(function ($q) use ($s) {
                     $q->where('name', 'like', "%{$s}%")
-                      ->orWhere('description', 'like', "%{$s}%");
+                      ->orWhere('description', 'like', "%{$s}%")
+                      ->orWhereHas('client', function ($clientQuery) use ($s) {
+                          $clientQuery->where('name', 'like', "%{$s}%")
+                                     ->orWhere('email', 'like', "%{$s}%");
+                      });
                 });
             }
 
@@ -50,6 +82,14 @@ class TrainerProgramController extends ApiBaseController
             $perPage = (int) $request->input('per_page', 15);
             $programs = $query->paginate($perPage);
 
+            // Add program type indicator to each program
+            $programs->getCollection()->transform(function ($program) use ($subscribedClientIds) {
+                $program->program_type = $program->client_id && in_array($program->client_id, $subscribedClientIds) 
+                    ? 'assigned' 
+                    : 'self';
+                return $program;
+            });
+
             return $this->sendResponse([
                 'data' => $programs->items(),
                 'pagination' => [
@@ -60,6 +100,18 @@ class TrainerProgramController extends ApiBaseController
                     'from' => $programs->firstItem(),
                     'to' => $programs->lastItem(),
                     'has_more_pages' => $programs->hasMorePages(),
+                ],
+                'summary' => [
+                    'total_programs' => $programs->total(),
+                    'self_created' => Program::where('trainer_id', $trainerId)
+                        ->where(function ($q) use ($subscribedClientIds) {
+                            $q->whereNull('client_id')
+                              ->orWhereNotIn('client_id', $subscribedClientIds);
+                        })
+                        ->count(),
+                    'assigned' => Program::where('trainer_id', $trainerId)
+                        ->whereIn('client_id', $subscribedClientIds)
+                        ->count(),
                 ]
             ], 'Programs retrieved successfully');
         } catch (\Exception $e) {
